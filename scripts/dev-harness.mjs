@@ -93,7 +93,7 @@ async function buildCss() {
 /* ------------------------------- api routes ------------------------------ */
 
 const routeModules = new Map();
-const ROUTE_NAMES = ['chat', 'health', 'subjects', 'title'];
+const ROUTE_NAMES = ['chat', 'diag', 'health', 'subjects', 'title'];
 
 /**
  * Route handlers use the `@/` path alias, which Node cannot resolve on its own.

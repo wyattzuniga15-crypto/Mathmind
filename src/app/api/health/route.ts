@@ -13,7 +13,7 @@ export async function GET() {
     configured,
     message: configured
       ? 'Server is configured and ready.'
-      : 'ANTHROPIC_API_KEY is not set. Copy .env.example to .env.local, add your key, then restart the dev server.',
+      : 'GROQ_API_KEY is not set. Add it in Vercel under Settings -> Environment Variables, then redeploy.',
     subjects: listSubjects().map((s) => ({ id: s.id, name: s.name, status: s.status })),
     time: new Date().toISOString(),
   });

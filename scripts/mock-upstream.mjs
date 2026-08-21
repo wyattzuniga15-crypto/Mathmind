@@ -16,7 +16,7 @@
  */
 import { createServer } from 'node:http';
 
-const enc = (obj) => `event: ${obj.type}\ndata: ${JSON.stringify(obj)}\n\n`;
+const enc = (obj) => `data: ${JSON.stringify(obj)}\n\n`;
 
 /** Chooses a tool the way a tutor model would, from the student's text. */
 function planToolCall(text, toolNames) {
@@ -131,40 +131,60 @@ function replyFromToolResult(name, data) {
   }
 }
 
-function streamText(res, text, { stopReason = 'end_turn', delayMs = 8 } = {}) {
-  res.write(enc({ type: 'message_start', message: { usage: { input_tokens: 42 } } }));
-  res.write(enc({ type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }));
+function streamText(res, text, { finishReason = 'stop', delayMs = 8 } = {}) {
   // Chunked so the client genuinely exercises incremental streaming.
   const chunks = text.match(/[\s\S]{1,24}/g) ?? [];
   let i = 0;
   const tick = () => {
     if (i < chunks.length) {
-      res.write(enc({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: chunks[i++] } }));
+      res.write(enc({ choices: [{ delta: { content: chunks[i++] }, finish_reason: null }] }));
       setTimeout(tick, delayMs);
       return;
     }
-    res.write(enc({ type: 'content_block_stop', index: 0 }));
-    res.write(enc({ type: 'message_delta', delta: { stop_reason: stopReason }, usage: { output_tokens: 120 } }));
+    res.write(
+      enc({
+        choices: [{ delta: {}, finish_reason: finishReason }],
+        usage: { prompt_tokens: 42, completion_tokens: 120 },
+      }),
+    );
+    res.write('data: [DONE]\n\n');
     res.end();
   };
   tick();
 }
 
 function streamToolUse(res, name, input) {
-  res.write(enc({ type: 'message_start', message: { usage: { input_tokens: 42 } } }));
   res.write(
     enc({
-      type: 'content_block_start',
-      index: 0,
-      content_block: { type: 'tool_use', id: `toolu_${Date.now()}`, name, input: {} },
+      choices: [
+        {
+          delta: {
+            tool_calls: [
+              { index: 0, id: `call_${Date.now()}`, type: 'function', function: { name, arguments: '' } },
+            ],
+          },
+          finish_reason: null,
+        },
+      ],
     }),
   );
   const json = JSON.stringify(input);
   for (const part of json.match(/[\s\S]{1,20}/g) ?? []) {
-    res.write(enc({ type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: part } }));
+    res.write(
+      enc({
+        choices: [
+          { delta: { tool_calls: [{ index: 0, function: { arguments: part } }] }, finish_reason: null },
+        ],
+      }),
+    );
   }
-  res.write(enc({ type: 'content_block_stop', index: 0 }));
-  res.write(enc({ type: 'message_delta', delta: { stop_reason: 'tool_use' }, usage: { output_tokens: 30 } }));
+  res.write(
+    enc({
+      choices: [{ delta: {}, finish_reason: 'tool_calls' }],
+      usage: { prompt_tokens: 42, completion_tokens: 30 },
+    }),
+  );
+  res.write('data: [DONE]\n\n');
   res.end();
 }
 
@@ -186,13 +206,13 @@ export function startMockUpstream({ port = 0, failMode = null } = {}) {
     req.on('data', (c) => (raw += c));
     req.on('end', () => {
       if (state.failMode === 'overloaded') {
-        res.writeHead(529, { 'content-type': 'application/json' });
-        res.end(JSON.stringify({ error: { type: 'overloaded_error', message: 'Service overloaded.' } }));
+        res.writeHead(503, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: { type: 'server_error', message: 'Service overloaded. Please try again.' } }));
         return;
       }
       if (state.failMode === 'auth') {
         res.writeHead(401, { 'content-type': 'application/json' });
-        res.end(JSON.stringify({ error: { type: 'authentication_error', message: 'invalid x-api-key' } }));
+        res.end(JSON.stringify({ error: { type: 'invalid_request_error', message: 'Invalid API Key' } }));
         return;
       }
 
@@ -205,7 +225,8 @@ export function startMockUpstream({ port = 0, failMode = null } = {}) {
         return;
       }
 
-      const toolNames = (payload.tools ?? []).map((t) => t.name);
+      // OpenAI/Groq wraps declarations as { type: 'function', function: { name } }.
+      const toolNames = (payload.tools ?? []).map((t) => t.function?.name ?? t.name);
       const messages = payload.messages ?? [];
 
       // Non-streaming requests are the title endpoint.
@@ -213,9 +234,10 @@ export function startMockUpstream({ port = 0, failMode = null } = {}) {
         res.writeHead(200, { 'content-type': 'application/json' });
         res.end(
           JSON.stringify({
-            content: [{ type: 'text', text: 'Solving a linear equation' }],
-            stop_reason: 'end_turn',
-            usage: { input_tokens: 10, output_tokens: 5 },
+            choices: [
+              { message: { role: 'assistant', content: 'Solving a linear equation' }, finish_reason: 'stop' },
+            ],
+            usage: { prompt_tokens: 10, completion_tokens: 5 },
           }),
         );
         return;
@@ -227,21 +249,20 @@ export function startMockUpstream({ port = 0, failMode = null } = {}) {
         connection: 'keep-alive',
       });
 
-      // If the last message carries tool results, answer using those real values.
+      // Groq/OpenAI sends tool output back as a role:'tool' message.
       const last = messages[messages.length - 1];
-      const toolResults = Array.isArray(last?.content)
-        ? last.content.filter((b) => b.type === 'tool_result')
-        : [];
-      if (toolResults.length) {
-        const prior = messages[messages.length - 2];
-        const use = Array.isArray(prior?.content) ? prior.content.find((b) => b.type === 'tool_use') : null;
+      if (last?.role === 'tool') {
+        const prior = [...messages].reverse().find((m) => m.role === 'assistant' && m.tool_calls?.length);
+        const call = prior?.tool_calls?.[0];
         let data = null;
         try {
-          data = JSON.parse(toolResults[0].content);
+          data = JSON.parse(last.content);
         } catch {
           data = null;
         }
-        streamText(res, replyFromToolResult(use?.name ?? 'unknown', data), { delayMs: state.delayMs });
+        streamText(res, replyFromToolResult(call?.function?.name ?? 'unknown', data), {
+          delayMs: state.delayMs,
+        });
         return;
       }
 
@@ -251,7 +272,7 @@ export function startMockUpstream({ port = 0, failMode = null } = {}) {
         .flatMap((m) =>
           typeof m.content === 'string'
             ? [m.content]
-            : m.content.filter((b) => b.type === 'text').map((b) => b.text),
+            : (m.content ?? []).filter((b) => b.type === 'text').map((b) => b.text),
         )
         .pop() ?? '';
 

@@ -12,7 +12,7 @@
 import { chromium } from 'playwright';
 import { startMockUpstream } from './mock-upstream.mjs';
 
-const LIVE = process.argv.includes('--live') && Boolean(process.env.ANTHROPIC_API_KEY);
+const LIVE = process.argv.includes('--live') && Boolean(process.env.GROQ_API_KEY);
 
 const results = [];
 let failures = 0;
@@ -30,8 +30,8 @@ async function main() {
   let upstream = null;
   if (!LIVE) {
     upstream = await startMockUpstream({ port: 0 });
-    process.env.ANTHROPIC_BASE_URL = upstream.url;
-    process.env.ANTHROPIC_API_KEY = 'sk-ant-harness-not-a-real-key';
+    process.env.GROQ_BASE_URL = upstream.url;
+    process.env.GROQ_API_KEY = 'gsk-harness-not-a-real-key';
   }
   process.env.RATE_LIMIT_PER_MINUTE = '200';
 
@@ -243,14 +243,14 @@ async function main() {
 
     /* ------------------------------ security ------------------------------ */
     const clientBundle = await (await fetch(`${base}/app.js`)).text();
-    check('API key never appears in the client bundle', !clientBundle.includes('sk-ant-'));
+    check('API key never appears in the client bundle', !clientBundle.includes('gsk-') && !clientBundle.includes('sk-ant-'));
     check(
       'client bundle contains no ANTHROPIC_API_KEY reference',
-      !clientBundle.includes('ANTHROPIC_API_KEY'),
+      !clientBundle.includes('GROQ_API_KEY'),
     );
     check(
       'client never calls the AI provider directly',
-      !clientBundle.includes('api.anthropic.com'),
+      !clientBundle.includes('api.groq.com'),
     );
 
     /* --------------------------- console health --------------------------- */

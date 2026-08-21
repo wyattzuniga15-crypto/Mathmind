@@ -4,6 +4,6 @@
   "buildCommand": "next build",
   "installCommand": "npm install",
   "functions": {
-    "src/app/api/chat/route.ts": { "maxDuration": 120 }
+    "src/app/api/chat/route.ts": { "maxDuration": 60 }
   }
 }

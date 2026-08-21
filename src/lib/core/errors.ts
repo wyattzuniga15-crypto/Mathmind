@@ -78,7 +78,7 @@ export function toAppError(err: unknown): AppError {
 export function friendlyMessage(code: ErrorCode): string {
   switch (code) {
     case 'missing_api_key':
-      return 'The server is missing its ANTHROPIC_API_KEY. Add it to .env.local and restart the dev server.';
+      return 'The server is missing its GROQ_API_KEY. Add it in Vercel under Settings -> Environment Variables, then redeploy.';
     case 'rate_limited':
       return 'Too many requests in a short time. Wait a moment and try again.';
     case 'upstream_overloaded':

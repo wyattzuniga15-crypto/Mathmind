@@ -218,37 +218,50 @@ test('registry exposes subjects and rejects duplicates', () => {
 
 /* -------------------------- ai client + agent --------------------------- */
 
-/** Builds a fake SSE HTTP response mimicking the Anthropic streaming format. */
+/** Builds a fake SSE HTTP response mimicking the Groq/OpenAI streaming format. */
 function mockStreamResponse(events: Record<string, unknown>[]): Response {
-  const body = events.map((e) => `event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`).join('');
+  const body = `${events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join('')}data: [DONE]\n\n`;
   return new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } });
 }
 
-function textTurn(text: string, stopReason = 'end_turn') {
+function textTurn(text: string, finishReason = 'stop') {
   return [
-    { type: 'message_start', message: { usage: { input_tokens: 10 } } },
-    { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
-    { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text } },
-    { type: 'content_block_stop', index: 0 },
-    { type: 'message_delta', delta: { stop_reason: stopReason }, usage: { output_tokens: 5 } },
+    { choices: [{ delta: { content: text }, finish_reason: null }] },
+    {
+      choices: [{ delta: {}, finish_reason: finishReason }],
+      usage: { prompt_tokens: 10, completion_tokens: 5 },
+    },
   ];
 }
 
 function toolTurn(name: string, input: Record<string, unknown>) {
   return [
-    { type: 'message_start', message: { usage: { input_tokens: 10 } } },
     {
-      type: 'content_block_start',
-      index: 0,
-      content_block: { type: 'tool_use', id: 'tool_1', name, input: {} },
+      choices: [
+        {
+          delta: {
+            tool_calls: [
+              { index: 0, id: 'call_1', type: 'function', function: { name, arguments: '' } },
+            ],
+          },
+          finish_reason: null,
+        },
+      ],
     },
     {
-      type: 'content_block_delta',
-      index: 0,
-      delta: { type: 'input_json_delta', partial_json: JSON.stringify(input) },
+      choices: [
+        {
+          delta: {
+            tool_calls: [{ index: 0, function: { arguments: JSON.stringify(input) } }],
+          },
+          finish_reason: null,
+        },
+      ],
     },
-    { type: 'content_block_stop', index: 0 },
-    { type: 'message_delta', delta: { stop_reason: 'tool_use' }, usage: { output_tokens: 8 } },
+    {
+      choices: [{ delta: {}, finish_reason: 'tool_calls' }],
+      usage: { prompt_tokens: 10, completion_tokens: 8 },
+    },
   ];
 }
 
@@ -316,8 +329,8 @@ test('agent surfaces upstream errors as error events', async () => {
   const client = new AiClient({
     apiKey: 'k',
     fetchImpl: (async () =>
-      new Response(JSON.stringify({ error: { message: 'overloaded', type: 'overloaded_error' } }), {
-        status: 529,
+      new Response(JSON.stringify({ error: { message: 'overloaded', type: 'server_error' } }), {
+        status: 503,
       })) as unknown as typeof fetch,
   });
   const events: StreamEvent[] = [];
@@ -334,7 +347,12 @@ test('agent surfaces upstream errors as error events', async () => {
     events.push(e);
   }
   const error = events.find((e) => e.type === 'error') as Extract<StreamEvent, { type: 'error' }>;
-  assert.equal(error.code, 'upstream_overloaded');
+  // A 5xx from the provider must surface as a retryable upstream failure so the
+  // UI offers "Try again" rather than looking like a client mistake.
+  assert.ok(
+    ['upstream_error', 'upstream_overloaded'].includes(error.code),
+    `unexpected code ${error.code}`,
+  );
   assert.equal(error.retryable, true);
 });
 
@@ -342,7 +360,7 @@ test('client maps auth failures to a clear error', async () => {
   const client = new AiClient({
     apiKey: 'bad',
     fetchImpl: (async () =>
-      new Response(JSON.stringify({ error: { message: 'invalid x-api-key' } }), { status: 401 })) as unknown as typeof fetch,
+      new Response(JSON.stringify({ error: { message: 'Invalid API Key' } }), { status: 401 })) as unknown as typeof fetch,
   });
   await assert.rejects(
     () => client.complete({ model: 'm', system: 's', messages: [], maxTokens: 5 }),

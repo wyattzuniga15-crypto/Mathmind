@@ -489,6 +489,7 @@ export class AiClient {
     >();
 
     let stopReason: string | null = null;
+    let reasoningText = '';
 
     const usage = {
       inputTokens: 0,
@@ -551,6 +552,14 @@ export class AiClient {
               choices?: Array<{
                 delta?: {
                   content?: string | null;
+                  /*
+                   * Reasoning models (gpt-oss, qwen3, deepseek-r1) put their
+                   * chain of thought here instead of in `content`. If a turn
+                   * produces only reasoning, ignoring this field yields a
+                   * completely empty answer.
+                   */
+                  reasoning?: string | null;
+                  reasoning_content?: string | null;
                   tool_calls?: Array<{
                     index?: number;
                     id?: string;
@@ -607,6 +616,14 @@ export class AiClient {
 
             const delta =
               choice.delta;
+
+            const reasoningDelta =
+              delta?.reasoning ??
+              delta?.reasoning_content;
+
+            if (reasoningDelta) {
+              reasoningText += reasoningDelta;
+            }
 
             /*
              * Normal text streaming.
@@ -771,7 +788,15 @@ export class AiClient {
     yield {
       type: 'turn_complete',
       turn: {
-        content: blocks,
+        /*
+         * If a reasoning model produced only chain-of-thought and never
+         * emitted `content` or a tool call, surface the reasoning rather than
+         * returning an empty turn, which the UI would render as a blank reply.
+         */
+        content:
+          blocks.length === 0 && reasoningText.trim()
+            ? [{ type: 'text', text: reasoningText }]
+            : blocks,
         stopReason:
           normalizeStopReason(
             stopReason,

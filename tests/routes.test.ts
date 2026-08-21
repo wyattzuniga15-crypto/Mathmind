@@ -59,7 +59,7 @@ test('subjects route describes the platform for the UI', async () => {
 });
 
 test('chat route rejects invalid JSON with a structured error', async () => {
-  process.env.ANTHROPIC_API_KEY = 'sk-ant-test-not-real';
+  process.env.GROQ_API_KEY = 'gsk-test-not-real';
   const { POST } = await loadChatRoute();
   const res = await POST(
     new Request('https://app.test/api/chat', {
@@ -74,7 +74,7 @@ test('chat route rejects invalid JSON with a structured error', async () => {
 });
 
 test('chat route validates the body before calling the model', async () => {
-  process.env.ANTHROPIC_API_KEY = 'sk-ant-test-not-real';
+  process.env.GROQ_API_KEY = 'gsk-test-not-real';
   const { POST } = await loadChatRoute();
 
   const badSubject = await POST(json({ ...validBody, subjectId: 'astrology' }));
@@ -89,22 +89,22 @@ test('chat route validates the body before calling the model', async () => {
 });
 
 test('chat route reports a missing API key clearly instead of failing obscurely', async () => {
-  const saved = process.env.ANTHROPIC_API_KEY;
-  delete process.env.ANTHROPIC_API_KEY;
+  const saved = process.env.GROQ_API_KEY;
+  delete process.env.GROQ_API_KEY;
   try {
     const { POST } = await loadChatRoute();
     const res = await POST(json(validBody));
     assert.equal(res.status, 500);
     const body = (await res.json()) as { error: { code: string; message: string } };
     assert.equal(body.error.code, 'missing_api_key');
-    assert.match(body.error.message, /\.env\.local/);
+    assert.match(body.error.message, /GROQ_API_KEY/);
   } finally {
-    if (saved) process.env.ANTHROPIC_API_KEY = saved;
+    if (saved) process.env.GROQ_API_KEY = saved;
   }
 });
 
 test('chat route sets an anonymous identity cookie and rate limit headers', async () => {
-  process.env.ANTHROPIC_API_KEY = 'sk-ant-test-not-real';
+  process.env.GROQ_API_KEY = 'gsk-test-not-real';
   process.env.RATE_LIMIT_PER_MINUTE = '2';
   const { POST } = await loadChatRoute();
 

@@ -67,6 +67,20 @@ export async function* runAgent(options: AgentRunOptions): AsyncGenerator<Stream
       );
 
       if (turn.stopReason !== 'tool_use' || toolUses.length === 0) {
+        // A turn with no text and no tool calls would render as a blank reply.
+        // Say so explicitly instead: a silent failure is impossible to debug.
+        const producedText = turn.content.some(
+          (b) => b.type === 'text' && b.text.trim().length > 0,
+        );
+        if (!producedText && allToolCalls.length === 0) {
+          yield {
+            type: 'error',
+            message: `The AI provider returned an empty response (stop reason: ${turn.stopReason ?? 'none'}). This usually means the configured model does not support tool calling, or the request was filtered. Check the model ID in your environment variables.`,
+            code: 'upstream_error',
+            retryable: true,
+          };
+          return;
+        }
         yield { type: 'done', usage, stopReason: turn.stopReason, toolCalls: allToolCalls };
         return;
       }
