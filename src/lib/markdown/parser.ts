@@ -17,13 +17,23 @@ export type Inline =
   | { type: 'link'; href: string; children: Inline[] }
   | { type: 'math'; value: string; display: false };
 
+/**
+ * Column alignment in a GFM table.
+ *
+ * A literal union rather than `string`: these values are written straight into
+ * a CSS `text-align`, whose React/csstype signature only accepts keywords. A
+ * widened `string` here becomes a type error at the point of use.
+ * `null` means the column had no alignment marker.
+ */
+export type TableAlign = 'left' | 'center' | 'right';
+
 export type Block =
   | { type: 'paragraph'; children: Inline[] }
   | { type: 'heading'; depth: number; children: Inline[] }
   | { type: 'list'; ordered: boolean; start: number; items: Block[][] }
   | { type: 'code'; lang: string | null; value: string }
   | { type: 'blockquote'; children: Block[] }
-  | { type: 'table'; header: Inline[][]; align: (string | null)[]; rows: Inline[][][] }
+  | { type: 'table'; header: Inline[][]; align: (TableAlign | null)[]; rows: Inline[][][] }
   | { type: 'mathBlock'; value: string }
   | { type: 'hr' };
 
@@ -205,6 +215,17 @@ const isHr = (line: string) => /^ {0,3}([-*_])\s*(\1\s*){2,}$/.test(line);
 const bulletRe = /^(\s*)([-*+])\s+(.*)$/;
 const orderedRe = /^(\s*)(\d+)[.)]\s+(.*)$/;
 
+/** Reads one cell of a GFM delimiter row, e.g. `:-`, `--:`, `:-:`. */
+export function parseAlignment(cell: string): TableAlign | null {
+  const trimmed = cell.trim();
+  const left = trimmed.startsWith(':');
+  const right = trimmed.endsWith(':');
+  if (left && right) return 'center';
+  if (right) return 'right';
+  if (left) return 'left';
+  return null;
+}
+
 export function parseMarkdown(input: string): Block[] {
   // Display math is extracted at block level so $$…$$ becomes its own block
   // even when the model puts it inline with surrounding prose.
@@ -314,9 +335,7 @@ export function parseMarkdown(input: string): Block[] {
           .split('|')
           .map((c) => c.trim());
       const header = splitRow(line).map(parseInline);
-      const align = splitRow(lines[i + 1]).map((c) =>
-        c.startsWith(':') && c.endsWith(':') ? 'center' : c.endsWith(':') ? 'right' : c.startsWith(':') ? 'left' : null,
-      );
+      const align = splitRow(lines[i + 1]).map(parseAlignment);
       i += 2;
       const rows: Inline[][][] = [];
       while (i < lines.length && lines[i].includes('|') && lines[i].trim()) {
