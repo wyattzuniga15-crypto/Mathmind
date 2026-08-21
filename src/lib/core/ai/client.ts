@@ -71,7 +71,7 @@ export interface AiClientOptions {
   apiVersion?: string;
 }
 
-type OpenAITool = {
+type GroqTool = {
   type: 'function';
   function: {
     name: string;
@@ -80,9 +80,9 @@ type OpenAITool = {
   };
 };
 
-type OpenAIMessage = {
+type GroqMessage = {
   role: 'system' | 'user' | 'assistant' | 'tool';
-  content?: unknown;
+  content?: string | null;
   tool_calls?: Array<{
     id: string;
     type: 'function';
@@ -95,133 +95,98 @@ type OpenAIMessage = {
 };
 
 export class AiClient {
-  private readonly apiKey: string;
-  private readonly baseUrl: string;
-  private readonly timeoutMs: number;
-  private readonly fetchImpl: typeof fetch;
+  private apiKey: string;
+  private baseUrl: string;
+  private timeoutMs: number;
+  private fetchImpl: typeof fetch;
 
   constructor(options: AiClientOptions) {
     this.apiKey = options.apiKey;
-
-    // IMPORTANT:
-    // Groq's OpenAI-compatible endpoint.
     this.baseUrl = (
-      options.baseUrl ?? 'https://api.groq.com/openai/v1'
+      options.baseUrl ??
+      'https://api.groq.com/openai/v1'
     ).replace(/\/$/, '');
 
     this.timeoutMs = options.timeoutMs ?? 120_000;
     this.fetchImpl = options.fetchImpl ?? fetch;
   }
 
-  private convertTool(tool: ToolDefinition): OpenAITool {
-    const t = tool as unknown as Record<string, unknown>;
+  private normalizeTools(
+    tools?: ToolDefinition[],
+  ): GroqTool[] | undefined {
+    if (!tools?.length) return undefined;
 
-    const name =
-      typeof t.name === 'string'
-        ? t.name
-        : typeof t['function'] === 'object' &&
-            t['function'] !== null &&
-            typeof (t['function'] as Record<string, unknown>).name === 'string'
-          ? ((t['function'] as Record<string, unknown>).name as string)
-          : 'unknown_tool';
-
-    const description =
-      typeof t.description === 'string'
-        ? t.description
-        : typeof t['function'] === 'object' &&
-            t['function'] !== null &&
-            typeof (t['function'] as Record<string, unknown>).description ===
-              'string'
-          ? ((t['function'] as Record<string, unknown>).description as string)
-          : undefined;
-
-    // Your old code used `parameters`, but your ToolDefinition does not
-    // expose that property. Some versions of the app use input_schema.
-    const parameters =
-      t.parameters &&
-      typeof t.parameters === 'object' &&
-      !Array.isArray(t.parameters)
-        ? (t.parameters as Record<string, unknown>)
-        : t.input_schema &&
-            typeof t.input_schema === 'object' &&
-            !Array.isArray(t.input_schema)
-          ? (t.input_schema as Record<string, unknown>)
-          : t['function'] &&
-              typeof t['function'] === 'object' &&
-              t['function'] !== null &&
-              typeof (t['function'] as Record<string, unknown>).parameters ===
-                'object'
-            ? ((t['function'] as Record<string, unknown>)
-                .parameters as Record<string, unknown>)
-            : {
-                type: 'object',
-                properties: {},
-                additionalProperties: false,
-              };
-
-    return {
-      type: 'function',
-      function: {
-        name,
-        ...(description ? { description } : {}),
-        parameters,
-      },
-    };
-  }
-
-  private convertContentBlock(block: ContentBlock): unknown {
-    if (block.type === 'text') {
-      return {
-        type: 'text',
-        text: block.text,
+    return tools.map((raw) => {
+      /*
+       * Mathmind's ToolDefinition may use slightly different names
+       * depending on which version of the project created it.
+       *
+       * We accept:
+       *   parameters
+       *   input_schema
+       *   inputSchema
+       */
+      const tool = raw as ToolDefinition & {
+        parameters?: unknown;
+        input_schema?: unknown;
+        inputSchema?: unknown;
+        name: string;
+        description?: string;
       };
-    }
 
-    if (block.type === 'image') {
+      let parameters: Record<string, unknown> = {
+        type: 'object',
+        properties: {},
+      };
+
+      if (
+        tool.parameters &&
+        typeof tool.parameters === 'object'
+      ) {
+        parameters = tool.parameters as Record<string, unknown>;
+      } else if (
+        tool.input_schema &&
+        typeof tool.input_schema === 'object'
+      ) {
+        parameters =
+          tool.input_schema as Record<string, unknown>;
+      } else if (
+        tool.inputSchema &&
+        typeof tool.inputSchema === 'object'
+      ) {
+        parameters =
+          tool.inputSchema as Record<string, unknown>;
+      }
+
       return {
-        type: 'image_url',
-        image_url: {
-          url: `data:${block.source.media_type};base64,${block.source.data}`,
+        type: 'function',
+        function: {
+          name: tool.name,
+          description: tool.description ?? '',
+          parameters,
         },
       };
-    }
-
-    if (block.type === 'tool_result') {
-      return {
-        type: 'tool_result',
-        tool_use_id: block.tool_use_id,
-        content: block.content,
-      };
-    }
-
-    if (block.type === 'tool_use') {
-      return {
-        type: 'tool_use',
-        id: block.id,
-        name: block.name,
-        input: block.input,
-      };
-    }
-
-    return null;
+    });
   }
 
   private convertMessages(
-    system: string,
-    messages: ApiMessage[],
-  ): OpenAIMessage[] {
-    const result: OpenAIMessage[] = [];
+    request: CompletionRequest,
+  ): GroqMessage[] {
+    const messages: GroqMessage[] = [];
 
-    if (system.trim()) {
-      result.push({
+    if (request.system?.trim()) {
+      messages.push({
         role: 'system',
-        content: system,
+        content: request.system,
       });
     }
 
-    for (const message of messages) {
+    for (const message of request.messages) {
+      /*
+       * User/assistant text messages
+       */
       if (typeof message.content === 'string') {
-        result.push({
+        messages.push({
           role: message.role,
           content: message.content,
         });
@@ -229,111 +194,83 @@ export class AiClient {
         continue;
       }
 
-      const blocks = message.content;
+      /*
+       * Content blocks.
+       */
+      const textParts: string[] = [];
+      const toolCalls: GroqMessage['tool_calls'] = [];
 
-      // Tool results must become OpenAI `tool` messages.
-      const toolResults = blocks.filter(
-        (block): block is Extract<ContentBlock, { type: 'tool_result' }> =>
-          block.type === 'tool_result',
-      );
-
-      if (toolResults.length > 0) {
-        for (const resultBlock of toolResults) {
-          result.push({
-            role: 'tool',
-            tool_call_id: resultBlock.tool_use_id,
-            content: resultBlock.content,
-          });
+      for (const block of message.content) {
+        if (block.type === 'text') {
+          textParts.push(block.text);
         }
 
-        // Include any normal text that was sent along with the results.
-        const text = blocks
-          .filter(
-            (block): block is Extract<ContentBlock, { type: 'text' }> =>
-              block.type === 'text',
-          )
-          .map((block) => block.text)
-          .join('');
-
-        if (text) {
-          result.push({
-            role: 'user',
-            content: text,
-          });
-        }
-
-        continue;
-      }
-
-      // Assistant tool calls.
-      const toolUses = blocks.filter(
-        (block): block is Extract<ContentBlock, { type: 'tool_use' }> =>
-          block.type === 'tool_use',
-      );
-
-      const text = blocks
-        .filter(
-          (block): block is Extract<ContentBlock, { type: 'text' }> =>
-            block.type === 'text',
-        )
-        .map((block) => block.text)
-        .join('');
-
-      if (message.role === 'assistant' && toolUses.length > 0) {
-        result.push({
-          role: 'assistant',
-          content: text || null,
-          tool_calls: toolUses.map((tool) => ({
-            id: tool.id,
+        if (block.type === 'tool_use') {
+          toolCalls.push({
+            id: block.id,
             type: 'function',
             function: {
-              name: tool.name,
-              arguments: JSON.stringify(tool.input ?? {}),
+              name: block.name,
+              arguments: JSON.stringify(
+                block.input ?? {},
+              ),
             },
-          })),
-        });
+          });
+        }
 
-        continue;
+        /*
+         * Tool results are sent as OpenAI/Groq tool messages.
+         */
+        if (block.type === 'tool_result') {
+          messages.push({
+            role: 'tool',
+            tool_call_id: block.tool_use_id,
+            content: block.content,
+          });
+        }
       }
 
-      result.push({
-        role: message.role,
-        content: blocks
-          .map((block) => this.convertContentBlock(block))
-          .filter(Boolean),
-      });
+      /*
+       * If this is an assistant message containing tool calls,
+       * send it as an assistant tool-call message.
+       */
+      if (message.role === 'assistant') {
+        const assistantMessage: GroqMessage = {
+          role: 'assistant',
+          content:
+            textParts.length > 0
+              ? textParts.join('')
+              : null,
+        };
+
+        if (toolCalls.length) {
+          assistantMessage.tool_calls = toolCalls;
+        }
+
+        messages.push(assistantMessage);
+      } else if (textParts.length) {
+        messages.push({
+          role: 'user',
+          content: textParts.join(''),
+        });
+      }
     }
 
-    return result;
-  }
-
-  private buildBody(
-    request: CompletionRequest,
-    stream: boolean,
-  ): Record<string, unknown> {
-    const body: Record<string, unknown> = {
-      model: request.model,
-      messages: this.convertMessages(request.system, request.messages),
-      max_tokens: request.maxTokens,
-      stream,
-    };
-
-    if (request.tools?.length) {
-      body.tools = request.tools.map((tool) => this.convertTool(tool));
-      body.tool_choice = 'auto';
-    }
-
-    if (typeof request.temperature === 'number') {
-      body.temperature = request.temperature;
-    }
-
-    return body;
+    return messages;
   }
 
   private async send(
     request: CompletionRequest,
     stream: boolean,
   ): Promise<Response> {
+    if (!this.apiKey) {
+      throw new AppError(
+        'unauthorized',
+        'GROQ_API_KEY is not configured.',
+        { status: 500 },
+      );
+    }
+
     const controller = new AbortController();
 
     const timer = setTimeout(() => {
@@ -352,6 +289,31 @@ export class AiClient {
       }
     }
 
+    const body: Record<string, unknown> = {
+      model:
+        request.model ||
+        process.env.GROQ_MODEL ||
+        'llama-3.3-70b-versatile',
+
+      messages: this.convertMessages(request),
+
+      max_tokens: request.maxTokens,
+
+      stream,
+
+      temperature:
+        typeof request.temperature === 'number'
+          ? request.temperature
+          : 0.2,
+    };
+
+    const tools = this.normalizeTools(request.tools);
+
+    if (tools?.length) {
+      body.tools = tools;
+      body.tool_choice = 'auto';
+    }
+
     let response: Response;
 
     try {
@@ -360,12 +322,10 @@ export class AiClient {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.apiKey}`,
+            'content-type': 'application/json',
+            authorization: `Bearer ${this.apiKey}`,
           },
-          body: JSON.stringify(
-            this.buildBody(request, stream),
-          ),
+          body: JSON.stringify(body),
           signal: controller.signal,
         },
       );
@@ -380,7 +340,9 @@ export class AiClient {
         );
       }
 
-      if ((err as Error)?.name === 'AbortError') {
+      if (
+        (err as Error)?.name === 'AbortError'
+      ) {
         throw new AppError(
           'timeout',
           'The AI service did not respond in time.',
@@ -389,15 +351,24 @@ export class AiClient {
 
       throw new AppError(
         'upstream_error',
-        `Could not reach the AI service: ${(err as Error)?.message ?? 'Unknown error'}`,
+        `Could not reach Groq: ${
+          (err as Error)?.message ??
+          'Unknown network error'
+        }`,
       );
     }
 
     clearTimeout(timer);
 
     if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw mapHttpError(response.status, text);
+      const text = await response
+        .text()
+        .catch(() => '');
+
+      throw mapGroqHttpError(
+        response.status,
+        text,
+      );
     }
 
     return response;
@@ -406,7 +377,10 @@ export class AiClient {
   async complete(
     request: CompletionRequest,
   ): Promise<AssistantTurn> {
-    const response = await this.send(request, false);
+    const response = await this.send(
+      request,
+      false,
+    );
 
     const json = (await response.json()) as {
       choices?: Array<{
@@ -414,7 +388,7 @@ export class AiClient {
           content?: string | null;
           tool_calls?: Array<{
             id: string;
-            type: string;
+            type: 'function';
             function: {
               name: string;
               arguments: string;
@@ -423,6 +397,7 @@ export class AiClient {
         };
         finish_reason?: string | null;
       }>;
+
       usage?: {
         prompt_tokens?: number;
         completion_tokens?: number;
@@ -441,275 +416,12 @@ export class AiClient {
       });
     }
 
-    for (const toolCall of message?.tool_calls ?? []) {
+    for (const tool of message?.tool_calls ?? []) {
       let input: unknown = {};
 
       try {
-        input = toolCall.function.arguments
-          ? JSON.parse(toolCall.function.arguments)
-          : {};
-      } catch {
-        input = {};
-      }
-
-      content.push({
-        type: 'tool_use',
-        id: toolCall.id,
-        name: toolCall.function.name,
-        input,
-      });
-    }
-
-    let stopReason: string | null =
-      choice?.finish_reason ?? null;
-
-    if (stopReason === 'tool_calls') {
-      stopReason = 'tool_use';
-    }
-
-    return {
-      content,
-      stopReason,
-      usage: {
-        inputTokens: json.usage?.prompt_tokens ?? 0,
-        outputTokens: json.usage?.completion_tokens ?? 0,
-      },
-    };
-  }
-
-  async *stream(
-    request: CompletionRequest,
-  ): AsyncGenerator<ModelStreamEvent> {
-    const response = await this.send(request, true);
-
-    if (!response.body) {
-      throw new AppError(
-        'upstream_error',
-        'The AI service returned an empty stream.',
-      );
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    let buffer = '';
-
-    const textParts: string[] = [];
-
-    const toolCalls = new Map<
-      number,
-      {
-        id: string;
-        name: string;
-        arguments: string;
-      }
-    >();
-
-    let finishReason: string | null = null;
-
-    let inputTokens = 0;
-    let outputTokens = 0;
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) break;
-
-        buffer += decoder.decode(value, {
-          stream: true,
-        });
-
-        const lines = buffer.split('\n');
-
-        buffer = lines.pop() ?? '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-
-          if (!trimmed.startsWith('data:')) {
-            continue;
-          }
-
-          const raw = trimmed.slice(5).trim();
-
-          if (!raw || raw === '[DONE]') {
-            continue;
-          }
-
-          let event: {
-            choices?: Array<{
-              delta?: {
-                content?: string | null;
-                tool_calls?: Array<{
-                  index: number;
-                  id?: string;
-                  type?: string;
-                  function?: {
-                    name?: string;
-                    arguments?: string;
-                  };
-                }>;
-              };
-              finish_reason?: string | null;
-            }>;
-            usage?: {
-              prompt_tokens?: number;
-              completion_tokens?: number;
-            };
-            error?: {
-              message?: string;
-              type?: string;
-            };
-          };
-
-          try {
-            event = JSON.parse(raw);
-          } catch {
-            continue;
-          }
-
-          if (event.error) {
-            throw new AppError(
-              'upstream_error',
-              event.error.message ??
-                'The AI service returned an error.',
-            );
-          }
-
-          if (event.usage) {
-            inputTokens =
-              event.usage.prompt_tokens ?? inputTokens;
-
-            outputTokens =
-              event.usage.completion_tokens ?? outputTokens;
-          }
-
-          const choice = event.choices?.[0];
-
-          if (!choice) {
-            continue;
-          }
-
-          if (choice.finish_reason) {
-            finishReason = choice.finish_reason;
-          }
-
-          const delta = choice.delta;
-
-          if (!delta) {
-            continue;
-          }
-
-          if (delta.content) {
-            textParts.push(delta.content);
-
-            yield {
-              type: 'text_delta',
-              text: delta.content,
-            };
-          }
-
-          for (const toolDelta of delta.tool_calls ?? []) {
-            const index = toolDelta.index;
-
-            let current = toolCalls.get(index);
-
-            if (!current) {
-              current = {
-                id: toolDelta.id ?? `tool_${index}`,
-                name: toolDelta.function?.name ?? '',
-                arguments:
-                  toolDelta.function?.arguments ?? '',
-              };
-
-              toolCalls.set(index, current);
-
-              if (current.name) {
-                yield {
-                  type: 'tool_use_start',
-                  id: current.id,
-                  name: current.name,
-                };
-              }
-            } else {
-              if (toolDelta.id) {
-                current.id = toolDelta.id;
-              }
-
-              if (toolDelta.function?.name) {
-                current.name += toolDelta.function.name;
-              }
-
-              if (toolDelta.function?.arguments) {
-                current.arguments +=
-                  toolDelta.function.arguments;
-              }
-            }
-          }
-        }
-      }
-
-      // Process anything remaining in the buffer.
-      const finalLine = buffer.trim();
-
-      if (finalLine.startsWith('data:')) {
-        const raw = finalLine.slice(5).trim();
-
-        if (raw && raw !== '[DONE]') {
-          try {
-            const event = JSON.parse(raw) as {
-              choices?: Array<{
-                delta?: {
-                  content?: string | null;
-                };
-                finish_reason?: string | null;
-              }>;
-              usage?: {
-                prompt_tokens?: number;
-                completion_tokens?: number;
-              };
-            };
-
-            const choice = event.choices?.[0];
-
-            if (event.usage) {
-              inputTokens =
-                event.usage.prompt_tokens ?? inputTokens;
-
-              outputTokens =
-                event.usage.completion_tokens ?? outputTokens;
-            }
-
-            if (choice?.finish_reason) {
-              finishReason = choice.finish_reason;
-            }
-          } catch {
-            // Ignore incomplete final frame.
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
-
-    const content: ContentBlock[] = [];
-
-    const fullText = textParts.join('');
-
-    if (fullText) {
-      content.push({
-        type: 'text',
-        text: fullText,
-      });
-    }
-
-    for (const tool of toolCalls.values()) {
-      let input: unknown = {};
-
-      try {
-        input = tool.arguments.trim()
-          ? JSON.parse(tool.arguments)
+        input = tool.function.arguments
+          ? JSON.parse(tool.function.arguments)
           : {};
       } catch {
         input = {};
@@ -718,30 +430,378 @@ export class AiClient {
       content.push({
         type: 'tool_use',
         id: tool.id,
-        name: tool.name,
+        name: tool.function.name,
         input,
       });
     }
 
-    if (finishReason === 'tool_calls') {
-      finishReason = 'tool_use';
+    const stopReason =
+      message?.tool_calls?.length
+        ? 'tool_use'
+        : normalizeStopReason(
+            choice?.finish_reason,
+          );
+
+    return {
+      content,
+      stopReason,
+      usage: {
+        inputTokens:
+          json.usage?.prompt_tokens ?? 0,
+        outputTokens:
+          json.usage?.completion_tokens ?? 0,
+      },
+    };
+  }
+
+  async *stream(
+    request: CompletionRequest,
+  ): AsyncGenerator<ModelStreamEvent> {
+    const response = await this.send(
+      request,
+      true,
+    );
+
+    if (!response.body) {
+      throw new AppError(
+        'upstream_error',
+        'Groq returned an empty stream.',
+      );
+    }
+
+    const reader =
+      response.body.getReader();
+
+    const decoder = new TextDecoder();
+
+    let buffer = '';
+
+    const blocks: ContentBlock[] = [];
+
+    const toolState = new Map<
+      number,
+      {
+        id: string;
+        name: string;
+        arguments: string;
+        started: boolean;
+      }
+    >();
+
+    let stopReason: string | null = null;
+
+    const usage = {
+      inputTokens: 0,
+      outputTokens: 0,
+    };
+
+    try {
+      for (;;) {
+        const { done, value } =
+          await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, {
+          stream: true,
+        });
+
+        /*
+         * Groq uses SSE.
+         *
+         * Events are separated by a blank line.
+         */
+        let separator: number;
+
+        while (
+          (separator =
+            buffer.indexOf('\n\n')) !== -1
+        ) {
+          const frame = buffer.slice(
+            0,
+            separator,
+          );
+
+          buffer = buffer.slice(
+            separator + 2,
+          );
+
+          for (const line of frame.split('\n')) {
+            const trimmed =
+              line.trim();
+
+            if (
+              !trimmed.startsWith('data:')
+            ) {
+              continue;
+            }
+
+            const raw = trimmed
+              .slice(5)
+              .trim();
+
+            if (
+              !raw ||
+              raw === '[DONE]'
+            ) {
+              continue;
+            }
+
+            let event: {
+              choices?: Array<{
+                delta?: {
+                  content?: string | null;
+                  tool_calls?: Array<{
+                    index?: number;
+                    id?: string;
+                    type?: string;
+                    function?: {
+                      name?: string;
+                      arguments?: string;
+                    };
+                  }>;
+                };
+                finish_reason?: string | null;
+              }>;
+              usage?: {
+                prompt_tokens?: number;
+                completion_tokens?: number;
+              };
+              error?: {
+                message?: string;
+                type?: string;
+              };
+            };
+
+            try {
+              event =
+                JSON.parse(raw);
+            } catch {
+              continue;
+            }
+
+            if (event.error) {
+              throw new AppError(
+                'upstream_error',
+                event.error.message ??
+                  'Groq returned an error.',
+              );
+            }
+
+            const choice =
+              event.choices?.[0];
+
+            if (!choice) {
+              if (event.usage) {
+                usage.inputTokens =
+                  event.usage
+                    .prompt_tokens ?? 0;
+
+                usage.outputTokens =
+                  event.usage
+                    .completion_tokens ?? 0;
+              }
+
+              continue;
+            }
+
+            const delta =
+              choice.delta;
+
+            /*
+             * Normal text streaming.
+             */
+            if (
+              delta?.content
+            ) {
+              let textBlock =
+                blocks.find(
+                  (block) =>
+                    block.type ===
+                    'text',
+                );
+
+              if (
+                !textBlock ||
+                textBlock.type !==
+                  'text'
+              ) {
+                textBlock = {
+                  type: 'text',
+                  text: '',
+                };
+
+                blocks.push(
+                  textBlock,
+                );
+              }
+
+              textBlock.text +=
+                delta.content;
+
+              yield {
+                type: 'text_delta',
+                text: delta.content,
+              };
+            }
+
+            /*
+             * Tool-call streaming.
+             */
+            for (
+              const call of
+                delta?.tool_calls ??
+                []
+            ) {
+              const index =
+                call.index ?? 0;
+
+              let state =
+                toolState.get(
+                  index,
+                );
+
+              if (!state) {
+                state = {
+                  id:
+                    call.id ??
+                    `call_${index}`,
+                  name:
+                    call.function
+                      ?.name ?? '',
+                  arguments: '',
+                  started: false,
+                };
+
+                toolState.set(
+                  index,
+                  state,
+                );
+              }
+
+              if (call.id) {
+                state.id =
+                  call.id;
+              }
+
+              if (
+                call.function?.name
+              ) {
+                state.name =
+                  call.function.name;
+              }
+
+              if (
+                call.function
+                  ?.arguments
+              ) {
+                state.arguments +=
+                  call.function.arguments;
+              }
+
+              if (
+                !state.started &&
+                state.name
+              ) {
+                state.started = true;
+
+                yield {
+                  type: 'tool_use_start',
+                  id: state.id,
+                  name: state.name,
+                };
+              }
+            }
+
+            if (
+              choice.finish_reason
+            ) {
+              stopReason =
+                choice.finish_reason;
+            }
+
+            if (event.usage) {
+              usage.inputTokens =
+                event.usage
+                  .prompt_tokens ?? 0;
+
+              usage.outputTokens =
+                event.usage
+                  .completion_tokens ?? 0;
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock?.();
+    }
+
+    /*
+     * Convert completed Groq tool calls
+     * into the ContentBlock format expected
+     * by runAgent().
+     */
+    for (
+      const state of toolState.values()
+    ) {
+      let input: unknown = {};
+
+      try {
+        input = state.arguments.trim()
+          ? JSON.parse(
+              state.arguments,
+            )
+          : {};
+      } catch {
+        input = {};
+      }
+
+      blocks.push({
+        type: 'tool_use',
+        id: state.id,
+        name: state.name,
+        input,
+      });
+    }
+
+    if (toolState.size > 0) {
+      stopReason = 'tool_use';
     }
 
     yield {
       type: 'turn_complete',
       turn: {
-        content,
-        stopReason: finishReason,
-        usage: {
-          inputTokens,
-          outputTokens,
-        },
+        content: blocks,
+        stopReason:
+          normalizeStopReason(
+            stopReason,
+          ),
+        usage,
       },
     };
   }
 }
 
-function mapHttpError(
+function normalizeStopReason(
+  reason: string | null | undefined,
+): string | null {
+  if (!reason) return null;
+
+  if (
+    reason === 'tool_calls' ||
+    reason === 'function_call'
+  ) {
+    return 'tool_use';
+  }
+
+  if (reason === 'stop') {
+    return 'end_turn';
+  }
+
+  return reason;
+}
+
+function mapGroqHttpError(
   status: number,
   body: string,
 ): AppError {
@@ -752,40 +812,37 @@ function mapHttpError(
       error?: {
         message?: string;
         type?: string;
+        code?: string;
       };
     };
 
     if (parsed.error?.message) {
-      message = parsed.error.message;
+      message =
+        parsed.error.message;
     }
   } catch {
-    // Keep raw response.
+    // Keep original response text.
   }
 
   const short =
     message.slice(0, 500) ||
     `HTTP ${status}`;
 
-  if (status === 401) {
+  if (
+    status === 401 ||
+    status === 403
+  ) {
     return new AppError(
       'unauthorized',
-      `Groq API key is invalid or missing: ${short}`,
-      { status: 401 },
-    );
-  }
-
-  if (status === 403) {
-    return new AppError(
-      'unauthorized',
-      `Groq rejected the request: ${short}`,
-      { status: 403 },
+      `Groq API key was rejected: ${short}`,
+      { status: 500 },
     );
   }
 
   if (status === 404) {
     return new AppError(
-      'upstream_error',
-      `Groq API endpoint or model was not found: ${short}`,
+      'invalid_request',
+      `Groq endpoint or model was not found. Check GROQ_MODEL. ${short}`,
       { status: 404 },
     );
   }
@@ -794,37 +851,33 @@ function mapHttpError(
     return new AppError(
       'rate_limited',
       `Groq rate limit reached: ${short}`,
-      { status: 429 },
     );
   }
 
-  if (status === 400) {
+  if (
+    status === 400 ||
+    status === 422
+  ) {
     return new AppError(
       'invalid_request',
       `Groq rejected the request: ${short}`,
-      { status: 400 },
     );
   }
 
-  if (status === 413) {
+  if (
+    status === 500 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
+  ) {
     return new AppError(
-      'invalid_request',
-      `The request is too large for Groq: ${short}`,
-      { status: 413 },
-    );
-  }
-
-  if (status === 500 || status === 502 || status === 503) {
-    return new AppError(
-      'upstream_overloaded',
-      `Groq is temporarily unavailable: ${short}`,
-      { status },
+      'upstream_error',
+      `Groq service error (${status}): ${short}`,
     );
   }
 
   return new AppError(
     'upstream_error',
     `Groq API error (${status}): ${short}`,
-    { status },
   );
 }
