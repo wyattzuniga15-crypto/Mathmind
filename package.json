@@ -1,0 +1,37 @@
+{
+  "name": "mathmind",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A modular AI tutoring platform. Math is the first subject module.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "typecheck:lib": "tsc -p tsconfig.lib.json",
+    "test": "tsx --tsconfig tsx.tsconfig.json --test tests/*.test.ts",
+    "test:e2e": "node scripts/e2e.mjs",
+    "verify": "node scripts/verify-project.mjs",
+    "harness": "node scripts/dev-harness.mjs",
+    "check": "npm run test && npm run typecheck:lib && npm run typecheck:ui && npm run verify",
+    "typecheck:ui": "tsc -p tsconfig.ui.json"
+  },
+  "dependencies": {
+    "katex": "^0.16.11",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}

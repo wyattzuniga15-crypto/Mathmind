@@ -1,0 +1,189 @@
+/* CSS requires @import before any other rule, so the KaTeX stylesheet must
+   come first. Placed after the @tailwind directives it is silently dropped
+   and all rendered math loses its styling. */
+@import 'katex/dist/katex.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: 255 255 255;
+  --surface-raised: 249 250 251;
+  --surface-sunken: 243 244 246;
+  --line: 229 231 235;
+  --ink: 17 24 39;
+  --ink-muted: 75 85 99;
+  --ink-faint: 156 163 175;
+  --brand: 79 70 229;
+  --brand-soft: 238 242 255;
+}
+
+.dark {
+  --surface: 15 17 21;
+  --surface-raised: 24 27 33;
+  --surface-sunken: 32 36 44;
+  --line: 46 51 61;
+  --ink: 237 240 245;
+  --ink-muted: 163 170 183;
+  --ink-faint: 116 124 138;
+  --brand: 129 140 248;
+  --brand-soft: 30 32 48;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: rgb(var(--surface));
+  color: rgb(var(--ink));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbars that don't fight the theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--line)) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--line));
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* --- Math rendering --- */
+.katex {
+  font-size: 1.05em;
+}
+.katex-display {
+  margin: 0.9em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.35rem 0;
+}
+.katex-display > .katex {
+  white-space: normal;
+}
+
+/* KaTeX renders errors in red; make that readable instead of alarming */
+.katex-error {
+  color: rgb(var(--ink-muted)) !important;
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+}
+
+/* --- Markdown prose --- */
+.prose-tutor {
+  color: rgb(var(--ink));
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+.prose-tutor > * + * {
+  margin-top: 0.85rem;
+}
+.prose-tutor h1,
+.prose-tutor h2,
+.prose-tutor h3,
+.prose-tutor h4 {
+  font-weight: 650;
+  line-height: 1.3;
+  margin-top: 1.5rem;
+}
+.prose-tutor h1 { font-size: 1.3rem; }
+.prose-tutor h2 { font-size: 1.15rem; }
+.prose-tutor h3 { font-size: 1.03rem; }
+.prose-tutor h4 { font-size: 0.97rem; }
+.prose-tutor ul,
+.prose-tutor ol {
+  padding-left: 1.4rem;
+}
+.prose-tutor ul { list-style: disc; }
+.prose-tutor ol { list-style: decimal; }
+.prose-tutor li + li { margin-top: 0.3rem; }
+.prose-tutor li > ul,
+.prose-tutor li > ol { margin-top: 0.3rem; }
+.prose-tutor a {
+  color: rgb(var(--brand));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-tutor strong { font-weight: 650; }
+.prose-tutor blockquote {
+  border-left: 3px solid rgb(var(--line));
+  padding-left: 0.9rem;
+  color: rgb(var(--ink-muted));
+}
+.prose-tutor hr {
+  border-color: rgb(var(--line));
+  margin: 1.25rem 0;
+}
+.prose-tutor code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.87em;
+  background: rgb(var(--surface-sunken));
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+}
+.prose-tutor pre {
+  background: rgb(var(--surface-sunken));
+  border: 1px solid rgb(var(--line));
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+}
+.prose-tutor pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.85em;
+}
+.prose-tutor table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  display: block;
+  overflow-x: auto;
+}
+.prose-tutor th,
+.prose-tutor td {
+  border: 1px solid rgb(var(--line));
+  padding: 0.45rem 0.7rem;
+  text-align: left;
+}
+.prose-tutor th {
+  background: rgb(var(--surface-sunken));
+  font-weight: 600;
+}
+
+.streaming-caret::after {
+  content: '';
+  display: inline-block;
+  width: 0.5em;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: rgb(var(--brand));
+  border-radius: 1px;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

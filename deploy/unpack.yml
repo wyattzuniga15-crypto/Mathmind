@@ -1,0 +1,104 @@
+name: Unpack project
+
+# One-time helper for setting the repository up from a phone.
+#
+# Upload mathmind.zip to the repository root and this workflow expands it into
+# the real project layout, commits the result, and removes the zip and itself.
+# After it runs once, the repository looks exactly as if it had been pushed
+# from a laptop.
+#
+# It can also be started by hand from the Actions tab.
+
+on:
+  push:
+    paths:
+      - '*.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Find the uploaded archive
+        id: find
+        run: |
+          archive=$(ls -1 *.zip 2>/dev/null | head -1 || true)
+          if [ -z "$archive" ]; then
+            echo "No .zip found at the repository root; nothing to unpack."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found $archive"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "archive=$archive" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Unpack
+        if: steps.find.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+          rm -rf .unpack && mkdir .unpack
+          unzip -q "${{ steps.find.outputs.archive }}" -d .unpack
+
+          # The archive contains a single top-level folder; move its contents up.
+          root=".unpack"
+          entries=$(ls -A "$root" | wc -l)
+          if [ "$entries" -eq 1 ]; then
+            only="$root/$(ls -A "$root")"
+            if [ -d "$only" ]; then root="$only"; fi
+          fi
+
+          if [ ! -f "$root/package.json" ]; then
+            echo "::error::package.json not found in the archive. Is this the right zip?"
+            exit 1
+          fi
+
+          # Trailing /. copies dotfiles too, without relying on shell globbing.
+          cp -R "$root/." .
+
+          rm -rf .unpack "${{ steps.find.outputs.archive }}"
+          # This workflow has done its job; remove it so it cannot run again.
+          rm -f .github/workflows/unpack.yml
+
+          echo "Unpacked files:"
+          ls -A
+
+      - name: Sanity check
+        if: steps.find.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+          for required in package.json next.config.mjs src/app/page.tsx src/app/api/chat/route.ts; do
+            if [ ! -e "$required" ]; then
+              echo "::error::Expected $required after unpacking but it is missing."
+              exit 1
+            fi
+          done
+          if grep -rIl "sk-ant-api" --include="*.ts" --include="*.tsx" --include="*.json" . >/dev/null 2>&1; then
+            echo "::error::An API key appears to be committed. Aborting."
+            exit 1
+          fi
+          echo "Project layout looks correct."
+
+      - name: Commit the project
+        if: steps.find.outputs.found == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "Unpack project from archive"
+            git push
+          fi
+
+      - name: Next steps
+        if: steps.find.outputs.found == 'true'
+        run: |
+          echo "Done. Now import this repository at https://vercel.com/new"
+          echo "and set ANTHROPIC_API_KEY in the project's environment variables."
