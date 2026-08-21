@@ -3,9 +3,26 @@ import type { ToolDefinition } from '../types';
 
 export type ContentBlock =
   | { type: 'text'; text: string }
-  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
-  | { type: 'tool_use'; id: string; name: string; input: unknown }
-  | { type: 'tool_result'; tool_use_id: string; content: string; is_error?: boolean };
+  | {
+      type: 'image';
+      source: {
+        type: 'base64';
+        media_type: string;
+        data: string;
+      };
+    }
+  | {
+      type: 'tool_use';
+      id: string;
+      name: string;
+      input: unknown;
+    }
+  | {
+      type: 'tool_result';
+      tool_use_id: string;
+      content: string;
+      is_error?: boolean;
+    };
 
 export interface ApiMessage {
   role: 'user' | 'assistant';
@@ -25,13 +42,26 @@ export interface CompletionRequest {
 export interface AssistantTurn {
   content: ContentBlock[];
   stopReason: string | null;
-  usage: { inputTokens: number; outputTokens: number };
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+  };
 }
 
 export type ModelStreamEvent =
-  | { type: 'text_delta'; text: string }
-  | { type: 'tool_use_start'; id: string; name: string }
-  | { type: 'turn_complete'; turn: AssistantTurn };
+  | {
+      type: 'text_delta';
+      text: string;
+    }
+  | {
+      type: 'tool_use_start';
+      id: string;
+      name: string;
+    }
+  | {
+      type: 'turn_complete';
+      turn: AssistantTurn;
+    };
 
 export interface AiClientOptions {
   apiKey: string;
@@ -50,11 +80,10 @@ interface GroqToolCall {
 }
 
 interface GroqMessage {
-  role: 'assistant' | 'user' | 'tool' | 'system';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content?: string | null;
   tool_calls?: GroqToolCall[];
   tool_call_id?: string;
-  name?: string;
 }
 
 interface GroqResponse {
@@ -76,59 +105,68 @@ export class AiClient {
 
   constructor(options: AiClientOptions) {
     this.apiKey = options.apiKey;
+
     this.baseUrl = (
       options.baseUrl ?? 'https://api.groq.com/openai/v1'
     ).replace(/\/$/, '');
+
     this.timeoutMs = options.timeoutMs ?? 120_000;
     this.fetchImpl = options.fetchImpl ?? fetch;
   }
 
-  private mapContent(content: string | ContentBlock[]): unknown {
-    if (typeof content === 'string') return content;
+  /**
+   * ToolDefinition differs slightly between versions of this project.
+   * Read the schema dynamically so TypeScript does not require a
+   * specific property name.
+   */
+  private getToolSchema(tool: ToolDefinition): unknown {
+    const value = tool as unknown as Record<string, unknown>;
 
-    return content.map((block) => {
-      if (block.type === 'text') {
-        return {
-          type: 'text',
-          text: block.text,
-        };
+    return (
+      value.inputSchema ??
+      value.input_schema ??
+      value.parameters ??
+      {
+        type: 'object',
+        properties: {},
       }
-
-      if (block.type === 'image') {
-        return {
-          type: 'image_url',
-          image_url: {
-            url: `data:${block.source.media_type};base64,${block.source.data}`,
-          },
-        };
-      }
-
-      if (block.type === 'tool_use') {
-        return {
-          type: 'text',
-          text: '',
-        };
-      }
-
-      if (block.type === 'tool_result') {
-        return {
-          type: 'text',
-          text: block.content,
-        };
-      }
-
-      return {
-        type: 'text',
-        text: '',
-      };
-    });
+    );
   }
 
-  private mapMessages(request: CompletionRequest): GroqMessage[] {
-    const messages: GroqMessage[] = [];
+  private getToolName(tool: ToolDefinition): string {
+    const value = tool as unknown as Record<string, unknown>;
+
+    return String(value.name ?? '');
+  }
+
+  private getToolDescription(tool: ToolDefinition): string {
+    const value = tool as unknown as Record<string, unknown>;
+
+    return String(value.description ?? '');
+  }
+
+  private mapTools(tools?: ToolDefinition[]) {
+    if (!tools?.length) {
+      return undefined;
+    }
+
+    return tools.map((tool) => ({
+      type: 'function' as const,
+      function: {
+        name: this.getToolName(tool),
+        description: this.getToolDescription(tool),
+        parameters: this.getToolSchema(tool),
+      },
+    }));
+  }
+
+  private mapMessages(
+    request: CompletionRequest,
+  ): GroqMessage[] {
+    const result: GroqMessage[] = [];
 
     if (request.system) {
-      messages.push({
+      result.push({
         role: 'system',
         content: request.system,
       });
@@ -136,82 +174,102 @@ export class AiClient {
 
     for (const message of request.messages) {
       if (typeof message.content === 'string') {
-        messages.push({
+        result.push({
           role: message.role,
           content: message.content,
         });
+
         continue;
       }
 
-      const toolUses = message.content.filter(
-        (block): block is Extract<ContentBlock, { type: 'tool_use' }> =>
-          block.type === 'tool_use',
-      );
+      if (message.role === 'assistant') {
+        const text = message.content
+          .filter(
+            (
+              block,
+            ): block is Extract<
+              ContentBlock,
+              { type: 'text' }
+            > => block.type === 'text',
+          )
+          .map((block) => block.text)
+          .join('');
+
+        const toolUses = message.content.filter(
+          (
+            block,
+          ): block is Extract<
+            ContentBlock,
+            { type: 'tool_use' }
+          > => block.type === 'tool_use',
+        );
+
+        result.push({
+          role: 'assistant',
+          content: text || null,
+          ...(toolUses.length
+            ? {
+                tool_calls: toolUses.map((tool) => ({
+                  id: tool.id,
+                  type: 'function' as const,
+                  function: {
+                    name: tool.name,
+                    arguments: JSON.stringify(
+                      tool.input ?? {},
+                    ),
+                  },
+                })),
+              }
+            : {}),
+        });
+
+        continue;
+      }
 
       const toolResults = message.content.filter(
-        (block): block is Extract<ContentBlock, { type: 'tool_result' }> =>
-          block.type === 'tool_result',
+        (
+          block,
+        ): block is Extract<
+          ContentBlock,
+          { type: 'tool_result' }
+        > => block.type === 'tool_result',
       );
 
-      const textBlocks = message.content.filter(
-        (block): block is Extract<ContentBlock, { type: 'text' }> =>
-          block.type === 'text',
-      );
+      const text = message.content
+        .filter(
+          (
+            block,
+          ): block is Extract<
+            ContentBlock,
+            { type: 'text' }
+          > => block.type === 'text',
+        )
+        .map((block) => block.text)
+        .join('');
 
-      if (message.role === 'assistant' && toolUses.length > 0) {
-        messages.push({
-          role: 'assistant',
-          content: textBlocks.map((b) => b.text).join('') || null,
-          tool_calls: toolUses.map((tool) => ({
-            id: tool.id,
-            type: 'function',
-            function: {
-              name: tool.name,
-              arguments: JSON.stringify(tool.input ?? {}),
-            },
-          })),
+      for (const resultBlock of toolResults) {
+        result.push({
+          role: 'tool',
+          tool_call_id: resultBlock.tool_use_id,
+          content: resultBlock.content,
         });
-      } else if (message.role === 'user' && toolResults.length > 0) {
-        for (const result of toolResults) {
-          messages.push({
-            role: 'tool',
-            tool_call_id: result.tool_use_id,
-            content: result.content,
-          });
-        }
+      }
 
-        const text = textBlocks.map((b) => b.text).join('');
-        if (text) {
-          messages.push({
-            role: 'user',
-            content: text,
-          });
-        }
-      } else {
-        messages.push({
-          role: message.role,
-          content: this.mapContent(message.content) as string,
+      if (text) {
+        result.push({
+          role: 'user',
+          content: text,
         });
       }
     }
 
-    return messages;
+    return result;
   }
 
-  private mapTools(tools?: ToolDefinition[]) {
-    if (!tools?.length) return undefined;
-
-    return tools.map((tool) => ({
-      type: 'function',
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters,
-      },
-    }));
-  }
-
-  private buildBody(request: CompletionRequest, stream: boolean) {
+  private buildBody(
+    request: CompletionRequest,
+    stream: boolean,
+  ) {
     const body: Record<string, unknown> = {
       model: request.model,
       messages: this.mapMessages(request),
@@ -219,8 +277,10 @@ export class AiClient {
       stream,
     };
 
-    if (request.tools?.length) {
-      body.tools = this.mapTools(request.tools);
+    const tools = this.mapTools(request.tools);
+
+    if (tools?.length) {
+      body.tools = tools;
       body.tool_choice = 'auto';
     }
 
@@ -264,11 +324,13 @@ export class AiClient {
             'content-type': 'application/json',
             authorization: `Bearer ${this.apiKey}`,
           },
-          body: JSON.stringify(this.buildBody(request, stream)),
+          body: JSON.stringify(
+            this.buildBody(request, stream),
+          ),
           signal: controller.signal,
         },
       );
-    } catch (err) {
+    } catch (error) {
       clearTimeout(timer);
 
       if (request.signal?.aborted) {
@@ -279,7 +341,7 @@ export class AiClient {
         );
       }
 
-      if ((err as Error)?.name === 'AbortError') {
+      if ((error as Error)?.name === 'AbortError') {
         throw new AppError(
           'timeout',
           'The AI service did not respond in time.',
@@ -288,7 +350,9 @@ export class AiClient {
 
       throw new AppError(
         'upstream_error',
-        `Could not reach the AI service: ${(err as Error).message}`,
+        `Could not reach the AI service: ${
+          (error as Error).message
+        }`,
       );
     }
 
@@ -296,16 +360,27 @@ export class AiClient {
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
-      throw mapHttpError(response.status, text);
+
+      throw mapHttpError(
+        response.status,
+        text,
+      );
     }
 
     return response;
   }
 
-  async complete(request: CompletionRequest): Promise<AssistantTurn> {
-    const response = await this.send(request, false);
+  async complete(
+    request: CompletionRequest,
+  ): Promise<AssistantTurn> {
+    const response = await this.send(
+      request,
+      false,
+    );
 
-    const json = (await response.json()) as GroqResponse;
+    const json =
+      (await response.json()) as GroqResponse;
+
     const choice = json.choices?.[0];
 
     if (!choice?.message) {
@@ -325,12 +400,12 @@ export class AiClient {
       });
     }
 
-    for (const tool of message.tool_calls ?? []) {
+    for (const call of message.tool_calls ?? []) {
       let input: unknown = {};
 
       try {
-        input = tool.function.arguments
-          ? JSON.parse(tool.function.arguments)
+        input = call.function.arguments
+          ? JSON.parse(call.function.arguments)
           : {};
       } catch {
         input = {};
@@ -338,8 +413,8 @@ export class AiClient {
 
       content.push({
         type: 'tool_use',
-        id: tool.id,
-        name: tool.function.name,
+        id: call.id,
+        name: call.function.name,
         input,
       });
     }
@@ -351,8 +426,10 @@ export class AiClient {
           ? 'tool_use'
           : choice.finish_reason ?? null,
       usage: {
-        inputTokens: json.usage?.prompt_tokens ?? 0,
-        outputTokens: json.usage?.completion_tokens ?? 0,
+        inputTokens:
+          json.usage?.prompt_tokens ?? 0,
+        outputTokens:
+          json.usage?.completion_tokens ?? 0,
       },
     };
   }
@@ -360,7 +437,10 @@ export class AiClient {
   async *stream(
     request: CompletionRequest,
   ): AsyncGenerator<ModelStreamEvent> {
-    const response = await this.send(request, true);
+    const response = await this.send(
+      request,
+      true,
+    );
 
     if (!response.body) {
       throw new AppError(
@@ -375,6 +455,7 @@ export class AiClient {
     let buffer = '';
 
     const textParts: string[] = [];
+
     const toolCalls = new Map<
       number,
       {
@@ -384,7 +465,7 @@ export class AiClient {
       }
     >();
 
-    let finishReason: string | null = null;
+    let stopReason: string | null = null;
 
     const usage = {
       inputTokens: 0,
@@ -393,25 +474,43 @@ export class AiClient {
 
     try {
       for (;;) {
-        const { done, value } = await reader.read();
+        const { done, value } =
+          await reader.read();
 
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(
+          value,
+          { stream: true },
+        );
 
-        let newlineIndex: number;
+        let newline: number;
 
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-          const line = buffer.slice(0, newlineIndex);
-          buffer = buffer.slice(newlineIndex + 1);
+        while (
+          (newline = buffer.indexOf('\n')) !== -1
+        ) {
+          const line = buffer.slice(
+            0,
+            newline,
+          );
+
+          buffer = buffer.slice(
+            newline + 1,
+          );
 
           const trimmed = line.trim();
 
-          if (!trimmed.startsWith('data:')) continue;
+          if (!trimmed.startsWith('data:')) {
+            continue;
+          }
 
-          const raw = trimmed.slice(5).trim();
+          const raw = trimmed
+            .slice(5)
+            .trim();
 
-          if (!raw || raw === '[DONE]') continue;
+          if (!raw || raw === '[DONE]') {
+            continue;
+          }
 
           let event: {
             choices?: Array<{
@@ -450,20 +549,25 @@ export class AiClient {
               usage.outputTokens;
           }
 
-          const choice = event.choices?.[0];
+          const choice =
+            event.choices?.[0];
 
           if (!choice) continue;
 
           if (choice.finish_reason) {
-            finishReason = choice.finish_reason;
+            stopReason =
+              choice.finish_reason;
           }
 
-          const delta = choice.delta;
+          const delta =
+            choice.delta;
 
           if (!delta) continue;
 
           if (delta.content) {
-            textParts.push(delta.content);
+            textParts.push(
+              delta.content,
+            );
 
             yield {
               type: 'text_delta',
@@ -471,31 +575,53 @@ export class AiClient {
             };
           }
 
-          for (const toolDelta of delta.tool_calls ?? []) {
-            const index = toolDelta.index;
+          for (
+            const toolDelta of
+              delta.tool_calls ?? []
+          ) {
+            const index =
+              toolDelta.index;
 
-            let existing = toolCalls.get(index);
+            let call =
+              toolCalls.get(index);
 
-            if (!existing) {
-              existing = {
-                id: toolDelta.id ?? `tool_${index}`,
-                name: toolDelta.function?.name ?? '',
+            if (!call) {
+              call = {
+                id:
+                  toolDelta.id ??
+                  `tool_${index}`,
+                name:
+                  toolDelta.function
+                    ?.name ?? '',
                 arguments: '',
               };
 
-              toolCalls.set(index, existing);
+              toolCalls.set(
+                index,
+                call,
+              );
             }
 
             if (toolDelta.id) {
-              existing.id = toolDelta.id;
+              call.id =
+                toolDelta.id;
             }
 
-            if (toolDelta.function?.name) {
-              existing.name += toolDelta.function.name;
+            if (
+              toolDelta.function
+                ?.name
+            ) {
+              call.name +=
+                toolDelta.function.name;
             }
 
-            if (toolDelta.function?.arguments) {
-              existing.arguments += toolDelta.function.arguments;
+            if (
+              toolDelta.function
+                ?.arguments
+            ) {
+              call.arguments +=
+                toolDelta.function
+                  .arguments;
             }
           }
         }
@@ -506,7 +632,8 @@ export class AiClient {
 
     const content: ContentBlock[] = [];
 
-    const text = textParts.join('');
+    const text =
+      textParts.join('');
 
     if (text) {
       content.push({
@@ -515,12 +642,16 @@ export class AiClient {
       });
     }
 
-    for (const tool of toolCalls.values()) {
+    for (
+      const call of toolCalls.values()
+    ) {
       let input: unknown = {};
 
       try {
-        input = tool.arguments.trim()
-          ? JSON.parse(tool.arguments)
+        input = call.arguments.trim()
+          ? JSON.parse(
+              call.arguments,
+            )
           : {};
       } catch {
         input = {};
@@ -528,46 +659,52 @@ export class AiClient {
 
       content.push({
         type: 'tool_use',
-        id: tool.id,
-        name: tool.name,
+        id: call.id,
+        name: call.name,
         input,
       });
 
       yield {
         type: 'tool_use_start',
-        id: tool.id,
-        name: tool.name,
+        id: call.id,
+        name: call.name,
       };
     }
 
-    if (finishReason === 'tool_calls' || toolCalls.size > 0) {
-      finishReason = 'tool_use';
+    if (
+      toolCalls.size > 0 ||
+      stopReason === 'tool_calls'
+    ) {
+      stopReason = 'tool_use';
     }
 
     yield {
       type: 'turn_complete',
       turn: {
         content,
-        stopReason: finishReason,
+        stopReason,
         usage,
       },
     };
   }
 }
 
-function mapHttpError(status: number, body: string): AppError {
+function mapHttpError(
+  status: number,
+  body: string,
+): AppError {
   let message = body;
 
   try {
     const parsed = JSON.parse(body) as {
       error?: {
         message?: string;
-        type?: string;
       };
     };
 
     if (parsed.error?.message) {
-      message = parsed.error.message;
+      message =
+        parsed.error.message;
     }
   } catch {
     // Keep raw response.
@@ -577,7 +714,10 @@ function mapHttpError(status: number, body: string): AppError {
     message.slice(0, 400) ||
     `HTTP ${status}`;
 
-  if (status === 401 || status === 403) {
+  if (
+    status === 401 ||
+    status === 403
+  ) {
     return new AppError(
       'unauthorized',
       `The Groq API rejected the API key: ${short}`,
@@ -599,14 +739,10 @@ function mapHttpError(status: number, body: string): AppError {
     );
   }
 
-  if (status === 408 || status === 504) {
-    return new AppError(
-      'timeout',
-      'The Groq AI service timed out.',
-    );
-  }
-
-  if (status === 503) {
+  if (
+    status === 503 ||
+    status === 529
+  ) {
     return new AppError(
       'upstream_overloaded',
       'Groq is temporarily unavailable.',
