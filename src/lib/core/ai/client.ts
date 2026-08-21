@@ -1,13 +1,6 @@
 import { AppError } from '../errors';
 import type { ToolDefinition } from '../types';
 
-/**
- * Minimal streaming client for the Anthropic Messages API built on fetch.
- *
- * Deliberately dependency-free: the whole request/stream path is plain
- * TypeScript, so it can be unit tested with an injected fetch implementation.
- */
-
 export type ContentBlock =
   | { type: 'text'; text: string }
   | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
@@ -35,7 +28,6 @@ export interface AssistantTurn {
   usage: { inputTokens: number; outputTokens: number };
 }
 
-/** Events surfaced while a single model turn streams in. */
 export type ModelStreamEvent =
   | { type: 'text_delta'; text: string }
   | { type: 'tool_use_start'; id: string; name: string }
@@ -45,9 +37,35 @@ export interface AiClientOptions {
   apiKey: string;
   baseUrl?: string;
   timeoutMs?: number;
-  /** Injectable for tests. */
   fetchImpl?: typeof fetch;
-  apiVersion?: string;
+}
+
+interface GroqToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+interface GroqMessage {
+  role: 'assistant' | 'user' | 'tool' | 'system';
+  content?: string | null;
+  tool_calls?: GroqToolCall[];
+  tool_call_id?: string;
+  name?: string;
+}
+
+interface GroqResponse {
+  choices?: Array<{
+    message?: GroqMessage;
+    finish_reason?: string | null;
+  }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+  };
 }
 
 export class AiClient {
@@ -55,180 +73,429 @@ export class AiClient {
   private baseUrl: string;
   private timeoutMs: number;
   private fetchImpl: typeof fetch;
-  private apiVersion: string;
 
   constructor(options: AiClientOptions) {
     this.apiKey = options.apiKey;
-    this.baseUrl = (options.baseUrl ?? 'https://api.anthropic.com').replace(/\/$/, '');
+    this.baseUrl = (
+      options.baseUrl ?? 'https://api.groq.com/openai/v1'
+    ).replace(/\/$/, '');
     this.timeoutMs = options.timeoutMs ?? 120_000;
     this.fetchImpl = options.fetchImpl ?? fetch;
-    this.apiVersion = options.apiVersion ?? '2023-06-01';
+  }
+
+  private mapContent(content: string | ContentBlock[]): unknown {
+    if (typeof content === 'string') return content;
+
+    return content.map((block) => {
+      if (block.type === 'text') {
+        return {
+          type: 'text',
+          text: block.text,
+        };
+      }
+
+      if (block.type === 'image') {
+        return {
+          type: 'image_url',
+          image_url: {
+            url: `data:${block.source.media_type};base64,${block.source.data}`,
+          },
+        };
+      }
+
+      if (block.type === 'tool_use') {
+        return {
+          type: 'text',
+          text: '',
+        };
+      }
+
+      if (block.type === 'tool_result') {
+        return {
+          type: 'text',
+          text: block.content,
+        };
+      }
+
+      return {
+        type: 'text',
+        text: '',
+      };
+    });
+  }
+
+  private mapMessages(request: CompletionRequest): GroqMessage[] {
+    const messages: GroqMessage[] = [];
+
+    if (request.system) {
+      messages.push({
+        role: 'system',
+        content: request.system,
+      });
+    }
+
+    for (const message of request.messages) {
+      if (typeof message.content === 'string') {
+        messages.push({
+          role: message.role,
+          content: message.content,
+        });
+        continue;
+      }
+
+      const toolUses = message.content.filter(
+        (block): block is Extract<ContentBlock, { type: 'tool_use' }> =>
+          block.type === 'tool_use',
+      );
+
+      const toolResults = message.content.filter(
+        (block): block is Extract<ContentBlock, { type: 'tool_result' }> =>
+          block.type === 'tool_result',
+      );
+
+      const textBlocks = message.content.filter(
+        (block): block is Extract<ContentBlock, { type: 'text' }> =>
+          block.type === 'text',
+      );
+
+      if (message.role === 'assistant' && toolUses.length > 0) {
+        messages.push({
+          role: 'assistant',
+          content: textBlocks.map((b) => b.text).join('') || null,
+          tool_calls: toolUses.map((tool) => ({
+            id: tool.id,
+            type: 'function',
+            function: {
+              name: tool.name,
+              arguments: JSON.stringify(tool.input ?? {}),
+            },
+          })),
+        });
+      } else if (message.role === 'user' && toolResults.length > 0) {
+        for (const result of toolResults) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: result.tool_use_id,
+            content: result.content,
+          });
+        }
+
+        const text = textBlocks.map((b) => b.text).join('');
+        if (text) {
+          messages.push({
+            role: 'user',
+            content: text,
+          });
+        }
+      } else {
+        messages.push({
+          role: message.role,
+          content: this.mapContent(message.content) as string,
+        });
+      }
+    }
+
+    return messages;
+  }
+
+  private mapTools(tools?: ToolDefinition[]) {
+    if (!tools?.length) return undefined;
+
+    return tools.map((tool) => ({
+      type: 'function',
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters,
+      },
+    }));
   }
 
   private buildBody(request: CompletionRequest, stream: boolean) {
     const body: Record<string, unknown> = {
       model: request.model,
+      messages: this.mapMessages(request),
       max_tokens: request.maxTokens,
-      system: request.system,
-      messages: request.messages,
       stream,
     };
-    if (request.tools?.length) body.tools = request.tools;
-    if (typeof request.temperature === 'number') body.temperature = request.temperature;
+
+    if (request.tools?.length) {
+      body.tools = this.mapTools(request.tools);
+      body.tool_choice = 'auto';
+    }
+
+    if (typeof request.temperature === 'number') {
+      body.temperature = request.temperature;
+    }
+
     return body;
   }
 
-  private async send(request: CompletionRequest, stream: boolean): Promise<Response> {
+  private async send(
+    request: CompletionRequest,
+    stream: boolean,
+  ): Promise<Response> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    const timer = setTimeout(() => {
+      controller.abort();
+    }, this.timeoutMs);
+
     if (request.signal) {
-      if (request.signal.aborted) controller.abort();
-      else request.signal.addEventListener('abort', () => controller.abort(), { once: true });
+      if (request.signal.aborted) {
+        controller.abort();
+      } else {
+        request.signal.addEventListener(
+          'abort',
+          () => controller.abort(),
+          { once: true },
+        );
+      }
     }
 
     let response: Response;
+
     try {
-      response = await this.fetchImpl(`${this.baseUrl}/v1/messages`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': this.apiKey,
-          'anthropic-version': this.apiVersion,
+      response = await this.fetchImpl(
+        `${this.baseUrl}/chat/completions`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${this.apiKey}`,
+          },
+          body: JSON.stringify(this.buildBody(request, stream)),
+          signal: controller.signal,
         },
-        body: JSON.stringify(this.buildBody(request, stream)),
-        signal: controller.signal,
-      });
+      );
     } catch (err) {
       clearTimeout(timer);
-      if (request.signal?.aborted) throw new AppError('aborted', 'Generation was stopped.', { status: 499 });
-      if ((err as Error)?.name === 'AbortError') {
-        throw new AppError('timeout', 'The AI service did not respond in time.');
+
+      if (request.signal?.aborted) {
+        throw new AppError(
+          'aborted',
+          'Generation was stopped.',
+          { status: 499 },
+        );
       }
-      throw new AppError('upstream_error', `Could not reach the AI service: ${(err as Error).message}`);
+
+      if ((err as Error)?.name === 'AbortError') {
+        throw new AppError(
+          'timeout',
+          'The AI service did not respond in time.',
+        );
+      }
+
+      throw new AppError(
+        'upstream_error',
+        `Could not reach the AI service: ${(err as Error).message}`,
+      );
     }
+
     clearTimeout(timer);
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
       throw mapHttpError(response.status, text);
     }
+
     return response;
   }
 
-  /** Non-streaming call, used for titles and summaries. */
   async complete(request: CompletionRequest): Promise<AssistantTurn> {
     const response = await this.send(request, false);
-    const json = (await response.json()) as {
-      content: ContentBlock[];
-      stop_reason: string | null;
-      usage?: { input_tokens?: number; output_tokens?: number };
-    };
+
+    const json = (await response.json()) as GroqResponse;
+    const choice = json.choices?.[0];
+
+    if (!choice?.message) {
+      throw new AppError(
+        'upstream_error',
+        'The AI service returned an empty response.',
+      );
+    }
+
+    const message = choice.message;
+    const content: ContentBlock[] = [];
+
+    if (message.content) {
+      content.push({
+        type: 'text',
+        text: message.content,
+      });
+    }
+
+    for (const tool of message.tool_calls ?? []) {
+      let input: unknown = {};
+
+      try {
+        input = tool.function.arguments
+          ? JSON.parse(tool.function.arguments)
+          : {};
+      } catch {
+        input = {};
+      }
+
+      content.push({
+        type: 'tool_use',
+        id: tool.id,
+        name: tool.function.name,
+        input,
+      });
+    }
+
     return {
-      content: json.content ?? [],
-      stopReason: json.stop_reason ?? null,
+      content,
+      stopReason:
+        message.tool_calls?.length
+          ? 'tool_use'
+          : choice.finish_reason ?? null,
       usage: {
-        inputTokens: json.usage?.input_tokens ?? 0,
-        outputTokens: json.usage?.output_tokens ?? 0,
+        inputTokens: json.usage?.prompt_tokens ?? 0,
+        outputTokens: json.usage?.completion_tokens ?? 0,
       },
     };
   }
 
-  /** Streams one assistant turn, reassembling content blocks as it goes. */
-  async *stream(request: CompletionRequest): AsyncGenerator<ModelStreamEvent> {
+  async *stream(
+    request: CompletionRequest,
+  ): AsyncGenerator<ModelStreamEvent> {
     const response = await this.send(request, true);
-    if (!response.body) throw new AppError('upstream_error', 'The AI service returned an empty stream.');
+
+    if (!response.body) {
+      throw new AppError(
+        'upstream_error',
+        'The AI service returned an empty stream.',
+      );
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+
     let buffer = '';
 
-    const blocks: ContentBlock[] = [];
-    const partialJson: Record<number, string> = {};
-    let stopReason: string | null = null;
-    const usage = { inputTokens: 0, outputTokens: 0 };
+    const textParts: string[] = [];
+    const toolCalls = new Map<
+      number,
+      {
+        id: string;
+        name: string;
+        arguments: string;
+      }
+    >();
+
+    let finishReason: string | null = null;
+
+    const usage = {
+      inputTokens: 0,
+      outputTokens: 0,
+    };
 
     try {
       for (;;) {
         const { done, value } = await reader.read();
+
         if (done) break;
+
         buffer += decoder.decode(value, { stream: true });
 
-        let sep: number;
-        while ((sep = buffer.indexOf('\n\n')) !== -1) {
-          const frame = buffer.slice(0, sep);
-          buffer = buffer.slice(sep + 2);
-          for (const line of frame.split('\n')) {
-            const trimmed = line.trimStart();
-            if (!trimmed.startsWith('data:')) continue;
-            const raw = trimmed.slice(5).trim();
-            if (!raw || raw === '[DONE]') continue;
-            let event: Record<string, unknown>;
-            try {
-              event = JSON.parse(raw);
-            } catch {
-              continue;
+        let newlineIndex: number;
+
+        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+          const line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+
+          const trimmed = line.trim();
+
+          if (!trimmed.startsWith('data:')) continue;
+
+          const raw = trimmed.slice(5).trim();
+
+          if (!raw || raw === '[DONE]') continue;
+
+          let event: {
+            choices?: Array<{
+              delta?: {
+                content?: string | null;
+                tool_calls?: Array<{
+                  index: number;
+                  id?: string;
+                  function?: {
+                    name?: string;
+                    arguments?: string;
+                  };
+                }>;
+              };
+              finish_reason?: string | null;
+            }>;
+            usage?: {
+              prompt_tokens?: number;
+              completion_tokens?: number;
+            };
+          };
+
+          try {
+            event = JSON.parse(raw);
+          } catch {
+            continue;
+          }
+
+          if (event.usage) {
+            usage.inputTokens =
+              event.usage.prompt_tokens ??
+              usage.inputTokens;
+
+            usage.outputTokens =
+              event.usage.completion_tokens ??
+              usage.outputTokens;
+          }
+
+          const choice = event.choices?.[0];
+
+          if (!choice) continue;
+
+          if (choice.finish_reason) {
+            finishReason = choice.finish_reason;
+          }
+
+          const delta = choice.delta;
+
+          if (!delta) continue;
+
+          if (delta.content) {
+            textParts.push(delta.content);
+
+            yield {
+              type: 'text_delta',
+              text: delta.content,
+            };
+          }
+
+          for (const toolDelta of delta.tool_calls ?? []) {
+            const index = toolDelta.index;
+
+            let existing = toolCalls.get(index);
+
+            if (!existing) {
+              existing = {
+                id: toolDelta.id ?? `tool_${index}`,
+                name: toolDelta.function?.name ?? '',
+                arguments: '',
+              };
+
+              toolCalls.set(index, existing);
             }
 
-            switch (event.type) {
-              case 'message_start': {
-                const message = event.message as { usage?: { input_tokens?: number } } | undefined;
-                usage.inputTokens = message?.usage?.input_tokens ?? 0;
-                break;
-              }
-              case 'content_block_start': {
-                const index = event.index as number;
-                const block = event.content_block as ContentBlock;
-                if (block.type === 'text') {
-                  blocks[index] = { type: 'text', text: block.text ?? '' };
-                } else if (block.type === 'tool_use') {
-                  blocks[index] = { type: 'tool_use', id: block.id, name: block.name, input: {} };
-                  partialJson[index] = '';
-                  yield { type: 'tool_use_start', id: block.id, name: block.name };
-                }
-                break;
-              }
-              case 'content_block_delta': {
-                const index = event.index as number;
-                const delta = event.delta as { type: string; text?: string; partial_json?: string };
-                if (delta.type === 'text_delta' && delta.text) {
-                  const existing = blocks[index];
-                  if (existing && existing.type === 'text') existing.text += delta.text;
-                  else blocks[index] = { type: 'text', text: delta.text };
-                  yield { type: 'text_delta', text: delta.text };
-                } else if (delta.type === 'input_json_delta') {
-                  partialJson[index] = (partialJson[index] ?? '') + (delta.partial_json ?? '');
-                }
-                break;
-              }
-              case 'content_block_stop': {
-                const index = event.index as number;
-                const block = blocks[index];
-                if (block && block.type === 'tool_use') {
-                  const raw = partialJson[index] ?? '';
-                  try {
-                    block.input = raw.trim() ? JSON.parse(raw) : {};
-                  } catch {
-                    block.input = {};
-                  }
-                }
-                break;
-              }
-              case 'message_delta': {
-                const delta = event.delta as { stop_reason?: string | null } | undefined;
-                const u = event.usage as { output_tokens?: number } | undefined;
-                if (delta?.stop_reason !== undefined) stopReason = delta.stop_reason;
-                if (u?.output_tokens) usage.outputTokens = u.output_tokens;
-                break;
-              }
-              case 'error': {
-                const e = event.error as { message?: string; type?: string } | undefined;
-                throw new AppError(
-                  e?.type === 'overloaded_error' ? 'upstream_overloaded' : 'upstream_error',
-                  e?.message ?? 'The AI service reported an error.',
-                );
-              }
-              default:
-                break;
+            if (toolDelta.id) {
+              existing.id = toolDelta.id;
+            }
+
+            if (toolDelta.function?.name) {
+              existing.name += toolDelta.function.name;
+            }
+
+            if (toolDelta.function?.arguments) {
+              existing.arguments += toolDelta.function.arguments;
             }
           }
         }
@@ -237,29 +504,117 @@ export class AiClient {
       reader.releaseLock?.();
     }
 
+    const content: ContentBlock[] = [];
+
+    const text = textParts.join('');
+
+    if (text) {
+      content.push({
+        type: 'text',
+        text,
+      });
+    }
+
+    for (const tool of toolCalls.values()) {
+      let input: unknown = {};
+
+      try {
+        input = tool.arguments.trim()
+          ? JSON.parse(tool.arguments)
+          : {};
+      } catch {
+        input = {};
+      }
+
+      content.push({
+        type: 'tool_use',
+        id: tool.id,
+        name: tool.name,
+        input,
+      });
+
+      yield {
+        type: 'tool_use_start',
+        id: tool.id,
+        name: tool.name,
+      };
+    }
+
+    if (finishReason === 'tool_calls' || toolCalls.size > 0) {
+      finishReason = 'tool_use';
+    }
+
     yield {
       type: 'turn_complete',
-      turn: { content: blocks.filter(Boolean), stopReason, usage },
+      turn: {
+        content,
+        stopReason: finishReason,
+        usage,
+      },
     };
   }
 }
 
 function mapHttpError(status: number, body: string): AppError {
   let message = body;
+
   try {
-    const parsed = JSON.parse(body) as { error?: { message?: string; type?: string } };
-    if (parsed.error?.message) message = parsed.error.message;
+    const parsed = JSON.parse(body) as {
+      error?: {
+        message?: string;
+        type?: string;
+      };
+    };
+
+    if (parsed.error?.message) {
+      message = parsed.error.message;
+    }
   } catch {
-    /* keep raw body */
+    // Keep raw response.
   }
-  const short = message.slice(0, 400) || `HTTP ${status}`;
+
+  const short =
+    message.slice(0, 400) ||
+    `HTTP ${status}`;
+
   if (status === 401 || status === 403) {
-    return new AppError('unauthorized', `The AI service rejected the API key: ${short}`, { status: 500 });
+    return new AppError(
+      'unauthorized',
+      `The Groq API rejected the API key: ${short}`,
+      { status: 500 },
+    );
   }
-  if (status === 429) return new AppError('rate_limited', `Rate limited by the AI service: ${short}`);
-  if (status === 400) return new AppError('invalid_request', `The AI service rejected the request: ${short}`);
-  if (status === 529 || status === 503) {
-    return new AppError('upstream_overloaded', 'The AI service is temporarily overloaded.');
+
+  if (status === 429) {
+    return new AppError(
+      'rate_limited',
+      `Groq rate limit reached: ${short}`,
+    );
   }
-  return new AppError('upstream_error', `AI service error (${status}): ${short}`);
+
+  if (status === 400) {
+    return new AppError(
+      'invalid_request',
+      `Groq rejected the request: ${short}`,
+    );
+  }
+
+  if (status === 408 || status === 504) {
+    return new AppError(
+      'timeout',
+      'The Groq AI service timed out.',
+    );
+  }
+
+  if (status === 503) {
+    return new AppError(
+      'upstream_overloaded',
+      'Groq is temporarily unavailable.',
+    );
+  }
+
+  return new AppError(
+    'upstream_error',
+    `Groq API error (${status}): ${short}`,
+  );
 }
