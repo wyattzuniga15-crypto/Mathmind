@@ -1,105 +1,80 @@
-import '@/lib/subjects';
-import { getSubject } from '@/lib/core/registry';
-import { getServerConfig } from '@/lib/core/env';
-import { AppError, toAppError } from '@/lib/core/errors';
-import { parseChatRequest } from '@/lib/core/validate';
-import { resolveIdentity, clientKey } from '@/lib/core/auth';
-import { rateLimiter, rateLimitHeaders, assertAllowed } from '@/lib/core/ratelimit';
-import { buildContext, summarizeDropped } from '@/lib/core/memory';
-import { eventStreamResponse } from '@/lib/core/sse';
-import { AiClient } from '@/lib/core/ai/client';
-import { runAgent } from '@/lib/core/ai/agent';
-import type { StreamEvent } from '@/lib/core/types';
+import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "openai/gpt-oss-120b";
 
-/**
- * The only path from browser to model.
- *
- * The API key lives in process.env on the server and is never serialised into
- * any response. The browser talks to this route; this route talks to Anthropic.
- */
-export async function POST(request: Request) {
-  let limitHeaders: Record<string, string> = {};
+export async function POST(req: NextRequest) {
   try {
-    const config = getServerConfig();
+    const body = await req.json();
 
-    const { identity, setCookie } = await resolveIdentity(request, {
-      adapter: null, // swap in a real AuthAdapter here to require accounts
-      required: config.authRequired,
-    });
+    const messages = Array.isArray(body.messages)
+      ? body.messages
+      : [];
 
-    const limit = await rateLimiter.check(clientKey(request, identity), [
-      { name: 'chat_minute', limit: config.rateLimitPerMinute, windowMs: 60_000 },
-      { name: 'chat_day', limit: config.rateLimitPerDay, windowMs: 86_400_000 },
-    ]);
-    // Carry the limit headers onto a 429 too, so clients can back off correctly.
-    limitHeaders = rateLimitHeaders(limit);
-    assertAllowed(limit);
-
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      throw new AppError('invalid_request', 'Request body must be valid JSON.');
+    if (messages.length === 0) {
+      return NextResponse.json(
+        { error: "No messages provided." },
+        { status: 400 }
+      );
     }
 
-    const parsed = parseChatRequest(body);
-    const subject = getSubject(parsed.subjectId);
-    if (subject.status !== 'available') {
-      throw new AppError('unknown_subject', `The ${subject.name} module is not available yet.`);
+    const apiKey = process.env.GROQ_API_KEY;
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "GROQ_API_KEY is missing from Vercel." },
+        { status: 500 }
+      );
     }
-    const mode = subject.modes.find((m) => m.id === parsed.mode)?.id ?? subject.defaultMode;
 
-    const context = buildContext(parsed.messages);
-    const memorySummary =
-      parsed.memorySummary ?? summarizeDropped(parsed.messages, context.droppedCount);
-
-    const lastMessage = parsed.messages[parsed.messages.length - 1];
-    const system = subject.buildSystemPrompt({
-      mode,
-      level: parsed.level,
-      memorySummary,
-      sessionNotes: [...context.sessionNotes, ...(parsed.sessionNotes ?? [])],
-      hasImages: Boolean(lastMessage.images?.length),
+    const response = await fetch(GROQ_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages,
+        temperature: 0.3,
+        max_tokens: 4096,
+      }),
     });
 
-    const client = new AiClient({
-      apiKey: config.apiKey,
-      baseUrl: config.apiBaseUrl,
-      timeoutMs: config.requestTimeoutMs,
-    });
+    const data = await response.json();
 
-    const events = runAgent({
-      client,
-      subject,
-      system,
-      messages: context.messages,
-      model: config.model,
-      maxTokens: config.maxTokens,
-      maxIterations: config.maxToolIterations,
-      context: { subjectId: subject.id, mode, level: parsed.level },
-      signal: request.signal,
-    });
+    if (!response.ok) {
+      console.error("Groq API error:", data);
 
-    const headers: Record<string, string> = { ...rateLimitHeaders(limit) };
-    if (setCookie) headers['Set-Cookie'] = setCookie;
-    return eventStreamResponse(events, { headers });
-  } catch (err) {
-    const appError = toAppError(err);
-    // Errors raised before the stream opens are returned as JSON, but the client
-    // also accepts an SSE error frame, so shape both the same way.
-    const event: StreamEvent = {
-      type: 'error',
-      message: appError.message,
-      code: appError.code,
-      retryable: appError.retryable,
-    };
-    return new Response(JSON.stringify({ ...appError.toJSON(), event }), {
-      status: appError.status,
-      headers: { 'Content-Type': 'application/json', ...limitHeaders },
+      return NextResponse.json(
+        {
+          error:
+            data?.error?.message ||
+            `Groq API returned HTTP ${response.status}`,
+        },
+        { status: response.status }
+      );
+    }
+
+    const answer =
+      data?.choices?.[0]?.message?.content ||
+      "I couldn't generate a response.";
+
+    return NextResponse.json({
+      message: answer,
+      model: MODEL,
     });
+  } catch (error) {
+    console.error("Chat API error:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown server error",
+      },
+      { status: 500 }
+    );
   }
 }
