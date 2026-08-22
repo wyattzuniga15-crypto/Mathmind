@@ -81,6 +81,16 @@ export interface SubjectModule {
   defaultMode: string;
   /** Deterministic tools this subject exposes to the model. */
   tools: SubjectTool[];
+  /**
+   * Optional: narrow the tool schemas advertised upstream for one question.
+   *
+   * Every schema is paid for on each call of the agent loop, so a subject with
+   * many tools can spend its whole token budget describing tools the question
+   * will never use. Returning a subset is an optimisation only — the agent
+   * still dispatches against the full `tools` list, so a model that names a
+   * tool outside the subset gets a real execution.
+   */
+  selectTools?: (input: { mode: string; text: string }) => SubjectTool[];
   /** Builds the full system prompt for a request. */
   buildSystemPrompt: (context: PromptContext) => string;
   /** Example prompts for the empty state. */

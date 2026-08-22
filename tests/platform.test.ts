@@ -454,6 +454,107 @@ test('client maps auth failures to a clear error', async () => {
   );
 });
 
+/* --------------------------- tool selection ----------------------------- */
+
+const pick = (mode: string, text: string) =>
+  mathSubject.selectTools!({ mode, text }).map((t) => t.definition.name);
+
+test('tool selection always offers exact arithmetic', () => {
+  for (const text of ['1+1', 'why did you subtract 5?', 'what is a derivative', '']) {
+    assert.ok(pick('solve', text).includes('calculate'), `calculate missing for ${JSON.stringify(text)}`);
+  }
+});
+
+test('tool selection recognises each specialised tool from a student phrasing', () => {
+  // A regex regression here would silently hide a tool from the model, which
+  // looks like the tutor "forgetting" how to do a whole topic.
+  const cases: [string, string][] = [
+    ['What is the derivative of x^2*sin(x)?', 'differentiate'],
+    ['Integrate x^2 from 0 to 3', 'integrate'],
+    ['What is the limit of (x^2-1)/(x-1) as x approaches 1?', 'limit'],
+    ['Find the determinant of this matrix', 'matrix'],
+    ['Find the mean and standard deviation of 4, 8, 15', 'statistics'],
+    ['What is the probability of rolling two sixes?', 'probability'],
+    ['Graph y = x^2 - 4', 'plot_function'],
+    ['Solve 3x - 6 > 0', 'solve_inequality'],
+    ['Solve the system 2x + 3y = 12 and x - y = 1', 'solve_system'],
+    ['Factor x^2 - 5x + 6', 'factor_polynomial'],
+    ['Simplify (x+1)(x-2) + 3x', 'simplify_expression'],
+    ['Did I do this right?', 'check_work'],
+    ['Is 2(x+3) equivalent to 2x+6?', 'check_equivalent'],
+    ['Solve 2x + 5 = 15', 'solve_equation'],
+  ];
+  for (const [text, expected] of cases) {
+    assert.ok(pick('solve', text).includes(expected), `${JSON.stringify(text)} should offer ${expected}`);
+  }
+});
+
+test('tool selection narrows the payload instead of sending everything', () => {
+  const derivative = pick('solve', 'What is the derivative of x^2*sin(x)?');
+  assert.ok(derivative.length < mathSubject.tools.length);
+  assert.ok(!derivative.includes('matrix'), 'a derivative question does not need the matrix schema');
+  assert.ok(!derivative.includes('probability'));
+});
+
+test('tool selection reads a bare pair of equations as a system', () => {
+  assert.ok(pick('solve', '2x + 3y = 12, x - y = 1').includes('solve_system'));
+});
+
+test('tool selection gives a context-free follow-up more than arithmetic', () => {
+  const names = pick('explain', 'why did you subtract 5?');
+  assert.ok(names.length > 1, 'a follow-up should still carry the everyday tools');
+  assert.ok(names.includes('solve_equation'));
+});
+
+test('check mode always carries the tool that diagnoses student work', () => {
+  assert.ok(pick('check', 'x = 8').includes('check_work'));
+});
+
+test('tool selection stays bounded and always returns real tools', () => {
+  const kitchenSink =
+    'graph the derivative and integral, find the limit, the matrix determinant, the mean, ' +
+    'the probability, factor it, simplify it, solve 2x = 4 and x + y = 3, is it equivalent, ' +
+    'did I do this right, and is 3x - 6 > 0';
+  const names = pick('solve', kitchenSink);
+  assert.ok(names.length <= 8, `selection must stay bounded, got ${names.length}`);
+  const real = new Set(mathSubject.tools.map((t) => t.definition.name));
+  for (const name of names) assert.ok(real.has(name), `${name} is not a real tool`);
+  assert.equal(new Set(names).size, names.length, 'no duplicates');
+});
+
+test('a tool left out of the selection still executes if the model calls it', async () => {
+  // This is what makes narrowing safe: the selection is an advertising choice,
+  // not an access-control list. If it ever guesses wrong, the model can still
+  // reach the engine and the student still gets verified math.
+  const events: StreamEvent[] = [];
+  const client = new AiClient({
+    apiKey: 'test-key',
+    fetchImpl: (async () =>
+      mockStreamResponse(toolTurn('solve_equation', { equation: '2x + 5 = 15' }))) as unknown as typeof fetch,
+  });
+  for await (const e of runAgent({
+    client,
+    subject: mathSubject,
+    system: 'test',
+    messages: [{ role: 'user', content: '2x + 5 = 15' }],
+    model: 'test-model',
+    maxTokens: 100,
+    maxIterations: 1,
+    context: { subjectId: 'math', mode: 'solve', level: 'auto' },
+    // Deliberately advertise only calculate, then have the model call something else.
+    advertisedTools: mathSubject.tools.filter((t) => t.definition.name === 'calculate'),
+  })) {
+    events.push(e);
+  }
+
+  const result = events.find((e) => e.type === 'tool_result') as
+    | { type: 'tool_result'; name: string; result: { ok: boolean } }
+    | undefined;
+  assert.ok(result, 'the unadvertised tool should still have run');
+  assert.equal(result!.name, 'solve_equation');
+  assert.equal(result!.result.ok, true, 'and it should have produced a real verified result');
+});
+
 test('every math tool has a valid schema and executes', async () => {
   for (const tool of mathSubject.tools) {
     assert.match(tool.definition.name, /^[a-z_]+$/);

@@ -3,6 +3,7 @@ import { createId } from '../sse';
 import type {
   StreamEvent,
   SubjectModule,
+  SubjectTool,
   ToolCallRecord,
   ToolExecutionContext,
   ToolResultPayload,
@@ -19,6 +20,12 @@ export interface AgentRunOptions {
   maxIterations: number;
   context: ToolExecutionContext;
   signal?: AbortSignal;
+  /**
+   * Schemas to advertise upstream. Defaults to every tool the subject has.
+   * Narrowing this saves tokens on each call; it never limits what can run,
+   * because dispatch below still uses the subject's full tool list.
+   */
+  advertisedTools?: SubjectTool[];
 }
 
 /**
@@ -29,7 +36,7 @@ export interface AgentRunOptions {
 export async function* runAgent(options: AgentRunOptions): AsyncGenerator<StreamEvent> {
   const { client, subject, system, model, maxTokens, maxIterations, context, signal } = options;
   const toolMap = new Map(subject.tools.map((t) => [t.definition.name, t]));
-  const toolDefs = subject.tools.map((t) => t.definition);
+  const toolDefs = (options.advertisedTools ?? subject.tools).map((t) => t.definition);
   const conversation: ApiMessage[] = [...options.messages];
   const messageId = createId('msg');
   const allToolCalls: ToolCallRecord[] = [];

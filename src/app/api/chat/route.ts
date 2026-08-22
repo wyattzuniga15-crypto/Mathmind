@@ -88,10 +88,21 @@ export async function POST(request: Request) {
       timeoutMs: config.requestTimeoutMs,
     });
 
+    // Advertise only the tools this question could plausibly need. The agent
+    // still dispatches against the subject's full list, so this costs nothing
+    // but the tokens it saves. Both the current message and the problem under
+    // discussion feed the choice, so a follow-up like "why did you subtract 5?"
+    // still gets the tools for the problem it refers to.
+    const advertisedTools = subject.selectTools?.({
+      mode,
+      text: [context.activeProblem ?? '', lastMessage.content].join('\n'),
+    });
+
     const events = runAgent({
       client,
       subject,
       system,
+      advertisedTools,
       messages: context.messages,
       model: config.model,
       maxTokens: config.maxTokens,

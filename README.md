@@ -157,6 +157,29 @@ src/
 
 ---
 
+## Token budget
+
+Every tool schema is re-sent on each call of the agent loop, and one tutored
+answer costs at least two calls: one to choose the tool, one to explain the
+verified result. All fifteen schemas together run about 2400 tokens, which is
+enough on a small per-minute quota to exhaust the budget before the explanation
+can start.
+
+So `src/lib/subjects/math/select.ts` advertises only the tools a question could
+plausibly need — about 500 tokens instead of 2400. Descriptions are never
+shortened: they are what teach the model when to reach for exact computation
+instead of doing arithmetic in its head.
+
+Narrowing is an optimisation, never a restriction. `runAgent` dispatches
+against the subject's full tool list, so a model that names a tool outside the
+selection still gets a real execution. There is a test that pins exactly this.
+
+`AI_MAX_TOKENS` is the other half: providers commonly bill the reservation
+against the quota even when the reply is shorter, so raising it buys longer
+answers and costs tool round-trips.
+
+---
+
 ## When answers stop working
 
 Open `/api/diag` on the deployment. It runs the pipeline server-side and names
