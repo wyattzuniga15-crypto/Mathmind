@@ -5,10 +5,10 @@ import { world, system } from "@minecraft/server";
 // block the player is looking at (or on the player if they're aiming at air).
 
 const CANNON_ID = "orbital:strike_cannon";
-const TNT_COUNT = 500; // total TNT per strike
+const TNT_COUNT = 5000; // total TNT per strike
 const DROP_HEIGHT = 60; // how far above the target the TNT spawns
-const STRIKE_RADIUS = 14; // horizontal spread of the barrage
-const BATCH_PER_TICK = 20; // TNT spawned per tick, so 500 arrive over ~1.25s
+const STRIKE_RADIUS = 30; // horizontal spread of the barrage
+const BATCH_PER_TICK = 50; // TNT spawned per tick, so 5000 arrive over ~5s
 
 world.afterEvents.itemUse.subscribe((event) => {
   if (event.itemStack?.typeId !== CANNON_ID) return;
@@ -24,7 +24,7 @@ world.afterEvents.itemUse.subscribe((event) => {
   } catch {}
 
   player.onScreenDisplay.setTitle("§c☄ ORBITAL STRIKE ☄", {
-    subtitle: "§6Incoming: 500 TNT",
+    subtitle: `§6Incoming: ${TNT_COUNT} TNT`,
     fadeInDuration: 5,
     stayDuration: 40,
     fadeOutDuration: 10
