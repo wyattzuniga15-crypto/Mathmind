@@ -140,8 +140,13 @@ pipeline server-side and names the broken step: missing key, rejected key, a
 model ID Groq has retired, or a model that cannot call tools. It never prints
 your key.
 
-If it reports a retired model, set `GROQ_MODEL` to a current ID from
-`console.groq.com/docs/models` and redeploy.
+It also lists every model your key can use right now. If `GROQ_MODEL` is set to
+something no longer on that list, Groq retired it — set the variable to one of
+the listed IDs and redeploy, or delete the variable to fall back to the default.
+
+The simplest working setup is **no `GROQ_MODEL` variable at all**: the app
+defaults to `openai/gpt-oss-120b`, which supports the tool calling the math
+engine depends on.
 
 ---
 
