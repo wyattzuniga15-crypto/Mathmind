@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Offline stand-in for the Anthropic Messages API.
+ * Offline stand-in for the Groq chat completions API.
  *
  * SCOPE: this replaces ONLY the language model, and only when no API key is
  * available. It speaks the real SSE wire format, so the application's client,
@@ -12,7 +12,7 @@
  * tool_result. That is what makes the end-to-end test meaningful: every number
  * rendered in the browser came from the engine, not from this file.
  *
- * Never used by the Next.js application. Point ANTHROPIC_BASE_URL at it.
+ * Never used by the Next.js application. Point GROQ_BASE_URL at it.
  */
 import { createServer } from 'node:http';
 

@@ -80,9 +80,17 @@ type GroqTool = {
   };
 };
 
+/**
+ * OpenAI-compatible multimodal content part. Groq's vision models take images
+ * as a data URL under `image_url`; there is no `image` block type on the wire.
+ */
+type GroqContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } };
+
 type GroqMessage = {
   role: 'system' | 'user' | 'assistant' | 'tool';
-  content?: string | null;
+  content?: string | GroqContentPart[] | null;
   tool_calls?: Array<{
     id: string;
     type: 'function';
@@ -198,11 +206,26 @@ export class AiClient {
        * Content blocks.
        */
       const textParts: string[] = [];
+      const imageParts: GroqContentPart[] = [];
       const toolCalls: GroqMessage['tool_calls'] = [];
 
       for (const block of message.content) {
         if (block.type === 'text') {
           textParts.push(block.text);
+        }
+
+        /*
+         * A photographed problem is the whole request for a lot of students.
+         * Dropping the image here would leave the model guessing from an empty
+         * prompt, so carry it through as a data URL.
+         */
+        if (block.type === 'image') {
+          imageParts.push({
+            type: 'image_url',
+            image_url: {
+              url: `data:${block.source.media_type};base64,${block.source.data}`,
+            },
+          });
         }
 
         if (block.type === 'tool_use') {
@@ -248,6 +271,17 @@ export class AiClient {
         }
 
         messages.push(assistantMessage);
+      } else if (imageParts.length) {
+        const parts: GroqContentPart[] = [];
+        if (textParts.length) {
+          parts.push({ type: 'text', text: textParts.join('') });
+        }
+        parts.push(...imageParts);
+
+        messages.push({
+          role: 'user',
+          content: parts,
+        });
       } else if (textParts.length) {
         messages.push({
           role: 'user',

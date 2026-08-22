@@ -356,6 +356,45 @@ test('agent surfaces upstream errors as error events', async () => {
   assert.equal(error.retryable, true);
 });
 
+test('client sends uploaded images to the model as image parts', async () => {
+  // A photographed problem is the entire question for many students. If the
+  // image never reaches the wire, the model answers a blank prompt.
+  let sent: { messages: { role: string; content: unknown }[] } | null = null;
+  const client = new AiClient({
+    apiKey: 'test-key',
+    fetchImpl: (async (_url: string, init: { body: string }) => {
+      sent = JSON.parse(init.body) as typeof sent;
+      return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch,
+  });
+
+  await client.complete({
+    model: 'm',
+    system: 's',
+    maxTokens: 16,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAAB' } },
+          { type: 'text', text: 'Solve the problem in this photo.' },
+        ],
+      },
+    ],
+  });
+
+  const userMessage = sent!.messages.find((m) => m.role === 'user');
+  assert.ok(Array.isArray(userMessage!.content), 'image messages must use content parts');
+  const parts = userMessage!.content as { type: string; text?: string; image_url?: { url: string } }[];
+  assert.ok(parts.some((p) => p.type === 'text' && p.text === 'Solve the problem in this photo.'));
+  const image = parts.find((p) => p.type === 'image_url');
+  assert.ok(image, 'the image must survive the conversion to the provider format');
+  assert.equal(image!.image_url!.url, 'data:image/png;base64,AAAB');
+});
+
 test('client maps auth failures to a clear error', async () => {
   const client = new AiClient({
     apiKey: 'bad',

@@ -15,11 +15,11 @@ an included unpack workflow, and Vercel. No terminal required.
 
 ```bash
 npm install
-cp .env.example .env.local     # add your ANTHROPIC_API_KEY
+cp .env.example .env.local     # add your GROQ_API_KEY
 npm run dev                    # http://localhost:3000
 ```
 
-Get an API key at https://console.anthropic.com/settings/keys.
+Get a free API key at https://console.groq.com/keys.
 
 If the key is missing, the app loads and tells you exactly what to fix rather than failing silently.
 
@@ -29,7 +29,7 @@ If the key is missing, the app loads and tells you exactly what to fix rather th
 | --- | --- |
 | `npm run dev` | Start the dev server |
 | `npm run build` / `npm start` | Production build and serve |
-| `npm test` | Unit suite (78 tests, no network or API key needed) |
+| `npm test` | Unit suite (79 tests, no network or API key needed) |
 | `npm run test:e2e` | End-to-end browser test of the real UI (see below) |
 | `npm run typecheck` | TypeScript across the whole project |
 | `npm run typecheck:lib` | Strict check of the dependency-free core |
@@ -48,7 +48,7 @@ persistence across reload, theme switching, error display, and that no secret
 reaches the client bundle.
 
 By default the **language model** — and only the language model — is replaced by
-`scripts/mock-upstream.mjs`, a local server speaking the Anthropic SSE wire
+`scripts/mock-upstream.mjs`, a local server speaking the Groq/OpenAI SSE wire
 format. It never invents math: it requests a real tool call and builds its reply
 from the values the engine returns, so every number asserted in the browser came
 from the engine. With a key present, `node scripts/e2e.mjs --live` runs the same
@@ -57,6 +57,16 @@ suite against the real model.
 `scripts/dev-harness.mjs` serves the app (esbuild bundle + Tailwind + the real
 route handlers) for environments where `next dev` is unavailable. Production
 runs on Next.js; the harness is a test tool.
+
+Playwright drives the browser and is installed on demand rather than declared
+as a dependency, so it never lands in a production build:
+
+```bash
+npm install --no-save playwright && npx playwright install chromium
+```
+
+On a machine that already has a Chromium, point
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` at it and skip the download.
 
 ## Dependencies
 
@@ -116,12 +126,13 @@ src/
 │   ├── api/subjects/   Subject + mode metadata, drives the whole UI
 │   ├── api/title/      Auto-naming for conversations
 │   ├── api/health/     Configuration check
+│   ├── api/diag/       Self-diagnosis: key, model ID, tool-calling support
 │   └── page.tsx
 ├── components/         ChatApp, Sidebar, MessageList, Composer, MarkdownMath, ToolTrace
 ├── hooks/              useChat (streaming, stop, regenerate), useTheme
 └── lib/
     ├── core/           SUBJECT-AGNOSTIC PLATFORM
-    │   ├── ai/client   Anthropic Messages API over fetch (no SDK)
+    │   ├── ai/client   Groq chat completions over fetch (no SDK)
     │   ├── ai/agent    Tool-calling loop → stream events
     │   ├── registry    Subject registration
     │   ├── memory      Context trimming, follow-up resolution
@@ -139,10 +150,28 @@ src/
 
 ### Security
 
-- `ANTHROPIC_API_KEY` is read **only** in `src/lib/core/env.ts`, only on the server. `npm run verify` fails the build if that is ever violated or if a client file references a server env var.
-- No `NEXT_PUBLIC_` secret exists. The browser talks to `/api/chat`; only the server talks to Anthropic.
+- `GROQ_API_KEY` is read **only** in `src/lib/core/env.ts`, only on the server. `npm run verify` fails the build if that is ever violated or if a client file references a server env var.
+- No `NEXT_PUBLIC_` secret exists. The browser talks to `/api/chat`; only the server talks to Groq.
 - Request validation runs before any upstream call: message counts, per-message and total length, image MIME types, and a 5MB image cap.
 - Rate limiting buckets anonymous clients by request origin rather than by cookie, so dropping the cookie does not reset the limit. Swap `MemoryRateLimitStore` for Redis in production.
+
+---
+
+## When answers stop working
+
+Open `/api/diag` on the deployment. It runs the pipeline server-side and names
+the failing step — no key, rejected key, a model ID Groq has retired, or a model
+that cannot call tools — without ever printing the key.
+
+Two invariants are worth stating because breaking either produces a blank chat
+rather than an error:
+
+- **`/api/chat` must return an SSE stream.** The browser reads it with an
+  incremental SSE parser, so a route that returns plain JSON on the success path
+  renders as an empty reply.
+- **The agent loop must receive the subject's tools.** Without them the model
+  does its own arithmetic and nothing is verified, which is the failure mode this
+  project exists to prevent.
 
 ---
 

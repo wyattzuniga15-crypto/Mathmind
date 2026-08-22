@@ -13,8 +13,8 @@
  *
  *   node scripts/dev-harness.mjs [--port 3000]
  *
- * If ANTHROPIC_API_KEY is set the app talks to the real API. If not, set
- * MOCK_UPSTREAM=1 to run a local server that speaks the Anthropic wire format
+ * If GROQ_API_KEY is set the app talks to the real API. If not, set
+ * MOCK_UPSTREAM=1 to run a local server that speaks the Groq wire format
  * so the UI, streaming, and the real math tools can be exercised offline.
  */
 import { createServer } from 'node:http';
