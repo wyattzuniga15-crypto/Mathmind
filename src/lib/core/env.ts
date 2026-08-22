@@ -46,7 +46,13 @@ export function getServerConfig(): ServerConfig {
     // change. These defaults are the current tool-calling production models.
     model: env('GROQ_MODEL') ?? 'openai/gpt-oss-120b',
     fastModel: env('GROQ_FAST_MODEL') ?? env('GROQ_MODEL') ?? 'openai/gpt-oss-20b',
-    maxTokens: intEnv('AI_MAX_TOKENS', 4096),
+    // Groq bills this reservation against your tokens-per-minute quota even
+    // when the reply is far shorter, and a tutored answer costs two calls (one
+    // to choose the tool, one to explain the verified result). At 4096 a single
+    // question could not fit inside the 8000 TPM free tier. 1024 is roughly 750
+    // words, which is long enough for a worked solution; raise it on a paid
+    // tier where the quota is not the binding constraint.
+    maxTokens: intEnv('AI_MAX_TOKENS', 1024),
     // Must stay under the platform function limit (60s on Vercel Hobby) so the
     // request fails with a readable error rather than being killed mid-stream.
     requestTimeoutMs: intEnv('AI_TIMEOUT_MS', 50_000),
