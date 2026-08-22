@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, RefreshCw, Sigma, TriangleAlert, User } from './icons';
+import { ChevronDown, RefreshCw, TriangleAlert, User } from './icons';
+import { SubjectIcon } from './subject-icons';
 import { MarkdownMath } from './MarkdownMath';
 import { CopyButton } from './CopyButton';
 import { ToolTrace } from './ToolTrace';
@@ -15,14 +16,16 @@ interface Props {
   error: { message: string; retryable: boolean; code: string; retryAfter?: number } | null;
   onRegenerate: () => void;
   onRetry: () => void;
+  /** The active subject's icon key, so the assistant avatar matches it. */
+  subjectIcon?: string;
 }
 
 /**
  * Retry, but only once retrying can actually work.
  *
  * A rate limit says how long the wait is. Without that on screen, the button
- * invites a student to hammer it and burn the quota they are already out of,
- * so count it down and keep the button out of reach until it is worth pressing.
+ * invites hammering it and burning the quota that's already exhausted, so
+ * count it down and keep the button out of reach until it is worth pressing.
  */
 function RetryButton({
   error,
@@ -57,7 +60,7 @@ function RetryButton({
   );
 }
 
-function Avatar({ role }: { role: 'user' | 'assistant' }) {
+function Avatar({ role, subjectIcon }: { role: 'user' | 'assistant'; subjectIcon?: string }) {
   return (
     <div
       className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
@@ -65,7 +68,7 @@ function Avatar({ role }: { role: 'user' | 'assistant' }) {
       }`}
       aria-hidden
     >
-      {role === 'assistant' ? <Sigma size={15} /> : <User size={15} />}
+      {role === 'assistant' ? <SubjectIcon icon={subjectIcon} size={15} /> : <User size={15} />}
     </div>
   );
 }
@@ -78,6 +81,7 @@ export function MessageList({
   error,
   onRegenerate,
   onRetry,
+  subjectIcon,
 }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -121,10 +125,10 @@ export function MessageList({
             return (
               <article key={message.id} className="mb-7 animate-fade-up">
                 <div className="flex gap-3">
-                  <Avatar role={message.role} />
+                  <Avatar role={message.role} subjectIcon={subjectIcon} />
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-                      {isAssistant ? 'Tutor' : 'You'}
+                      {isAssistant ? 'Assistant' : 'You'}
                     </div>
 
                     {message.images?.some((i) => i.data) && (
@@ -186,10 +190,10 @@ export function MessageList({
           {isStreaming && (
             <article className="mb-7">
               <div className="flex gap-3">
-                <Avatar role="assistant" />
+                <Avatar role="assistant" subjectIcon={subjectIcon} />
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-                    Tutor
+                    Assistant
                   </div>
                   {activeToolCalls.length > 0 && <ToolTrace toolCalls={activeToolCalls} live />}
                   {streamingText ? (

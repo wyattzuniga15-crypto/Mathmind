@@ -24,8 +24,8 @@ async function loadChatRoute() {
 }
 
 const validBody = {
-  subjectId: 'math',
-  mode: 'solve',
+  subjectId: 'general',
+  mode: 'chat',
   level: 'auto',
   messages: [{ role: 'user', content: '2x + 5 = 15' }],
 };
@@ -48,11 +48,17 @@ test('subjects route describes the platform for the UI', async () => {
   const body = (await (await GET()).json()) as {
     subjects: { id: string; modes: unknown[]; tools: unknown[]; suggestions: unknown[] }[];
   };
-  const math = body.subjects.find((s) => s.id === 'math');
-  assert.ok(math, 'math subject must be registered');
-  assert.equal(math!.modes.length, 6);
-  assert.ok(math!.tools.length >= 10);
-  assert.ok(math!.suggestions.length > 0);
+  const general = body.subjects.find((s) => s.id === 'general');
+  assert.ok(general, 'general subject must be registered');
+  assert.equal(general!.modes.length, 1);
+  assert.ok(general!.tools.length >= 10);
+  assert.ok(general!.suggestions.length > 0);
+
+  const code = body.subjects.find((s) => s.id === 'code');
+  assert.ok(code, 'code subject must be registered');
+  assert.equal(code!.modes.length, 1);
+  assert.ok(code!.suggestions.length > 0);
+
   // The payload must not carry anything server-only.
   assert.ok(!JSON.stringify(body).includes('sk-ant'));
   assert.ok(!JSON.stringify(body).includes('buildSystemPrompt'));

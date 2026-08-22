@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Download, Menu, Moon, PanelLeft, Sigma, Sun, TriangleAlert } from './icons';
+import { Download, Menu, Moon, PanelLeft, Sun, TriangleAlert } from './icons';
+import { SubjectIcon } from './subject-icons';
 import { Sidebar, type SubjectSummary } from './Sidebar';
 import { MessageList } from './MessageList';
 import { Composer } from './Composer';
@@ -45,8 +46,8 @@ export function ChatApp() {
   const isOnline = useOnlineStatus();
 
   const [subjects, setSubjects] = useState<PlatformSubject[]>([]);
-  const [subjectId, setSubjectId] = useState('math');
-  const [mode, setMode] = useState('solve');
+  const [subjectId, setSubjectId] = useState('general');
+  const [mode, setMode] = useState('chat');
   const [level, setLevel] = useState<StudentLevel>('auto');
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -59,9 +60,15 @@ export function ChatApp() {
     () => conversations.find((c) => c.id === activeId) ?? null,
     [conversations, activeId],
   );
+  // The conversation actually on screen is the real source of truth for which
+  // subject is showing -- not the last subject clicked in the sidebar, which
+  // goes stale the moment an older conversation from a different subject is
+  // opened from history. Falls back to the sidebar selection only when there
+  // is no active conversation to defer to (a fresh app, or after a delete).
+  const effectiveSubjectId = active?.subjectId ?? subjectId;
   const subject = useMemo(
-    () => subjects.find((s) => s.id === subjectId) ?? null,
-    [subjects, subjectId],
+    () => subjects.find((s) => s.id === effectiveSubjectId) ?? null,
+    [subjects, effectiveSubjectId],
   );
 
   /* ------------------------------ bootstrap ------------------------------ */
@@ -226,11 +233,11 @@ export function ChatApp() {
 
   const handleNew = useCallback(() => {
     if (chat.isStreaming) chat.stop();
-    const created = newConversation(subjectId, mode, level);
+    const created = newConversation(effectiveSubjectId, mode, level);
     persist(created);
     setActiveId(created.id);
     setSidebarOpen(false);
-  }, [chat, level, mode, persist, subjectId]);
+  }, [chat, effectiveSubjectId, level, mode, persist]);
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -266,25 +273,52 @@ export function ChatApp() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         subjects={subjects}
-        activeSubjectId={subjectId}
+        activeSubjectId={effectiveSubjectId}
         onSubjectChange={(id) => {
-          setSubjectId(id);
+          if (id === effectiveSubjectId) {
+            setSidebarOpen(false);
+            return;
+          }
+          if (chat.isStreaming) chat.stop();
           const next = subjects.find((s) => s.id === id);
-          if (next) setMode(next.defaultMode);
+          if (!next) return;
+          setSubjectId(id);
+          // Resume the most recent conversation already in that subject
+          // (conversations are kept sorted newest-first) rather than always
+          // starting over -- switching subjects should feel like switching
+          // to a different thread, not discarding one.
+          const existing = conversations.find((c) => c.subjectId === id);
+          if (existing) {
+            setActiveId(existing.id);
+            setMode(next.modes.some((m) => m.id === existing.mode) ? existing.mode : next.defaultMode);
+          } else {
+            setMode(next.defaultMode);
+            const created = newConversation(id, next.defaultMode, level);
+            persist(created);
+            setActiveId(created.id);
+          }
           setSidebarOpen(false);
         }}
         conversations={conversations}
         activeId={activeId}
         onSelect={(id) => {
           if (chat.isStreaming) chat.stop();
+          const target = conversations.find((c) => c.id === id);
+          if (target) {
+            setSubjectId(target.subjectId);
+            const targetSubject = subjects.find((s) => s.id === target.subjectId);
+            setMode(
+              targetSubject?.modes.some((m) => m.id === target.mode)
+                ? target.mode
+                : (targetSubject?.defaultMode ?? target.mode),
+            );
+          }
           setActiveId(id);
           setSidebarOpen(false);
         }}
         onNew={handleNew}
         onRename={handleRename}
         onDelete={handleDelete}
-        level={level}
-        onLevelChange={setLevel}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -309,7 +343,7 @@ export function ChatApp() {
           </button>
 
           <h1 className="min-w-0 flex-1 truncate text-[14px] font-medium">
-            {active?.title ?? subject?.name ?? 'Math'}
+            {active?.title ?? subject?.name ?? 'Chat'}
           </h1>
 
           {!isEmpty && active && (
@@ -370,14 +404,11 @@ export function ChatApp() {
           <div className="flex-1 overflow-y-auto">
             <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-5 py-8 text-center sm:py-16">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-white">
-                <Sigma size={24} />
+                <SubjectIcon icon={subject?.icon} size={24} />
               </div>
-              <h2 className="text-[22px] font-semibold tracking-tight">
-                {subject?.name ?? 'Math'} tutor
-              </h2>
+              <h2 className="text-[22px] font-semibold tracking-tight">How can I help?</h2>
               <p className="mt-2 max-w-md text-[14px] text-ink-muted">
-                {(subject?.tagline ?? 'Step-by-step help with any math problem.').replace(/\.?$/, '.')}{' '}
-                Every calculation is verified by an exact math engine, not guessed.
+                {subject?.description ?? 'Ask anything.'}
               </p>
 
               <div className="mt-6 grid w-full gap-2 sm:mt-8 sm:grid-cols-2">
@@ -409,6 +440,7 @@ export function ChatApp() {
             error={chat.error}
             onRegenerate={chat.regenerate}
             onRetry={chat.retry}
+            subjectIcon={subject?.icon}
           />
         )}
 

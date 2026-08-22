@@ -18,7 +18,31 @@ import { createServer } from 'node:http';
 
 const enc = (obj) => `data: ${JSON.stringify(obj)}\n\n`;
 
-/** Chooses a tool the way a tutor model would, from the student's text. */
+/** Canned reply for the Code subject, which advertises no tools at all. */
+function planCodeReply(text) {
+  const t = text.toLowerCase();
+  if (t.includes('regex')) {
+    return '```regex\n^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$\n```\nThat matches a local part, an @, a domain, and a dot-separated top-level domain.';
+  }
+  if (t.includes('typeerror') || t.includes('debug') || t.includes('error')) {
+    return 'That error means the code is calling a property or method on `undefined` or `null`. Check whatever produced that value one line above -- most likely something that was expected to return an object returned nothing instead.';
+  }
+  return [
+    '```python',
+    'def dedupe(items):',
+    '    seen = set()',
+    '    result = []',
+    '    for item in items:',
+    '        if item not in seen:',
+    '            seen.add(item)',
+    '            result.append(item)',
+    '    return result',
+    '```',
+    'Uses a set for O(1) membership checks while a list keeps the original order.',
+  ].join('\n');
+}
+
+/** Chooses a tool the way the model would, from the person's text. */
 function planToolCall(text, toolNames) {
   const t = text.toLowerCase();
   const has = (n) => toolNames.includes(n);
@@ -266,7 +290,7 @@ export function startMockUpstream({ port = 0, failMode = null } = {}) {
         return;
       }
 
-      // Otherwise decide what to compute, using the student's newest message.
+      // Otherwise decide what to compute, using the newest user message.
       const userText = messages
         .filter((m) => m.role === 'user')
         .flatMap((m) =>
@@ -292,9 +316,16 @@ export function startMockUpstream({ port = 0, failMode = null } = {}) {
         return;
       }
 
+      if (toolNames.length === 0) {
+        // The Code subject advertises no tools -- there is nothing to plan a
+        // call against, so reply the way a coding assistant actually would.
+        streamText(res, planCodeReply(userText), { delayMs: state.delayMs });
+        return;
+      }
+
       const plan = planToolCall(userText, toolNames);
       if (plan) streamToolUse(res, plan.name, plan.input);
-      else streamText(res, 'Could you share the specific problem you are working on?', { delayMs: state.delayMs });
+      else streamText(res, 'Could you share more detail about what you need?', { delayMs: state.delayMs });
     });
   });
 

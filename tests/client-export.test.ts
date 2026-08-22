@@ -22,7 +22,7 @@ test('conversation exports as readable markdown with the title as a heading', ()
   const md = conversationToMarkdown(base);
   assert.match(md, /^# Solving a linear equation\n/);
   assert.match(md, /\*\*You:\*\*\n2x \+ 5 = 15/);
-  assert.match(md, /\*\*Tutor:\*\*\nx = 5, verified by substitution\./);
+  assert.match(md, /\*\*Assistant:\*\*\nx = 5, verified by substitution\./);
 });
 
 test('an attached image is noted by count, never by its data', () => {

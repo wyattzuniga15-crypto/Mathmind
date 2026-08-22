@@ -1,32 +1,38 @@
 import type { SubjectModule } from '../../core/types';
-import { MATH_MODES, DEFAULT_MATH_MODE } from './modes';
-import { buildMathSystemPrompt } from './prompt';
+import { GENERAL_MODES, DEFAULT_GENERAL_MODE } from './modes';
+import { buildGeneralSystemPrompt } from './prompt';
 import { MATH_TOOLS } from './tools';
 import { selectMathTools } from './select';
 
-export const mathSubject: SubjectModule = {
-  id: 'math',
-  name: 'Math',
-  tagline: 'Arithmetic through calculus, worked step by step',
+/**
+ * The default, general-purpose subject. Despite the folder name (kept to
+ * avoid moving the math engine and its extensive test suite), this is not a
+ * math-only mode -- it's a normal AI assistant that happens to carry an
+ * exact computation engine, so arithmetic, equations, and statistics it
+ * touches are verified rather than guessed.
+ */
+export const generalSubject: SubjectModule = {
+  id: 'general',
+  name: 'Chat',
+  tagline: 'Ask anything',
   description:
-    'A math tutor backed by a deterministic computation engine. Every calculation, solution, and equivalence claim is verified by exact symbolic tools rather than produced from memory.',
-  icon: 'sigma',
-  accent: '#6366f1',
-  modes: MATH_MODES,
-  defaultMode: DEFAULT_MATH_MODE,
+    'A general-purpose AI assistant. Math and calculations are checked by an exact symbolic engine rather than produced from memory; everything else is a normal conversation.',
+  icon: 'message-circle',
+  accent: '#4f46e5',
+  modes: GENERAL_MODES,
+  defaultMode: DEFAULT_GENERAL_MODE,
   tools: MATH_TOOLS,
   selectTools: (input) => selectMathTools(MATH_TOOLS, input),
-  buildSystemPrompt: buildMathSystemPrompt,
+  buildSystemPrompt: buildGeneralSystemPrompt,
   status: 'available',
   suggestions: [
-    { label: 'Solve a linear equation', prompt: '2x + 5 = 15', mode: 'solve' },
-    { label: 'Explain a concept', prompt: 'What actually is a derivative? Explain it simply.', mode: 'explain' },
-    { label: 'Check my work', prompt: '3x + 6 = 18\n3x = 24\nx = 8\n\nDid I do this right?', mode: 'check' },
-    { label: 'Just a hint', prompt: 'How do I start factoring x^2 - 5x + 6?', mode: 'hint' },
-    { label: 'Graph a function', prompt: 'Graph y = x^2 - 4 and mark its intercepts.', mode: 'solve' },
-    { label: 'A word problem', prompt: 'A train leaves at 60 mph. Two hours later another leaves the same station at 80 mph. How long until the second catches the first?', mode: 'solve' },
-    { label: 'Practice problems', prompt: 'Give me practice with fractions and mixed numbers.', mode: 'practice' },
+    { label: 'Explain something', prompt: 'Explain how compound interest works, simply.' },
+    { label: 'Write for me', prompt: 'Write a short, friendly email asking to reschedule a meeting.' },
+    { label: 'Quick math', prompt: 'What is 15% of 340, and what is 3/4 + 1/6 exactly?' },
+    { label: 'Help me decide', prompt: "I'm choosing between two job offers. What should I actually weigh?" },
+    { label: 'Solve an equation', prompt: '2x + 5 = 15' },
+    { label: 'Just talk', prompt: "What's an interesting idea you think more people should know about?" },
   ],
 };
 
-export default mathSubject;
+export default generalSubject;

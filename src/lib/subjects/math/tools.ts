@@ -496,7 +496,7 @@ const checkEquivalentTool: SubjectTool = {
   definition: {
     name: 'check_equivalent',
     description:
-      'Determine whether two expressions are mathematically equal, using canonical symbolic normalisation AND evaluation at many sample points. When they differ it returns a concrete counterexample. Use this before telling a student two forms match, and to check your own algebra.',
+      'Determine whether two expressions are mathematically equal, using canonical symbolic normalisation AND evaluation at many sample points. When they differ it returns a concrete counterexample. Use this before telling someone two forms match, and to check your own algebra.',
     input_schema: {
       type: 'object',
       properties: {
@@ -513,14 +513,14 @@ const checkWorkTool: SubjectTool = {
   definition: {
     name: 'check_work',
     description:
-      "Analyse a student's written solution line by line and find the FIRST line that does not follow from the line before it. Returns a per-line verdict, the index of the first error, and a counterexample proving the error. This is the authoritative tool for Check My Work mode — always call it before judging a student's work.",
+      "Analyse a written solution line by line and find the FIRST line that does not follow from the line before it. Returns a per-line verdict, the index of the first error, and a counterexample proving the error. This is the authoritative check -- always call it before judging someone's work, rather than eyeballing it.",
     input_schema: {
       type: 'object',
       properties: {
         lines: {
           type: 'array',
           items: { type: 'string' },
-          description: 'The student\'s steps, one per element, in order. e.g. ["2x + 5 = 15", "2x = 10", "x = 5"].',
+          description: 'The steps, one per element, in order. e.g. ["2x + 5 = 15", "2x = 10", "x = 5"].',
         },
         originalProblem: {
           type: 'string',
@@ -543,7 +543,7 @@ const plotTool: SubjectTool = {
   definition: {
     name: 'plot_function',
     description:
-      'Sample one or more functions for graphing and identify key features: x- and y-intercepts, turning points (with min/max classification), and vertical asymptotes. The student sees an interactive graph, so call this whenever a picture would help.',
+      'Sample one or more functions for graphing and identify key features: x- and y-intercepts, turning points (with min/max classification), and vertical asymptotes. The person sees an interactive graph, so call this whenever a picture would help.',
     input_schema: {
       type: 'object',
       properties: {

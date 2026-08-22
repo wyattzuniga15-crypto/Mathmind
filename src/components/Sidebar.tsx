@@ -12,23 +12,17 @@ import {
   Trash2,
   X,
 } from './icons';
-import type { Conversation, StudentLevel } from '@/lib/core/types';
+import { SubjectIcon } from './subject-icons';
+import type { Conversation } from '@/lib/core/types';
 
 export interface SubjectSummary {
   id: string;
   name: string;
   tagline: string;
+  description: string;
   icon: string;
   status: 'available' | 'coming-soon';
 }
-
-const LEVELS: { id: StudentLevel; label: string }[] = [
-  { id: 'auto', label: 'Auto' },
-  { id: 'elementary', label: 'Elementary' },
-  { id: 'middle', label: 'Middle' },
-  { id: 'high', label: 'High' },
-  { id: 'college', label: 'College' },
-];
 
 interface Props {
   open: boolean;
@@ -42,8 +36,6 @@ interface Props {
   onNew: () => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
-  level: StudentLevel;
-  onLevelChange: (level: StudentLevel) => void;
 }
 
 function groupByDate(conversations: Conversation[]) {
@@ -193,8 +185,6 @@ export function Sidebar(props: Props) {
     onNew,
     onRename,
     onDelete,
-    level,
-    onLevelChange,
   } = props;
 
   const [query, setQuery] = useState('');
@@ -283,34 +273,13 @@ export function Sidebar(props: Props) {
                         : 'hover:bg-surface-sunken'
                   }`}
                 >
-                  <Sigma size={14} className="shrink-0" />
+                  <SubjectIcon icon={s.icon} size={14} className="shrink-0" />
                   <span className="flex-1 truncate">{s.name}</span>
                   {disabled && <Lock size={12} />}
                 </button>
               );
             })}
           </div>
-        </div>
-
-        <div className="px-3 pt-4">
-          <label
-            htmlFor="level-select"
-            className="mb-1.5 block px-1 text-[10.5px] font-semibold uppercase tracking-wider text-ink-faint"
-          >
-            Explanation level
-          </label>
-          <select
-            id="level-select"
-            value={level}
-            onChange={(e) => onLevelChange(e.target.value as StudentLevel)}
-            className="w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] outline-none focus:border-brand/60"
-          >
-            {LEVELS.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         {conversations.length > 4 && (

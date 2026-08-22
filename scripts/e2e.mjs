@@ -84,16 +84,20 @@ async function main() {
     check('app loads without a page error', pageErrors.length === 0, pageErrors.join(' | '));
 
     await page.waitForSelector('textarea[aria-label="Message"]', { timeout: 15000 });
-    check('math tutor interface renders', await page.isVisible('text=Math tutor'));
-    check('mode buttons render', (await page.locator('[role="tab"]').count()) === 6);
+    check('assistant interface renders', await page.isVisible('text=How can I help?'));
+    check(
+      'a single-mode subject shows no mode tabs',
+      (await page.locator('[role="tab"]').count()) === 0,
+    );
+    check('both subjects are listed in the sidebar', await page.isVisible('text=Chat') && await page.isVisible('text=Code'));
     check(
       'styles applied (tailwind compiled)',
       (await page.evaluate(() => getComputedStyle(document.body).backgroundColor)) !== 'rgba(0, 0, 0, 0)',
     );
 
     /* ---------------------- 1. basic arithmetic: 2 + 2 -------------------- */
-    const send = async (text, { mode } = {}) => {
-      if (mode) await page.click(`[role="tab"]:has-text("${mode}")`);
+    const send = async (text, { subject } = {}) => {
+      if (subject) await page.click(`aside button:has-text("${subject}")`);
       await page.fill('textarea[aria-label="Message"]', text);
       await page.press('textarea[aria-label="Message"]', 'Enter');
     };
@@ -152,7 +156,7 @@ async function main() {
 
     /* ------------------- 2. linear equation 2x + 5 = 15 ------------------- */
     await page.click('button:has-text("New conversation")');
-    await page.waitForSelector('text=Math tutor');
+    await page.waitForSelector('text=How can I help?');
     await send('2x + 5 = 15');
     await waitForReply();
     reply = await lastAssistant();
@@ -193,7 +197,7 @@ async function main() {
 
     /* ---------------- 6. check my work with a wrong solution -------------- */
     await page.click('button:has-text("New conversation")');
-    await send('3x + 6 = 18\n3x = 24\nx = 8\n\nDid I do this right?', { mode: 'Check My Work' });
+    await send('3x + 6 = 18\n3x = 24\nx = 8\n\nDid I do this right?');
     await waitForReply();
     reply = await lastAssistant();
     check('6. check-my-work names the first wrong line', /Line 2/i.test(reply), reply.slice(0, 200));
@@ -220,6 +224,24 @@ async function main() {
       /1/.test(reply) && /2/.test(reply) && /3/.test(reply),
       reply.slice(0, 200),
     );
+
+    /* -------------------------- 10. code subject --------------------------- */
+    await page.click('button:has-text("New conversation")');
+    await send('Write a function that removes duplicates from a list', { subject: 'Code' });
+    await waitForReply();
+    reply = await lastAssistant();
+    check('10. switching to Code changes the active subject', await page.isVisible('text=Code'));
+    check(
+      '10. code subject returns an actual code block',
+      await page.locator('article').last().locator('pre code, pre').count() > 0,
+      reply.slice(0, 160),
+    );
+    check(
+      '10. code subject never shows a math verification chip -- it has no tools',
+      !(await page.isVisible('text=/Verified with \\d+ exact computation/')),
+    );
+    // Back to the default subject for the remaining scenarios.
+    await page.click('aside button:has-text("Chat")');
 
     /* --------------------------- streaming/stop --------------------------- */
     await page.click('button:has-text("New conversation")');
@@ -301,8 +323,15 @@ async function main() {
 
     /* --------------------------- jump to latest ---------------------------- */
     await page.click('button:has-text("New conversation")');
-    await page.waitForSelector('text=Math tutor');
-    for (const p of ['1 + 1', '2 + 2', '3 + 3', '4 + 4']) await send(p);
+    await page.waitForSelector('text=How can I help?');
+    // Each send must be awaited to completion: the composer silently no-ops
+    // while a reply is still streaming, so firing these back-to-back could
+    // drop some of them and leave too little content to actually overflow --
+    // which is exactly what made this flaky before this fix.
+    for (const p of ['1 + 1', '2 + 2', '3 + 3', '4 + 4']) {
+      await send(p);
+      await waitForReply();
+    }
     await page.evaluate(() => {
       const el = document.querySelector('.overscroll-contain');
       el.scrollTop = 0;
@@ -313,11 +342,20 @@ async function main() {
     check('jump-to-latest button appears once scrolled away from the bottom', jumpVisible);
     if (jumpVisible) {
       await page.click('button[aria-label="Jump to the latest message"]');
-      await wait(500);
-      const gap = await page.evaluate(() => {
-        const el = document.querySelector('.overscroll-contain');
-        return el.scrollHeight - el.scrollTop - el.clientHeight;
-      });
+      // Polls instead of a fixed sleep: the button triggers a smooth scroll,
+      // and a fixed wait either races it under load or wastes time when it
+      // finishes early. Same 120px threshold the app itself uses for "pinned".
+      const readGap = () =>
+        page.evaluate(() => {
+          const el = document.querySelector('.overscroll-contain');
+          return el.scrollHeight - el.scrollTop - el.clientHeight;
+        });
+      let gap = await readGap();
+      const deadline = Date.now() + 3000;
+      while (gap >= 120 && Date.now() < deadline) {
+        await wait(100);
+        gap = await readGap();
+      }
       check('jump-to-latest actually returns to the bottom', gap < 120, `gap=${gap}`);
       check(
         'jump-to-latest button disappears once back at the bottom',

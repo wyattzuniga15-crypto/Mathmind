@@ -1,19 +1,21 @@
 import { registerSubject, hasSubject } from '../core/registry';
-import { mathSubject } from './math';
+import { generalSubject } from './math';
+import { codeSubject } from './code';
 
 /**
  * Subject registration happens exactly once, here.
  *
- * ADDING A NEW SUBJECT (e.g. Science):
- *   1. Create `src/lib/subjects/science/` with `index.ts`, `modes.ts`,
- *      `prompt.ts`, and `tools.ts`, mirroring the math module.
+ * ADDING A NEW SUBJECT:
+ *   1. Create `src/lib/subjects/<name>/` with `index.ts`, `modes.ts`, and
+ *      `prompt.ts` (plus `tools.ts` if it needs deterministic tools),
+ *      mirroring the code or general module.
  *   2. Export a `SubjectModule` from it.
  *   3. Import it below and add it to the `SUBJECT_MODULES` array.
  *
  * Nothing else changes. API routes, streaming, tool execution, memory,
  * validation, rate limiting, and the UI all read from the registry.
  */
-const SUBJECT_MODULES = [mathSubject];
+const SUBJECT_MODULES = [generalSubject, codeSubject];
 
 let initialized = false;
 
@@ -29,4 +31,4 @@ export function initSubjects(): void {
 // simply by importing from this module.
 initSubjects();
 
-export { mathSubject };
+export { generalSubject, codeSubject };

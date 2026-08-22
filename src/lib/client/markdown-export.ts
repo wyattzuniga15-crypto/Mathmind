@@ -10,7 +10,7 @@ export function conversationToMarkdown(conversation: Conversation): string {
   const lines: string[] = [`# ${conversation.title}`, ''];
 
   for (const message of conversation.messages) {
-    lines.push(message.role === 'user' ? '**You:**' : '**Tutor:**');
+    lines.push(message.role === 'user' ? '**You:**' : '**Assistant:**');
     if (message.images?.length) {
       lines.push(`_(${message.images.length} image${message.images.length === 1 ? '' : 's'} attached)_`);
     }
