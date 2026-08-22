@@ -23,6 +23,18 @@ whatever block you're aiming at, obliterating the area.
 3. The world must allow cheats OR you craft the cannon; no experimental toggles are
    needed (the script uses only stable `@minecraft/server` APIs, Minecraft 1.21+).
 
+## Updating (and getting rid of duplicates)
+
+Minecraft files an imported pack under its UUID *and* its version number, so
+raising the version in `manifest.json` installs a second copy alongside the old
+one instead of replacing it — that's where a duplicate entry in the pack list
+comes from. Delete the older version under **Settings -> Storage**, on both the
+Behavior Packs and Resource Packs lists.
+
+To avoid the duplicate entirely, leave the header `version` alone when you edit
+the pack. Re-importing the same UUID at the same version overwrites the
+installed copy in place, and any world already using it picks up the change.
+
 ## Getting the cannon
 
 - Creative: search "Orbital Strike Cannon" in the inventory.
