@@ -152,6 +152,7 @@ export async function* runAgent(options: AgentRunOptions): AsyncGenerator<Stream
       message: appError.message,
       code: appError.code,
       retryable: appError.retryable,
+      retryAfter: appError.retryAfter,
     };
   }
 }

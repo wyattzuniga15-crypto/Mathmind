@@ -57,7 +57,9 @@ export function getServerConfig(): ServerConfig {
     // Must stay under the platform function limit (60s on Vercel Hobby) so the
     // request fails with a readable error rather than being killed mid-stream.
     requestTimeoutMs: intEnv('AI_TIMEOUT_MS', 50_000),
-    maxToolIterations: intEnv('AI_MAX_TOOL_ITERATIONS', 4),
+    // Three round-trips is what the token budget above actually affords; a
+    // fourth would spend a call just to be refused by the rate limiter.
+    maxToolIterations: intEnv('AI_MAX_TOOL_ITERATIONS', 3),
     rateLimitPerMinute: intEnv('RATE_LIMIT_PER_MINUTE', 20),
     rateLimitPerDay: intEnv('RATE_LIMIT_PER_DAY', 500),
     authRequired: env('AUTH_REQUIRED') === 'true',

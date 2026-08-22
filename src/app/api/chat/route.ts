@@ -124,6 +124,7 @@ export async function POST(request: Request) {
       message: appError.message,
       code: appError.code,
       retryable: appError.retryable,
+      retryAfter: appError.retryAfter,
     };
     return new Response(JSON.stringify({ ...appError.toJSON(), event }), {
       status: appError.status,

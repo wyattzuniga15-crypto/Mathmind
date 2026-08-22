@@ -174,6 +174,9 @@ Narrowing is an optimisation, never a restriction. `runAgent` dispatches
 against the subject's full tool list, so a model that names a tool outside the
 selection still gets a real execution. There is a test that pins exactly this.
 
+`AI_MAX_TOOL_ITERATIONS` is capped at what that budget affords, so the agent
+does not spend a call it will only be refused for.
+
 `AI_MAX_TOKENS` is the other half: providers commonly bill the reservation
 against the quota even when the reply is shorter, so raising it buys longer
 answers and costs tool round-trips.

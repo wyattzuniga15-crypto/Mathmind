@@ -16,11 +16,13 @@ export class AppError extends Error {
   status: number;
   retryable: boolean;
   details?: unknown;
+  /** Seconds to wait before retrying, when the failure told us. */
+  retryAfter?: number;
 
   constructor(
     code: ErrorCode,
     message: string,
-    options: { status?: number; retryable?: boolean; details?: unknown } = {},
+    options: { status?: number; retryable?: boolean; details?: unknown; retryAfter?: number } = {},
   ) {
     super(message);
     this.name = 'AppError';
@@ -28,10 +30,19 @@ export class AppError extends Error {
     this.status = options.status ?? defaultStatus(code);
     this.retryable = options.retryable ?? defaultRetryable(code);
     this.details = options.details;
+    this.retryAfter = options.retryAfter;
   }
 
   toJSON() {
-    return { error: { code: this.code, message: this.message, retryable: this.retryable, details: this.details } };
+    return {
+      error: {
+        code: this.code,
+        message: this.message,
+        retryable: this.retryable,
+        retryAfter: this.retryAfter,
+        details: this.details,
+      },
+    };
   }
 }
 

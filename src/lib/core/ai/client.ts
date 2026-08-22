@@ -969,9 +969,14 @@ function mapGroqHttpError(
   }
 
   if (status === 429) {
+    // "Please try again in 49.305s" -- the one number that tells a student
+    // when it is worth pressing the button again.
+    const wait = /try again in ([\d.]+)s/i.exec(message);
+
     return new AppError(
       'rate_limited',
       `Groq rate limit reached: ${short}`,
+      wait ? { retryAfter: Math.ceil(Number(wait[1])) } : {},
     );
   }
 

@@ -24,7 +24,7 @@ export interface ChatState {
   isStreaming: boolean;
   streamingText: string;
   activeToolCalls: ToolCallRecord[];
-  error: { message: string; retryable: boolean; code: string } | null;
+  error: { message: string; retryable: boolean; code: string; retryAfter?: number } | null;
 }
 
 interface UseChatArgs {
@@ -100,7 +100,12 @@ export function useChat({ conversation, onUpdate, onFirstMessage }: UseChatArgs)
             break;
           }
           case 'error':
-            failure = { message: event.message, retryable: event.retryable, code: event.code };
+            failure = {
+              message: event.message,
+              retryable: event.retryable,
+              code: event.code,
+              retryAfter: event.retryAfter,
+            };
             break;
           default:
             break;
@@ -131,6 +136,7 @@ export function useChat({ conversation, onUpdate, onFirstMessage }: UseChatArgs)
             message: payload?.error?.message ?? `Request failed with status ${response.status}.`,
             retryable: payload?.error?.retryable ?? response.status >= 500,
             code: payload?.error?.code ?? 'internal_error',
+            retryAfter: payload?.error?.retryAfter,
           };
         } else if (response.body) {
           const reader = response.body.getReader();

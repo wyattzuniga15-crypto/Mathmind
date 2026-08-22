@@ -326,7 +326,7 @@ export function ChatApp() {
 
         {isEmpty ? (
           <div className="flex-1 overflow-y-auto">
-            <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-5 py-12 text-center sm:py-20">
+            <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-5 py-8 text-center sm:py-16">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-white">
                 <Sigma size={24} />
               </div>
@@ -334,11 +334,11 @@ export function ChatApp() {
                 {subject?.name ?? 'Math'} tutor
               </h2>
               <p className="mt-2 max-w-md text-[14px] text-ink-muted">
-                {subject?.tagline ?? 'Step-by-step help with any math problem.'} Every calculation is
-                verified by an exact math engine, not guessed.
+                {(subject?.tagline ?? 'Step-by-step help with any math problem.').replace(/\.?$/, '.')}{' '}
+                Every calculation is verified by an exact math engine, not guessed.
               </p>
 
-              <div className="mt-8 grid w-full gap-2 sm:grid-cols-2">
+              <div className="mt-6 grid w-full gap-2 sm:mt-8 sm:grid-cols-2">
                 {(subject?.suggestions ?? []).map((s) => (
                   <button
                     key={s.label}
@@ -350,7 +350,9 @@ export function ChatApp() {
                     className="rounded-xl border border-line bg-surface-raised p-3 text-left transition hover:border-brand/50 hover:bg-surface-sunken"
                   >
                     <p className="text-[13px] font-medium">{s.label}</p>
-                    <p className="mt-0.5 line-clamp-2 text-[12px] text-ink-muted">{s.prompt}</p>
+                    <p className="mt-0.5 line-clamp-2 text-[12px] text-ink-muted">
+                      {s.prompt.split('\n').filter(Boolean).join(' · ')}
+                    </p>
                   </button>
                 ))}
               </div>

@@ -154,4 +154,4 @@ export type StreamEvent =
       stopReason: string | null;
       toolCalls: ToolCallRecord[];
     }
-  | { type: 'error'; message: string; code: string; retryable: boolean };
+  | { type: 'error'; message: string; code: string; retryable: boolean; retryAfter?: number };

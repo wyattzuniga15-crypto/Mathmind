@@ -87,11 +87,9 @@ export function Composer({
   return (
     <div className="border-t border-line bg-surface/85 backdrop-blur">
       <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-2.5 sm:px-6 sm:pb-4">
-        <div
-          className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1"
-          role="tablist"
-          aria-label="Tutoring mode"
-        >
+        {/* Wraps rather than scrolling: a mode hidden off the right edge of a
+            phone is a mode nobody finds. */}
+        <div className="mb-2 flex flex-wrap gap-1.5" role="tablist" aria-label="Tutoring mode">
           {modes.map((m) => (
             <button
               key={m.id}
