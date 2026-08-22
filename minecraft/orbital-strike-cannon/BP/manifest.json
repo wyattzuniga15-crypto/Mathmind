@@ -4,7 +4,7 @@
     "name": "Orbital Strike Cannon [BP]",
     "description": "Adds the Orbital Strike Cannon — use it to call down 5000 TNT from the sky.",
     "uuid": "2b31abb3-ea63-4fe0-a77f-580ee846168f",
-    "version": [1, 0, 0],
+    "version": [1, 1, 0],
     "min_engine_version": [1, 21, 30]
   },
   "modules": [
@@ -28,7 +28,7 @@
     },
     {
       "uuid": "8c93c755-2e56-4876-a11a-05280153e18c",
-      "version": [1, 0, 0]
+      "version": [1, 1, 0]
     }
   ]
 }

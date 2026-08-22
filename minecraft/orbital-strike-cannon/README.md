@@ -6,9 +6,11 @@ whatever block you're aiming at, obliterating the area.
 
 ## What's in the box
 
-- `BP/` — behavior pack: the custom item, a crafting recipe, and the script
-  (`BP/scripts/main.js`) that spawns the barrage.
-- `RP/` — resource pack: the item's pixel-art icon and display name.
+- `BP/` — behavior pack: the custom item, a crafting recipe, the fuseless shell
+  entity, and the script (`BP/scripts/main.js`) that spawns the barrage and
+  detonates each shell on impact.
+- `RP/` — resource pack: the item's pixel-art icon, the shell's TNT texture and
+  model, and display names.
 - `OrbitalStrikeCannon.mcaddon` — both packs zipped up, ready to import.
 - `build.py` — rebuilds the `.mcaddon` after you edit anything.
 - `make_icon.py` — regenerates the item texture and pack icons.
@@ -37,8 +39,11 @@ whatever block you're aiming at, obliterating the area.
 
 - Aims at the block in your crosshair, up to 150 blocks away (falls back to your
   own position if you're aiming at open sky).
-- Spawns 5000 primed TNT ~60–80 blocks above the target, spread over a 30-block-radius
+- Spawns 5000 shells ~60–80 blocks above the target, spread over a 30-block-radius
   circle, in batches of 50 per tick (~5 seconds) so the game does not hitch.
+- The shells have **no fuse**: each one detonates the instant it touches the
+  ground, so nothing airbursts on the way down. They are also immune to damage,
+  so a neighbour's blast can't destroy one before it lands.
 - 15-second cooldown on the item so one use = one strike, with time for the
   blast wave to finish before you can fire again.
 

@@ -1,0 +1,18 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "orbital:sky_tnt",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/sky_tnt"
+      },
+      "geometry": {
+        "default": "geometry.orbital_sky_tnt"
+      },
+      "render_controllers": ["controller.render.orbital_sky_tnt"]
+    }
+  }
+}
