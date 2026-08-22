@@ -11,6 +11,7 @@ export interface ServerConfig {
   apiBaseUrl: string;
   model: string;
   fastModel: string;
+  visionModel: string;
   maxTokens: number;
   requestTimeoutMs: number;
   maxToolIterations: number;
@@ -46,6 +47,11 @@ export function getServerConfig(): ServerConfig {
     // change. These defaults are the current tool-calling production models.
     model: env('GROQ_MODEL') ?? 'openai/gpt-oss-120b',
     fastModel: env('GROQ_FAST_MODEL') ?? env('GROQ_MODEL') ?? 'openai/gpt-oss-20b',
+    // The default GROQ_MODEL is text-only: it cannot see an uploaded photo of
+    // a problem, so a request carrying an image is routed to a vision-capable
+    // model instead. Scout is the current free-tier model with both image
+    // input and the tool calling the math engine depends on.
+    visionModel: env('GROQ_VISION_MODEL') ?? 'meta-llama/llama-4-scout-17b-16e-instruct',
     // Groq bills this reservation against your tokens-per-minute quota even
     // when the reply is far shorter, so it is a real per-call cost and not just
     // a ceiling. With the narrowed tool payload a call costs roughly 1600

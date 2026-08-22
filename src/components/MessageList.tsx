@@ -101,7 +101,7 @@ export function MessageList({
   const lastAssistantIndex = messages.map((m) => m.role).lastIndexOf('assistant');
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto overscroll-contain">
+    <div ref={containerRef} data-print-flow className="flex-1 overflow-y-auto overscroll-contain">
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
         {messages.map((message, index) => {
           const isAssistant = message.role === 'assistant';
@@ -150,7 +150,7 @@ export function MessageList({
                   )}
 
                   {isAssistant && !isStreaming && message.content && (
-                    <div className="mt-1.5 flex items-center gap-1">
+                    <div data-print-hide className="mt-1.5 flex items-center gap-1">
                       <CopyButton value={message.content} />
                       {index === lastAssistantIndex && (
                         <button

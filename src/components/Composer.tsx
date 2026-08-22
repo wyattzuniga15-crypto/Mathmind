@@ -85,7 +85,7 @@ export function Composer({
   const activeMode = modes.find((m) => m.id === mode);
 
   return (
-    <div className="border-t border-line bg-surface/85 backdrop-blur">
+    <div data-print-hide className="border-t border-line bg-surface/85 backdrop-blur">
       <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-2.5 sm:px-6 sm:pb-4">
         {/* Wraps rather than scrolling: a mode hidden off the right edge of a
             phone is a mode nobody finds. */}

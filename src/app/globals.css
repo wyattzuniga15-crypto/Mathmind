@@ -187,3 +187,45 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Export-as-PDF is "print this page" rather than a generated file: no PDF
+ * library, nothing to keep in sync with the chat UI. The layout is chat-app
+ * shaped (fixed-height flex column, an internally scrolling message list),
+ * which prints as one clipped page unless overridden here.
+ */
+@media print {
+  [data-print-hide] {
+    display: none !important;
+  }
+  [data-print-flow] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  /* Paper is white regardless of the app's theme: dark-mode's CSS custom
+     properties are values, not a media query, so ".dark" alone survives
+     into print and would put light text on unprinted (white) paper. */
+  :root, .dark {
+    color-scheme: light;
+    --surface: 255 255 255;
+    --surface-raised: 255 255 255;
+    --surface-sunken: 243 244 246;
+    --line: 229 231 235;
+    --ink: 17 24 39;
+    --ink-muted: 75 85 99;
+    --ink-faint: 156 163 175;
+  }
+  html, body {
+    height: auto !important;
+    background: #fff !important;
+  }
+  /* The theme toggle animates colour with a 150ms transition. Printing fires
+     the instant window.print() is called, which can land mid-transition and
+     bake a half-dark, half-light frame into the page -- kill transitions and
+     animations outright so the printed colours are always the settled ones. */
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -158,6 +158,7 @@ Vercel → your project → **Settings** → **Environment Variables**. Anything
 | Name | Effect |
 | --- | --- |
 | `GROQ_MODEL` | Which model answers (default `openai/gpt-oss-120b`) |
+| `GROQ_VISION_MODEL` | Which model reads an uploaded photo (default `meta-llama/llama-4-scout-17b-16e-instruct`) |
 | `RATE_LIMIT_PER_MINUTE` | Requests allowed per minute per user |
 | `RATE_LIMIT_PER_DAY` | Requests allowed per day per user |
 

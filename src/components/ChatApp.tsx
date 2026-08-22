@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Menu, Moon, PanelLeft, Sigma, Sun, TriangleAlert } from './icons';
+import { Download, Menu, Moon, PanelLeft, Sigma, Sun, TriangleAlert } from './icons';
 import { Sidebar, type SubjectSummary } from './Sidebar';
 import { MessageList } from './MessageList';
 import { Composer } from './Composer';
@@ -257,7 +257,7 @@ export function ChatApp() {
   const isEmpty = !active || active.messages.length === 0;
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-surface text-ink">
+    <div data-print-flow className="flex h-[100dvh] overflow-hidden bg-surface text-ink">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -289,6 +289,7 @@ export function ChatApp() {
             type="button"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open menu"
+            data-print-hide
             className="rounded-lg p-1.5 text-ink-muted hover:bg-surface-sunken lg:hidden"
           >
             <Menu size={18} />
@@ -297,6 +298,7 @@ export function ChatApp() {
             type="button"
             onClick={() => setSidebarOpen((o) => !o)}
             aria-label="Toggle sidebar"
+            data-print-hide
             className="hidden rounded-lg p-1.5 text-ink-muted hover:bg-surface-sunken lg:block"
           >
             <PanelLeft size={18} />
@@ -306,10 +308,24 @@ export function ChatApp() {
             {active?.title ?? subject?.name ?? 'Math'}
           </h1>
 
+          {!isEmpty && (
+            <button
+              type="button"
+              onClick={() => window.print()}
+              aria-label="Export this conversation as a PDF"
+              title="Export as PDF"
+              data-print-hide
+              className="rounded-lg p-1.5 text-ink-muted hover:bg-surface-sunken"
+            >
+              <Download size={17} />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={toggleTheme}
             aria-label="Toggle dark mode"
+            data-print-hide
             className="rounded-lg p-1.5 text-ink-muted hover:bg-surface-sunken"
           >
             <Sun size={17} className="hidden dark:block" />
@@ -318,7 +334,10 @@ export function ChatApp() {
         </header>
 
         {setupMessage && (
-          <div className="flex items-start gap-2 border-b border-amber-300/50 bg-amber-50 px-4 py-2.5 text-[12.5px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <div
+            data-print-hide
+            className="flex items-start gap-2 border-b border-amber-300/50 bg-amber-50 px-4 py-2.5 text-[12.5px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+          >
             <TriangleAlert size={15} className="mt-0.5 shrink-0" />
             <p>{setupMessage}</p>
           </div>

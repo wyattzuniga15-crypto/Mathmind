@@ -116,6 +116,23 @@ async function main() {
     );
     check('KaTeX rendered math', (await page.locator('.katex').count()) > 0);
 
+    /* ------------------------- export as PDF (print) ----------------------- */
+    check(
+      'export button appears once a conversation has messages',
+      await page.isVisible('button[aria-label="Export this conversation as a PDF"]'),
+    );
+    await page.emulateMedia({ media: 'print' });
+    check(
+      'sidebar and composer are hidden when printing',
+      !(await page.locator('aside').first().isVisible()) &&
+        !(await page.locator('textarea[aria-label="Message"]').isVisible()),
+    );
+    check(
+      'the transcript itself stays visible when printing',
+      await page.isVisible('text=/Verified with \\d+ exact computation/'),
+    );
+    await page.emulateMedia({ media: 'screen' });
+
     /* ------------------- 2. linear equation 2x + 5 = 15 ------------------- */
     await page.click('button:has-text("New conversation")');
     await page.waitForSelector('text=Math tutor');
