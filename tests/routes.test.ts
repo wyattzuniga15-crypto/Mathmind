@@ -103,6 +103,50 @@ test('chat route reports a missing API key clearly instead of failing obscurely'
   }
 });
 
+test('chat route switches to the vision model when a message carries an image', async () => {
+  process.env.GROQ_API_KEY = 'gsk-test-not-real';
+  const { POST } = await loadChatRoute();
+
+  const originalFetch = globalThis.fetch;
+  const seenModels: string[] = [];
+  globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body ?? '{}')) as { model?: string };
+    if (body.model) seenModels.push(body.model);
+    // A short-lived stub, not a full SSE server: the route only needs a
+    // well-formed streaming response to read past the fetch call.
+    return new Response('data: [DONE]\n\n', {
+      status: 200,
+      headers: { 'content-type': 'text/event-stream' },
+    });
+  }) as typeof fetch;
+
+  try {
+    const withImage = await POST(
+      fromIp('198.51.100.9', {
+        ...validBody,
+        messages: [
+          {
+            role: 'user',
+            content: 'What is the answer here?',
+            images: [{ data: 'aGVsbG8=', mediaType: 'image/png' }],
+          },
+        ],
+      }),
+    );
+    // Drain the stream so the fetch call inside runAgent actually happens.
+    await withImage.text();
+
+    const withoutImage = await POST(fromIp('198.51.100.10'));
+    await withoutImage.text();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(seenModels.length, 2);
+  assert.notEqual(seenModels[0], seenModels[1], 'an image must route to a different model than plain text');
+  assert.match(seenModels[0], /vision|scout|maverick|llama-4/i);
+});
+
 test('chat route sets an anonymous identity cookie and rate limit headers', async () => {
   process.env.GROQ_API_KEY = 'gsk-test-not-real';
   process.env.RATE_LIMIT_PER_MINUTE = '2';

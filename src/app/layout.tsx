@@ -5,6 +5,19 @@ export const metadata: Metadata = {
   title: 'MathMind — AI Math Tutor',
   description:
     'A step-by-step AI math tutor backed by an exact symbolic computation engine. Arithmetic through calculus.',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [{ url: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  appleWebApp: {
+    // Installed from Safari's Share sheet rather than a store, so this is
+    // what actually makes "Add to Home Screen" open as an app instead of a
+    // browser tab with address bar chrome.
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'MathMind',
+  },
 };
 
 export const viewport: Viewport = {

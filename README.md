@@ -29,7 +29,7 @@ If the key is missing, the app loads and tells you exactly what to fix rather th
 | --- | --- |
 | `npm run dev` | Start the dev server |
 | `npm run build` / `npm start` | Production build and serve |
-| `npm test` | Unit suite (79 tests, no network or API key needed) |
+| `npm test` | Unit suite (92 tests, no network or API key needed) |
 | `npm run test:e2e` | End-to-end browser test of the real UI (see below) |
 | `npm run typecheck` | TypeScript across the whole project |
 | `npm run typecheck:lib` | Strict check of the dependency-free core |
@@ -42,10 +42,10 @@ If the key is missing, the app loads and tells you exactly what to fix rather th
 ## End-to-end testing
 
 `npm run test:e2e` launches the real UI in Chromium against the real API routes,
-the real streaming agent loop, and the real math engine, then asserts 35 checks:
-every math scenario below, streaming and stop, conversation create/rename/delete,
-persistence across reload, theme switching, error display, and that no secret
-reaches the client bundle.
+the real streaming agent loop, and the real math engine, then asserts 38 checks:
+every math scenario below, exporting a conversation to PDF, streaming and stop,
+conversation create/rename/delete, persistence across reload, theme switching,
+error display, and that no secret reaches the client bundle.
 
 By default the **language model** — and only the language model — is replaced by
 `scripts/mock-upstream.mjs`, a local server speaking the Groq/OpenAI SSE wire
@@ -174,11 +174,41 @@ Narrowing is an optimisation, never a restriction. `runAgent` dispatches
 against the subject's full tool list, so a model that names a tool outside the
 selection still gets a real execution. There is a test that pins exactly this.
 
+`AI_MAX_TOOL_ITERATIONS` is capped at what that budget affords, so the agent
+does not spend a call it will only be refused for.
+
 `AI_MAX_TOKENS` is the other half: providers commonly bill the reservation
 against the quota even when the reply is shorter, so raising it buys longer
 answers and costs tool round-trips.
 
 ---
+
+## Vision (photo uploads)
+
+The default model is text-only, so a request carrying an uploaded photo is
+routed to a separate vision-capable model instead (`GROQ_VISION_MODEL`,
+default `meta-llama/llama-4-scout-17b-16e-instruct`) -- chosen for supporting
+both image input and the tool calling the math engine depends on; most vision
+models drop tool calling, which would let the model do arithmetic on the photo
+itself instead of the verified engine. The decision is based on what
+`buildContext` actually kept in the request, not the raw upload, since memory
+strips images from every turn except the most recent couple.
+
+## Export as PDF
+
+The export button in the header is `window.print()` behind a styled print
+stylesheet (`@media print` in `globals.css`) -- there is no PDF library and
+nothing to keep in sync with the chat UI. It hides the sidebar and composer,
+lets the message list flow across pages instead of scrolling inside a fixed
+height, and forces light colours regardless of the app's theme (dark mode's
+palette is a set of CSS custom properties, not a media query, so ".dark" alone
+survives into print and would put light text on the unprinted white page).
+
+## Installable (PWA)
+
+`public/manifest.json` plus the icons and `appleWebApp` metadata in
+`layout.tsx` make "Add to Home Screen" open as a standalone app -- own icon
+and window chrome, no browser address bar -- on both Android and iOS.
 
 ## When answers stop working
 

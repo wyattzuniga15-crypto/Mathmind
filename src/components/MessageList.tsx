@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RefreshCw, Sigma, TriangleAlert, User } from './icons';
 import { MarkdownMath } from './MarkdownMath';
 import { CopyButton } from './CopyButton';
@@ -12,9 +12,49 @@ interface Props {
   streamingText: string;
   isStreaming: boolean;
   activeToolCalls: ToolCallRecord[];
-  error: { message: string; retryable: boolean; code: string } | null;
+  error: { message: string; retryable: boolean; code: string; retryAfter?: number } | null;
   onRegenerate: () => void;
   onRetry: () => void;
+}
+
+/**
+ * Retry, but only once retrying can actually work.
+ *
+ * A rate limit says how long the wait is. Without that on screen, the button
+ * invites a student to hammer it and burn the quota they are already out of,
+ * so count it down and keep the button out of reach until it is worth pressing.
+ */
+function RetryButton({
+  error,
+  onRetry,
+}: {
+  error: { retryAfter?: number };
+  onRetry: () => void;
+}) {
+  const [remaining, setRemaining] = useState(error.retryAfter ?? 0);
+
+  useEffect(() => {
+    setRemaining(error.retryAfter ?? 0);
+    if (!error.retryAfter) return;
+    const timer = setInterval(() => {
+      setRemaining((seconds) => (seconds <= 1 ? 0 : seconds - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [error.retryAfter]);
+
+  const waiting = remaining > 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      disabled={waiting}
+      className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/50 px-2 py-1 text-xs font-medium transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:hover:bg-amber-500/20"
+    >
+      <RefreshCw size={12} />
+      {waiting ? `Try again in ${remaining}s` : 'Try again'}
+    </button>
+  );
 }
 
 function Avatar({ role }: { role: 'user' | 'assistant' }) {
@@ -61,7 +101,7 @@ export function MessageList({
   const lastAssistantIndex = messages.map((m) => m.role).lastIndexOf('assistant');
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto overscroll-contain">
+    <div ref={containerRef} data-print-flow className="flex-1 overflow-y-auto overscroll-contain">
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
         {messages.map((message, index) => {
           const isAssistant = message.role === 'assistant';
@@ -102,7 +142,7 @@ export function MessageList({
                     </div>
                   )}
 
-                  {message.error && (
+                  {message.error && message.error !== error?.message && (
                     <p className="mt-2 flex items-start gap-1.5 text-[12.5px] text-amber-600 dark:text-amber-400">
                       <TriangleAlert size={14} className="mt-0.5 shrink-0" />
                       {message.error}
@@ -110,7 +150,7 @@ export function MessageList({
                   )}
 
                   {isAssistant && !isStreaming && message.content && (
-                    <div className="mt-1.5 flex items-center gap-1">
+                    <div data-print-hide className="mt-1.5 flex items-center gap-1">
                       <CopyButton value={message.content} />
                       {index === lastAssistantIndex && (
                         <button
@@ -165,16 +205,7 @@ export function MessageList({
             <TriangleAlert size={16} className="mt-0.5 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="break-words">{error.message}</p>
-              {error.retryable && (
-                <button
-                  type="button"
-                  onClick={onRetry}
-                  className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/50 px-2 py-1 text-xs font-medium transition hover:bg-amber-100 dark:hover:bg-amber-500/20"
-                >
-                  <RefreshCw size={12} />
-                  Try again
-                </button>
-              )}
+              {error.retryable && <RetryButton error={error} onRetry={onRetry} />}
             </div>
           </div>
         )}

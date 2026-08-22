@@ -205,11 +205,13 @@ export function Sidebar(props: Props) {
           type="button"
           aria-label="Close menu"
           onClick={onClose}
+          data-print-hide
           className="fixed inset-0 z-30 bg-black/40 lg:hidden"
         />
       )}
 
       <aside
+        data-print-hide
         className={`fixed inset-y-0 left-0 z-40 flex w-[270px] flex-col border-r border-line bg-surface-raised transition-transform duration-200 lg:static lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}

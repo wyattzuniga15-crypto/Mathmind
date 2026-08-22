@@ -6,7 +6,7 @@ export const MATH_MODES: SubjectMode[] = [
     label: 'Solve',
     icon: 'target',
     description: 'Full worked solution with reasoning for every step.',
-    hint: 'Get the complete solution, explained step by step.',
+    hint: 'Type a problem to solve…',
     instructions: `MODE: SOLVE
 Work the problem completely.
 1. Restate what is being asked in one sentence, and name the concepts involved.
@@ -20,7 +20,7 @@ Work the problem completely.
     label: 'Learn',
     icon: 'book',
     description: 'Teach the concept from the ground up.',
-    hint: 'Start from the beginning and build up the idea.',
+    hint: 'What should I teach you?',
     instructions: `MODE: LEARN
 Teach the underlying concept, do not just answer.
 1. Start from what the student almost certainly already knows.
@@ -34,7 +34,7 @@ Teach the underlying concept, do not just answer.
     label: 'Hint',
     icon: 'lightbulb',
     description: 'A nudge, never the answer.',
-    hint: 'Get one small hint at a time.',
+    hint: 'Where are you stuck?',
     instructions: `MODE: HINT
 Give exactly ONE hint and then stop.
 - Never state the final answer, and never work the problem to completion.
@@ -48,7 +48,7 @@ Give exactly ONE hint and then stop.
     label: 'Practice',
     icon: 'dumbbell',
     description: 'Generate practice problems at the right level.',
-    hint: 'Get problems tuned to your current level.',
+    hint: 'What should we practise?',
     instructions: `MODE: PRACTICE
 Generate practice problems calibrated to what this student has shown they can do.
 1. Produce 3-5 problems that increase in difficulty.
@@ -62,7 +62,7 @@ Generate practice problems calibrated to what this student has shown they can do
     label: 'Check My Work',
     icon: 'check',
     description: 'Find the exact line where it went wrong.',
-    hint: 'Paste your working and find the mistake.',
+    hint: 'Paste your working…',
     instructions: `MODE: CHECK MY WORK
 The student has shown you their work. Find the first line that is wrong.
 1. ALWAYS call the check_work tool with the student's lines split one per line. Its verdict is authoritative — it compares each line to the previous one deterministically.
@@ -77,7 +77,7 @@ The student has shown you their work. Find the first line that is wrong.
     label: 'Explain',
     icon: 'message',
     description: 'Plain-language explanation of an idea.',
-    hint: 'Understand a concept in simple language.',
+    hint: 'What should I explain?',
     instructions: `MODE: EXPLAIN
 Explain the concept in plain language at the student's level.
 1. Lead with a one-sentence answer to "what is this really?".

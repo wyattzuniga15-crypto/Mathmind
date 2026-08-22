@@ -11,6 +11,7 @@ export interface ServerConfig {
   apiBaseUrl: string;
   model: string;
   fastModel: string;
+  visionModel: string;
   maxTokens: number;
   requestTimeoutMs: number;
   maxToolIterations: number;
@@ -46,6 +47,11 @@ export function getServerConfig(): ServerConfig {
     // change. These defaults are the current tool-calling production models.
     model: env('GROQ_MODEL') ?? 'openai/gpt-oss-120b',
     fastModel: env('GROQ_FAST_MODEL') ?? env('GROQ_MODEL') ?? 'openai/gpt-oss-20b',
+    // The default GROQ_MODEL is text-only: it cannot see an uploaded photo of
+    // a problem, so a request carrying an image is routed to a vision-capable
+    // model instead. Scout is the current free-tier model with both image
+    // input and the tool calling the math engine depends on.
+    visionModel: env('GROQ_VISION_MODEL') ?? 'meta-llama/llama-4-scout-17b-16e-instruct',
     // Groq bills this reservation against your tokens-per-minute quota even
     // when the reply is far shorter, so it is a real per-call cost and not just
     // a ceiling. With the narrowed tool payload a call costs roughly 1600
@@ -57,7 +63,9 @@ export function getServerConfig(): ServerConfig {
     // Must stay under the platform function limit (60s on Vercel Hobby) so the
     // request fails with a readable error rather than being killed mid-stream.
     requestTimeoutMs: intEnv('AI_TIMEOUT_MS', 50_000),
-    maxToolIterations: intEnv('AI_MAX_TOOL_ITERATIONS', 4),
+    // Three round-trips is what the token budget above actually affords; a
+    // fourth would spend a call just to be refused by the rate limiter.
+    maxToolIterations: intEnv('AI_MAX_TOOL_ITERATIONS', 3),
     rateLimitPerMinute: intEnv('RATE_LIMIT_PER_MINUTE', 20),
     rateLimitPerDay: intEnv('RATE_LIMIT_PER_DAY', 500),
     authRequired: env('AUTH_REQUIRED') === 'true',

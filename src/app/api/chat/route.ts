@@ -7,7 +7,7 @@ import { resolveIdentity, clientKey } from '@/lib/core/auth';
 import { rateLimiter, rateLimitHeaders, assertAllowed } from '@/lib/core/ratelimit';
 import { buildContext, summarizeDropped } from '@/lib/core/memory';
 import { eventStreamResponse } from '@/lib/core/sse';
-import { AiClient } from '@/lib/core/ai/client';
+import { AiClient, type ContentBlock } from '@/lib/core/ai/client';
 import { runAgent } from '@/lib/core/ai/agent';
 import type { StreamEvent } from '@/lib/core/types';
 
@@ -74,12 +74,19 @@ export async function POST(request: Request) {
       parsed.memorySummary ?? summarizeDropped(parsed.messages, context.droppedCount);
 
     const lastMessage = parsed.messages[parsed.messages.length - 1];
+    // Checked against what buildContext actually kept, not the raw request:
+    // memory strips images from every turn except the most recent couple, so
+    // this must match what is really going out or the model gets switched for
+    // a photo that no longer exists in the payload.
+    const hasImages = context.messages.some(
+      (m) => Array.isArray(m.content) && m.content.some((b: ContentBlock) => b.type === 'image'),
+    );
     const system = subject.buildSystemPrompt({
       mode,
       level: parsed.level,
       memorySummary,
       sessionNotes: [...context.sessionNotes, ...(parsed.sessionNotes ?? [])],
-      hasImages: Boolean(lastMessage.images?.length),
+      hasImages,
     });
 
     const client = new AiClient({
@@ -104,7 +111,9 @@ export async function POST(request: Request) {
       system,
       advertisedTools,
       messages: context.messages,
-      model: config.model,
+      // The default model is text-only and cannot read a photographed
+      // problem, so a request carrying an image goes to the vision model.
+      model: hasImages ? config.visionModel : config.model,
       maxTokens: config.maxTokens,
       maxIterations: config.maxToolIterations,
       context: { subjectId: subject.id, mode, level: parsed.level },
@@ -124,6 +133,7 @@ export async function POST(request: Request) {
       message: appError.message,
       code: appError.code,
       retryable: appError.retryable,
+      retryAfter: appError.retryAfter,
     };
     return new Response(JSON.stringify({ ...appError.toJSON(), event }), {
       status: appError.status,

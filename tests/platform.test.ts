@@ -442,6 +442,49 @@ test('a model listing failure still produces an actionable 404', async () => {
   );
 });
 
+test('a rate limit carries how long to wait', async () => {
+  // Without this the student sees "try again" with no idea when, and hammers
+  // a button that spends quota they are already out of.
+  const client = new AiClient({
+    apiKey: 'test-key',
+    fetchImpl: (async () =>
+      new Response(
+        JSON.stringify({
+          error: {
+            message:
+              'Rate limit reached for model `openai/gpt-oss-120b` on tokens per minute (TPM): Limit 8000, Used 7318, Requested 7256. Please try again in 49.305s.',
+          },
+        }),
+        { status: 429 },
+      )) as unknown as typeof fetch,
+  });
+
+  await assert.rejects(
+    () => client.complete({ model: 'm', system: 's', messages: [], maxTokens: 5 }),
+    (e: AppError) => {
+      assert.equal(e.code, 'rate_limited');
+      assert.equal(e.retryable, true);
+      assert.equal(e.retryAfter, 50, 'the wait is rounded up to whole seconds');
+      return true;
+    },
+  );
+});
+
+test('a rate limit without a stated wait still reports cleanly', async () => {
+  const client = new AiClient({
+    apiKey: 'test-key',
+    fetchImpl: (async () =>
+      new Response(JSON.stringify({ error: { message: 'Too many requests' } }), {
+        status: 429,
+      })) as unknown as typeof fetch,
+  });
+
+  await assert.rejects(
+    () => client.complete({ model: 'm', system: 's', messages: [], maxTokens: 5 }),
+    (e: AppError) => e.code === 'rate_limited' && e.retryAfter === undefined,
+  );
+});
+
 test('client maps auth failures to a clear error', async () => {
   const client = new AiClient({
     apiKey: 'bad',
