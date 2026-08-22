@@ -2,6 +2,7 @@ import type { SubjectModule } from '../../core/types';
 import { MATH_MODES, DEFAULT_MATH_MODE } from './modes';
 import { buildMathSystemPrompt } from './prompt';
 import { MATH_TOOLS } from './tools';
+import { selectMathTools } from './select';
 
 export const mathSubject: SubjectModule = {
   id: 'math',
@@ -14,6 +15,7 @@ export const mathSubject: SubjectModule = {
   modes: MATH_MODES,
   defaultMode: DEFAULT_MATH_MODE,
   tools: MATH_TOOLS,
+  selectTools: (input) => selectMathTools(MATH_TOOLS, input),
   buildSystemPrompt: buildMathSystemPrompt,
   status: 'available',
   suggestions: [

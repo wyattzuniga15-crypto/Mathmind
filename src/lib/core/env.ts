@@ -47,11 +47,12 @@ export function getServerConfig(): ServerConfig {
     model: env('GROQ_MODEL') ?? 'openai/gpt-oss-120b',
     fastModel: env('GROQ_FAST_MODEL') ?? env('GROQ_MODEL') ?? 'openai/gpt-oss-20b',
     // Groq bills this reservation against your tokens-per-minute quota even
-    // when the reply is far shorter, and a tutored answer costs two calls (one
-    // to choose the tool, one to explain the verified result). At 4096 a single
-    // question could not fit inside the 8000 TPM free tier. 1024 is roughly 750
-    // words, which is long enough for a worked solution; raise it on a paid
-    // tier where the quota is not the binding constraint.
+    // when the reply is far shorter, so it is a real per-call cost and not just
+    // a ceiling. With the narrowed tool payload a call costs roughly 1600
+    // tokens of input, so 1024 leaves room for three tool round-trips inside an
+    // 8000 TPM budget (3 x 2624 = 7872) -- enough for a multi-part problem.
+    // That is the trade being made: raising this buys longer answers and costs
+    // round-trips. Raise it on a paid tier, where the quota does not bind.
     maxTokens: intEnv('AI_MAX_TOKENS', 1024),
     // Must stay under the platform function limit (60s on Vercel Hobby) so the
     // request fails with a readable error rather than being killed mid-stream.
