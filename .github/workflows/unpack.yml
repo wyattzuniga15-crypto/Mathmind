@@ -1,10 +1,14 @@
 name: Unpack MathMind ZIP
 
+# Manual only, on purpose.
+#
+# This job overwrites the working tree with the contents of mathmind.zip and
+# pushes the result. When it also ran on push, dropping an older zip into the
+# repository silently reverted the project to that snapshot -- which is how the
+# streaming chat route got replaced once already. Run it from the Actions tab
+# when you really do mean to replace the project with a zip.
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "mathmind.zip"
 
 permissions:
   contents: write

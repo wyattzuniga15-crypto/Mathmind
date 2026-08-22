@@ -1,6 +1,6 @@
 # Deploying from a phone
 
-You need two free accounts — **GitHub** and **Vercel** — plus an **Anthropic API
+You need two free accounts — **GitHub** and **Vercel** — plus a **Groq API
 key**. No computer, no terminal, no `npm`.
 
 Total time: about 10 minutes, most of it waiting for builds.
@@ -9,9 +9,9 @@ Total time: about 10 minutes, most of it waiting for builds.
 
 ## What you need first
 
-1. **An Anthropic API key.** In your phone browser open
-   `console.anthropic.com` → sign in → **API keys** → **Create key** → copy it.
-   It starts with `sk-ant-`. Paste it somewhere you can get to later (a note to
+1. **A Groq API key.** In your phone browser open
+   `console.groq.com/keys` → sign in → **Create API Key** → copy it.
+   It starts with `gsk_`. Paste it somewhere you can get to later (a note to
    yourself). You will need it in step 6.
 2. **The file `mathmind.zip`** saved to your phone. In the Claude app, tap the
    file and choose Save / Download so it lands in Files (iPhone) or Downloads
@@ -93,7 +93,7 @@ Still on the import screen, open **Environment Variables** and add:
 
 | Name | Value |
 | --- | --- |
-| `ANTHROPIC_API_KEY` | your `sk-ant-…` key |
+| `GROQ_API_KEY` | your `gsk_…` key |
 
 Tap **Add**, then **Deploy**.
 
@@ -120,7 +120,7 @@ app.
 
 Open the deployment in Vercel and read the log.
 
-- **"ANTHROPIC_API_KEY is not set"** — the app built fine, you just missed step
+- **"GROQ_API_KEY is not set"** — the app built fine, you just missed step
   6. Add it under Settings → Environment Variables, then Deployments → ⋯ →
   **Redeploy**.
 - **A TypeScript error** — the message names the file and line. Tap the file in
@@ -133,6 +133,23 @@ your phone is just: edit file → commit → wait.
 
 ---
 
+## If the app loads but answers fail
+
+Open `https://your-app.vercel.app/api/diag` in the browser. It runs the whole
+pipeline server-side and names the broken step: missing key, rejected key, a
+model ID Groq has retired, or a model that cannot call tools. It never prints
+your key.
+
+It also lists every model your key can use right now. If `GROQ_MODEL` is set to
+something no longer on that list, Groq retired it — set the variable to one of
+the listed IDs and redeploy, or delete the variable to fall back to the default.
+
+The simplest working setup is **no `GROQ_MODEL` variable at all**: the app
+defaults to `openai/gpt-oss-120b`, which supports the tool calling the math
+engine depends on.
+
+---
+
 ## Changing settings later
 
 Vercel → your project → **Settings** → **Environment Variables**. Anything from
@@ -140,7 +157,7 @@ Vercel → your project → **Settings** → **Environment Variables**. Anything
 
 | Name | Effect |
 | --- | --- |
-| `AI_MODEL` | Which model answers (default `claude-sonnet-4-5`) |
+| `GROQ_MODEL` | Which model answers (default `openai/gpt-oss-120b`) |
 | `RATE_LIMIT_PER_MINUTE` | Requests allowed per minute per user |
 | `RATE_LIMIT_PER_DAY` | Requests allowed per day per user |
 
@@ -150,7 +167,7 @@ Change one, then **Redeploy** for it to take effect.
 
 ## A note on cost
 
-Every question sends a request to Anthropic and is billed to your key. The
+Every question sends a request to Groq and is billed to your key. The
 built-in rate limits (20/minute, 500/day per visitor) are there to stop a
 runaway bill if you share the link. If you plan to give the URL to other
 people, lower `RATE_LIMIT_PER_DAY` first, and consider keeping the deployment

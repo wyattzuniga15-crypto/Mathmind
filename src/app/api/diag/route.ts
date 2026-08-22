@@ -65,6 +65,43 @@ export async function GET() {
     return Response.json({ ok: false, summary: 'No API key configured.', steps }, { status: 200 });
   }
 
+  // 3b. Which models can this key actually reach? Groq retires IDs on a
+  //     schedule, so a hardcoded list in the docs goes stale; ask the provider.
+  let availableModels: string[] = [];
+  try {
+    const res = await fetch(`${baseUrl}/models`, {
+      headers: { authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { data?: Array<{ id?: string }> };
+      availableModels = (json.data ?? [])
+        .map((m) => m.id)
+        .filter((id): id is string => typeof id === 'string')
+        .sort();
+    }
+    steps.push({
+      step: '3b. Models available to this key',
+      ok: availableModels.length > 0,
+      detail: availableModels.length
+        ? `${availableModels.length} models: ${availableModels.join(', ')}`
+        : `Could not list models (HTTP ${res.status}). The key may be invalid.`,
+    });
+    if (availableModels.length && !availableModels.includes(model)) {
+      steps.push({
+        step: '3c. Configured model is available',
+        ok: false,
+        detail: `GROQ_MODEL is "${model}", which is not in the list above. It was probably retired. Set GROQ_MODEL to one of the listed IDs and redeploy.`,
+      });
+    }
+  } catch (e) {
+    steps.push({
+      step: '3b. Models available to this key',
+      ok: false,
+      detail: `Could not list models: ${(e as Error).message}`,
+    });
+  }
+
   // 4. Can we reach the provider and is the model ID valid?
   try {
     const res = await fetch(`${baseUrl}/chat/completions`, {

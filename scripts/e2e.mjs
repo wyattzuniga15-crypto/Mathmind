@@ -4,13 +4,31 @@
  * routes, real agent loop, and real math engine.
  *
  *   node scripts/e2e.mjs            # offline, using the stand-in upstream
- *   ANTHROPIC_API_KEY=... node scripts/e2e.mjs --live
+ *   GROQ_API_KEY=... node scripts/e2e.mjs --live
  *
  * With --live the language model is real too. Without it, only the model is
  * substituted; every number asserted below still comes from the math engine.
  */
-import { chromium } from 'playwright';
 import { startMockUpstream } from './mock-upstream.mjs';
+
+/**
+ * Playwright is loaded on demand rather than declared as a dependency: its
+ * install step downloads browser bundles, and this repository is deployed with
+ * `npm install`, so declaring it would put a few hundred megabytes of download
+ * into every production build for a tool only the test suite uses.
+ */
+async function loadChromium() {
+  try {
+    return (await import('playwright')).chromium;
+  } catch {
+    console.error(
+      'The end-to-end suite needs Playwright:\n' +
+        '  npm install --no-save playwright && npx playwright install chromium\n' +
+        'If a Chromium is already installed, point PLAYWRIGHT_CHROMIUM_EXECUTABLE at it.',
+    );
+    process.exit(1);
+  }
+}
 
 const LIVE = process.argv.includes('--live') && Boolean(process.env.GROQ_API_KEY);
 
@@ -31,7 +49,7 @@ async function main() {
   if (!LIVE) {
     upstream = await startMockUpstream({ port: 0 });
     process.env.GROQ_BASE_URL = upstream.url;
-    process.env.GROQ_API_KEY = 'gsk-harness-not-a-real-key';
+    process.env.GROQ_API_KEY = 'gsk_harnessNotARealKey000000000000';
   }
   process.env.RATE_LIMIT_PER_MINUTE = '200';
 
@@ -39,7 +57,14 @@ async function main() {
   const harness = await startHarness({ port: 0, quiet: true });
   const base = `http://127.0.0.1:${harness.port}`;
 
-  const browser = await chromium.launch();
+  const chromium = await loadChromium();
+  // CI images and sandboxes often ship a preinstalled Chromium instead of
+  // letting Playwright download its own. Honour it when it is pointed at.
+  const browser = await chromium.launch(
+    process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+      : {},
+  );
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
 
@@ -243,9 +268,13 @@ async function main() {
 
     /* ------------------------------ security ------------------------------ */
     const clientBundle = await (await fetch(`${base}/app.js`)).text();
-    check('API key never appears in the client bundle', !clientBundle.includes('gsk-') && !clientBundle.includes('sk-ant-'));
+    // Real Groq keys start with `gsk_`, so that is the prefix that matters here.
     check(
-      'client bundle contains no ANTHROPIC_API_KEY reference',
+      'API key never appears in the client bundle',
+      !clientBundle.includes('gsk_') && !clientBundle.includes('gsk-') && !clientBundle.includes('sk-ant-'),
+    );
+    check(
+      'client bundle contains no API key reference',
       !clientBundle.includes('GROQ_API_KEY'),
     );
     check(

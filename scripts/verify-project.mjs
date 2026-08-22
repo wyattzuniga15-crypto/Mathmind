@@ -49,28 +49,32 @@ const clientFiles = files.filter((f) => {
 });
 for (const file of clientFiles) {
   const src = readFileSync(file, 'utf8');
-  if (/ANTHROPIC_API_KEY|process\.env\.(?!NEXT_PUBLIC_)[A-Z_]+/.test(src)) {
+  if (/GROQ_API_KEY|ANTHROPIC_API_KEY|process\.env\.(?!NEXT_PUBLIC_)[A-Z_]+/.test(src)) {
     failures.push(`Client file reads a server env var: ${relative(root, file)}`);
   }
-  if (/api\.anthropic\.com/.test(src)) {
+  if (/api\.groq\.com|api\.anthropic\.com/.test(src)) {
     failures.push(`Client file talks to the AI provider directly: ${relative(root, file)}`);
   }
 }
 
 /* 3. The API key must only be read through the server config module.
-      Tests are exempt: they set the variable to exercise config handling. */
+      Tests are exempt: they set the variable to exercise config handling.
+      The diag route is exempt by design: it reports whether a key is present
+      without ever echoing its value, and must work even when config throws. */
+const KEY_READERS_ALLOWED = ['core/env.ts', `api${sep}diag${sep}route.ts`];
 for (const file of files) {
   if (file.includes(`${sep}tests${sep}`)) continue;
   const src = readFileSync(file, 'utf8');
-  if (/process\.env\.ANTHROPIC_API_KEY/.test(src) && !file.endsWith('core/env.ts')) {
-    failures.push(`ANTHROPIC_API_KEY read outside core/env.ts: ${relative(root, file)}`);
+  const allowed = KEY_READERS_ALLOWED.some((suffix) => file.endsWith(suffix));
+  if (/process\.env\.(GROQ|ANTHROPIC)_API_KEY/.test(src) && !allowed) {
+    failures.push(`The API key is read outside core/env.ts: ${relative(root, file)}`);
   }
 }
 
 /* 4. No committed .env with a real key. */
 for (const name of ['.env', '.env.local']) {
   const p = join(root, name);
-  if (existsSync(p) && /sk-ant-[A-Za-z0-9]/.test(readFileSync(p, 'utf8'))) {
+  if (existsSync(p) && /(gsk_|sk-ant-)[A-Za-z0-9]/.test(readFileSync(p, 'utf8'))) {
     failures.push(`${name} appears to contain a real API key — it must not be committed.`);
   }
 }

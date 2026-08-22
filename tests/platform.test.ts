@@ -356,6 +356,92 @@ test('agent surfaces upstream errors as error events', async () => {
   assert.equal(error.retryable, true);
 });
 
+test('client sends uploaded images to the model as image parts', async () => {
+  // A photographed problem is the entire question for many students. If the
+  // image never reaches the wire, the model answers a blank prompt.
+  let sent: { messages: { role: string; content: unknown }[] } | null = null;
+  const client = new AiClient({
+    apiKey: 'test-key',
+    fetchImpl: (async (_url: string, init: { body: string }) => {
+      sent = JSON.parse(init.body) as typeof sent;
+      return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch,
+  });
+
+  await client.complete({
+    model: 'm',
+    system: 's',
+    maxTokens: 16,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAAB' } },
+          { type: 'text', text: 'Solve the problem in this photo.' },
+        ],
+      },
+    ],
+  });
+
+  const userMessage = sent!.messages.find((m) => m.role === 'user');
+  assert.ok(Array.isArray(userMessage!.content), 'image messages must use content parts');
+  const parts = userMessage!.content as { type: string; text?: string; image_url?: { url: string } }[];
+  assert.ok(parts.some((p) => p.type === 'text' && p.text === 'Solve the problem in this photo.'));
+  const image = parts.find((p) => p.type === 'image_url');
+  assert.ok(image, 'the image must survive the conversion to the provider format');
+  assert.equal(image!.image_url!.url, 'data:image/png;base64,AAAB');
+});
+
+test('a retired model ID reports the models the key can actually use', async () => {
+  // Groq retires model IDs on a schedule. A bare "model not found" leaves the
+  // operator guessing, so the error has to name the working alternatives.
+  const client = new AiClient({
+    apiKey: 'test-key',
+    fetchImpl: (async (url: string) => {
+      if (url.endsWith('/models')) {
+        return new Response(
+          JSON.stringify({ data: [{ id: 'openai/gpt-oss-120b' }, { id: 'openai/gpt-oss-20b' }] }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          error: { message: 'The model `llama-3.1-8b-instant` does not exist or you do not have access to it.' },
+        }),
+        { status: 404 },
+      );
+    }) as unknown as typeof fetch,
+  });
+
+  await assert.rejects(
+    () => client.complete({ model: 'llama-3.1-8b-instant', system: 's', messages: [], maxTokens: 5 }),
+    (e: AppError) => {
+      assert.equal(e.code, 'invalid_request');
+      assert.match(e.message, /llama-3\.1-8b-instant/);
+      assert.match(e.message, /openai\/gpt-oss-120b/);
+      return true;
+    },
+  );
+});
+
+test('a model listing failure still produces an actionable 404', async () => {
+  const client = new AiClient({
+    apiKey: 'test-key',
+    fetchImpl: (async (url: string) => {
+      if (url.endsWith('/models')) throw new Error('network down');
+      return new Response(JSON.stringify({ error: { message: 'model not found' } }), { status: 404 });
+    }) as unknown as typeof fetch,
+  });
+
+  await assert.rejects(
+    () => client.complete({ model: 'gone', system: 's', messages: [], maxTokens: 5 }),
+    (e: AppError) => e.code === 'invalid_request' && /console\.groq\.com/.test(e.message),
+  );
+});
+
 test('client maps auth failures to a clear error', async () => {
   const client = new AiClient({
     apiKey: 'bad',

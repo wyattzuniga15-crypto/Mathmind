@@ -80,9 +80,17 @@ type GroqTool = {
   };
 };
 
+/**
+ * OpenAI-compatible multimodal content part. Groq's vision models take images
+ * as a data URL under `image_url`; there is no `image` block type on the wire.
+ */
+type GroqContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } };
+
 type GroqMessage = {
   role: 'system' | 'user' | 'assistant' | 'tool';
-  content?: string | null;
+  content?: string | GroqContentPart[] | null;
   tool_calls?: Array<{
     id: string;
     type: 'function';
@@ -198,11 +206,26 @@ export class AiClient {
        * Content blocks.
        */
       const textParts: string[] = [];
+      const imageParts: GroqContentPart[] = [];
       const toolCalls: GroqMessage['tool_calls'] = [];
 
       for (const block of message.content) {
         if (block.type === 'text') {
           textParts.push(block.text);
+        }
+
+        /*
+         * A photographed problem is the whole request for a lot of students.
+         * Dropping the image here would leave the model guessing from an empty
+         * prompt, so carry it through as a data URL.
+         */
+        if (block.type === 'image') {
+          imageParts.push({
+            type: 'image_url',
+            image_url: {
+              url: `data:${block.source.media_type};base64,${block.source.data}`,
+            },
+          });
         }
 
         if (block.type === 'tool_use') {
@@ -248,6 +271,17 @@ export class AiClient {
         }
 
         messages.push(assistantMessage);
+      } else if (imageParts.length) {
+        const parts: GroqContentPart[] = [];
+        if (textParts.length) {
+          parts.push({ type: 'text', text: textParts.join('') });
+        }
+        parts.push(...imageParts);
+
+        messages.push({
+          role: 'user',
+          content: parts,
+        });
       } else if (textParts.length) {
         messages.push({
           role: 'user',
@@ -365,6 +399,22 @@ export class AiClient {
         .text()
         .catch(() => '');
 
+      /*
+       * Groq retires model IDs on a schedule, and a retired ID comes back as a
+       * bare 404. "Model not found" on its own leaves you guessing which ID to
+       * use instead, so ask the provider what this key can actually reach and
+       * put the answer in the error.
+       */
+      if (response.status === 404) {
+        const available = await this.listModelIds();
+
+        throw mapGroqHttpError(
+          response.status,
+          text,
+          available,
+        );
+      }
+
       throw mapGroqHttpError(
         response.status,
         text,
@@ -372,6 +422,38 @@ export class AiClient {
     }
 
     return response;
+  }
+
+  /**
+   * Model IDs this key can currently use. Best effort: it runs only on a
+   * failure path, so it never throws and never blocks a working request.
+   */
+  async listModelIds(): Promise<string[]> {
+    try {
+      const response = await this.fetchImpl(
+        `${this.baseUrl}/models`,
+        {
+          method: 'GET',
+          headers: {
+            authorization: `Bearer ${this.apiKey}`,
+          },
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+
+      if (!response.ok) return [];
+
+      const json = (await response.json()) as {
+        data?: Array<{ id?: string }>;
+      };
+
+      return (json.data ?? [])
+        .map((model) => model.id)
+        .filter((id): id is string => typeof id === 'string')
+        .sort();
+    } catch {
+      return [];
+    }
   }
 
   async complete(
@@ -826,9 +908,17 @@ function normalizeStopReason(
   return reason;
 }
 
+/** Pulls the rejected model ID out of a Groq error body, when it names one. */
+function extractModelId(body: string): string | null {
+  const match = /`([^`]+)`|'([^']+)'|"model": ?"([^"]+)"/.exec(body);
+  if (!match) return null;
+  return match[1] ?? match[2] ?? match[3] ?? null;
+}
+
 function mapGroqHttpError(
   status: number,
   body: string,
+  availableModels: string[] = [],
 ): AppError {
   let message = body;
 
@@ -865,9 +955,15 @@ function mapGroqHttpError(
   }
 
   if (status === 404) {
+    const suggestion = availableModels.length
+      ? ` Set GROQ_MODEL to one of the models this key can use: ${availableModels
+          .slice(0, 12)
+          .join(', ')}.`
+      : ' Set GROQ_MODEL to a current ID from console.groq.com/docs/models.';
+
     return new AppError(
       'invalid_request',
-      `Groq endpoint or model was not found. Check GROQ_MODEL. ${short}`,
+      `Groq does not have the model "${extractModelId(body) ?? 'requested'}" — it was probably retired.${suggestion} ${short}`,
       { status: 404 },
     );
   }
