@@ -5,9 +5,12 @@ import { Download, Menu, Moon, PanelLeft, Sigma, Sun, TriangleAlert } from './ic
 import { Sidebar, type SubjectSummary } from './Sidebar';
 import { MessageList } from './MessageList';
 import { Composer } from './Composer';
+import { CopyButton } from './CopyButton';
 import { useChat } from '@/hooks/useChat';
 import { useTheme } from '@/hooks/useTheme';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { conversationStore, loadSettings, saveSettings } from '@/lib/client/storage';
+import { conversationToMarkdown } from '@/lib/client/markdown-export';
 import { createId } from '@/lib/core/sse';
 import type {
   ChatMessage,
@@ -39,6 +42,7 @@ function newConversation(subjectId: string, mode: string, level: StudentLevel): 
 
 export function ChatApp() {
   const { toggle: toggleTheme } = useTheme();
+  const isOnline = useOnlineStatus();
 
   const [subjects, setSubjects] = useState<PlatformSubject[]>([]);
   const [subjectId, setSubjectId] = useState('math');
@@ -308,17 +312,23 @@ export function ChatApp() {
             {active?.title ?? subject?.name ?? 'Math'}
           </h1>
 
-          {!isEmpty && (
-            <button
-              type="button"
-              onClick={() => window.print()}
-              aria-label="Export this conversation as a PDF"
-              title="Export as PDF"
-              data-print-hide
-              className="rounded-lg p-1.5 text-ink-muted hover:bg-surface-sunken"
-            >
-              <Download size={17} />
-            </button>
+          {!isEmpty && active && (
+            <div data-print-hide className="flex items-center">
+              <CopyButton
+                value={() => conversationToMarkdown(active)}
+                label="Copy conversation as Markdown"
+                iconOnly
+              />
+              <button
+                type="button"
+                onClick={() => window.print()}
+                aria-label="Export this conversation as a PDF"
+                title="Export as PDF"
+                className="rounded-lg p-1.5 text-ink-muted hover:bg-surface-sunken"
+              >
+                <Download size={17} />
+              </button>
+            </div>
           )}
 
           <button
@@ -333,14 +343,27 @@ export function ChatApp() {
           </button>
         </header>
 
-        {setupMessage && (
+        {/* Offline takes priority over the setup banner: it is the more
+            urgent, more actionable problem, and both together would just be
+            noise stacked in the same corner of the screen. */}
+        {!isOnline ? (
           <div
             data-print-hide
             className="flex items-start gap-2 border-b border-amber-300/50 bg-amber-50 px-4 py-2.5 text-[12.5px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
           >
             <TriangleAlert size={15} className="mt-0.5 shrink-0" />
-            <p>{setupMessage}</p>
+            <p>You&rsquo;re offline. Reconnect to keep chatting -- your conversations are saved on this device.</p>
           </div>
+        ) : (
+          setupMessage && (
+            <div
+              data-print-hide
+              className="flex items-start gap-2 border-b border-amber-300/50 bg-amber-50 px-4 py-2.5 text-[12.5px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+            >
+              <TriangleAlert size={15} className="mt-0.5 shrink-0" />
+              <p>{setupMessage}</p>
+            </div>
+          )
         )}
 
         {isEmpty ? (
@@ -396,7 +419,7 @@ export function ChatApp() {
           onSend={handleSend}
           onStop={chat.stop}
           isStreaming={chat.isStreaming}
-          disabled={!ready || !subject}
+          disabled={!ready || !subject || !isOnline}
         />
       </div>
     </div>

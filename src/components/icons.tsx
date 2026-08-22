@@ -193,6 +193,13 @@ export const CircleAlert = (p: IconProps) => (
   </Icon>
 );
 
+export const Search = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </Icon>
+);
+
 export const Download = (p: IconProps) => (
   <Icon {...p}>
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

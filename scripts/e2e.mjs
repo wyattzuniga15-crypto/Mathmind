@@ -65,7 +65,10 @@ async function main() {
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
       : {},
   );
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    permissions: ['clipboard-read', 'clipboard-write'],
+  });
   const page = await context.newPage();
 
   const consoleErrors = [];
@@ -115,6 +118,20 @@ async function main() {
       await page.isVisible('text=/Verified with \\d+ exact computation/'),
     );
     check('KaTeX rendered math', (await page.locator('.katex').count()) > 0);
+
+    /* ------------------------ copy conversation as markdown ---------------- */
+    check(
+      'copy-as-markdown button appears once a conversation has messages',
+      await page.isVisible('button[aria-label="Copy conversation as Markdown"]'),
+    );
+    await page.click('button[aria-label="Copy conversation as Markdown"]');
+    await wait(200);
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText()).catch(() => '');
+    check(
+      'clipboard holds the conversation as markdown, not the rendered app',
+      clipboard.startsWith('#') && clipboard.includes('2 + 2') && !clipboard.includes('<'),
+      clipboard.slice(0, 60),
+    );
 
     /* ------------------------- export as PDF (print) ----------------------- */
     check(
@@ -237,6 +254,28 @@ async function main() {
     const convCount = await page.locator('aside button[title]').count();
     check('conversation history lists past chats', convCount >= 5, `found ${convCount}`);
 
+    // search: the mock upstream titles every conversation identically, so
+    // this asserts by opening the filtered result and checking its actual
+    // transcript, the same thing a real user cares about -- not the title.
+    check('search box appears once there is enough history', await page.isVisible('input[aria-label="Search conversations"]'));
+    await page.fill('input[aria-label="Search conversations"]', 'derivative');
+    await wait(150);
+    const searchRowCount = await page.locator('aside .group').count();
+    check('search narrows the list to the matching conversation', searchRowCount === 1, `${searchRowCount} rows`);
+    if (searchRowCount === 1) {
+      await page.click('aside .group button >> nth=0');
+      await wait(300);
+      check(
+        'the opened search result actually contains the search term',
+        /derivative/i.test(await page.locator('article').first().innerText()),
+      );
+    }
+    await page.fill('input[aria-label="Search conversations"]', 'no conversation says this');
+    await wait(150);
+    check('search reports no matches rather than showing everything', await page.isVisible('text=/No conversations match/'));
+    await page.click('button[aria-label="Clear search"]');
+    await wait(150);
+
     // rename
     const firstRow = page.locator('aside .group').first();
     await firstRow.hover();
@@ -259,6 +298,44 @@ async function main() {
     await page.click('button:has-text("Delete")');
     await wait(400);
     check('delete conversation works', !(await page.isVisible('text=Renamed by test')));
+
+    /* --------------------------- jump to latest ---------------------------- */
+    await page.click('button:has-text("New conversation")');
+    await page.waitForSelector('text=Math tutor');
+    for (const p of ['1 + 1', '2 + 2', '3 + 3', '4 + 4']) await send(p);
+    await page.evaluate(() => {
+      const el = document.querySelector('.overscroll-contain');
+      el.scrollTop = 0;
+      el.dispatchEvent(new Event('scroll'));
+    });
+    await wait(200);
+    const jumpVisible = await page.isVisible('button[aria-label="Jump to the latest message"]');
+    check('jump-to-latest button appears once scrolled away from the bottom', jumpVisible);
+    if (jumpVisible) {
+      await page.click('button[aria-label="Jump to the latest message"]');
+      await wait(500);
+      const gap = await page.evaluate(() => {
+        const el = document.querySelector('.overscroll-contain');
+        return el.scrollHeight - el.scrollTop - el.clientHeight;
+      });
+      check('jump-to-latest actually returns to the bottom', gap < 120, `gap=${gap}`);
+      check(
+        'jump-to-latest button disappears once back at the bottom',
+        !(await page.isVisible('button[aria-label="Jump to the latest message"]')),
+      );
+    }
+
+    /* ---------------------------- offline banner --------------------------- */
+    await context.setOffline(true);
+    await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+    await wait(200);
+    check('offline banner appears when the connection drops', await page.isVisible('text=/You.re offline/'));
+    check('composer is disabled while offline', await page.isDisabled('textarea[aria-label="Message"]'));
+    await context.setOffline(false);
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await wait(200);
+    check('offline banner clears once back online', !(await page.isVisible('text=/You.re offline/')));
+    check('composer re-enables once back online', !(await page.isDisabled('textarea[aria-label="Message"]')));
 
     /* ------------------------------- theming ------------------------------ */
     const beforeTheme = await page.evaluate(() => document.documentElement.classList.contains('dark'));

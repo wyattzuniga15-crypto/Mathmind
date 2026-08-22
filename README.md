@@ -29,7 +29,7 @@ If the key is missing, the app loads and tells you exactly what to fix rather th
 | --- | --- |
 | `npm run dev` | Start the dev server |
 | `npm run build` / `npm start` | Production build and serve |
-| `npm test` | Unit suite (92 tests, no network or API key needed) |
+| `npm test` | Unit suite (96 tests, no network or API key needed) |
 | `npm run test:e2e` | End-to-end browser test of the real UI (see below) |
 | `npm run typecheck` | TypeScript across the whole project |
 | `npm run typecheck:lib` | Strict check of the dependency-free core |
@@ -42,8 +42,10 @@ If the key is missing, the app loads and tells you exactly what to fix rather th
 ## End-to-end testing
 
 `npm run test:e2e` launches the real UI in Chromium against the real API routes,
-the real streaming agent loop, and the real math engine, then asserts 38 checks:
-every math scenario below, exporting a conversation to PDF, streaming and stop,
+the real streaming agent loop, and the real math engine, then asserts 51 checks:
+every math scenario below, exporting a conversation to PDF or Markdown,
+searching conversation history, jumping back to the latest message while
+scrolled up, an offline banner that disables the composer, streaming and stop,
 conversation create/rename/delete, persistence across reload, theme switching,
 error display, and that no secret reaches the client bundle.
 
@@ -209,6 +211,20 @@ survives into print and would put light text on the unprinted white page).
 `public/manifest.json` plus the icons and `appleWebApp` metadata in
 `layout.tsx` make "Add to Home Screen" open as a standalone app -- own icon
 and window chrome, no browser address bar -- on both Android and iOS.
+
+## Convenience features
+
+- **Search** (`Sidebar.tsx`) appears once there are more than a handful of
+  conversations. It matches title or message content, so "the one about
+  circles" finds a conversation whose title never says "circle."
+- **Copy as Markdown** (`lib/client/markdown-export.ts`) is the plain-text
+  sibling of PDF export -- for pasting into notes or a homework doc rather
+  than producing a page. Never includes image data, only an image count.
+- **Jump to latest** (`MessageList.tsx`) appears once you scroll away from the
+  bottom during a live answer, so following along doesn't require staying
+  glued to the newest line.
+- **Offline banner** (`hooks/useOnlineStatus.ts`) disables the composer and
+  says so, rather than letting a send fail into a generic network error.
 
 ## When answers stop working
 

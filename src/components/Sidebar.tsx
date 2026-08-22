@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   Lock,
   MessageSquarePlus,
   MoreHorizontal,
   Pencil,
+  Search,
   Sigma,
   Trash2,
   X,
@@ -196,7 +197,23 @@ export function Sidebar(props: Props) {
     onLevelChange,
   } = props;
 
-  const groups = groupByDate(conversations);
+  const [query, setQuery] = useState('');
+
+  // Matches the title or any message, not just the title: "the one about
+  // circles" finds a conversation whose title never says "circle" but whose
+  // messages do. Only appears once history is long enough that scrolling to
+  // find something is actually a chore.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        c.messages.some((m) => m.content.toLowerCase().includes(q)),
+    );
+  }, [conversations, query]);
+
+  const groups = groupByDate(filtered);
 
   return (
     <>
@@ -296,10 +313,39 @@ export function Sidebar(props: Props) {
           </select>
         </div>
 
+        {conversations.length > 4 && (
+          <div className="px-3 pt-4">
+            <div className="relative">
+              <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-faint" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search conversations"
+                aria-label="Search conversations"
+                className="w-full rounded-lg border border-line bg-surface py-1.5 pl-8 pr-7 text-[13px] outline-none focus:border-brand/60"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  aria-label="Clear search"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-ink-faint hover:text-ink"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
           {conversations.length === 0 ? (
             <p className="px-1 py-3 text-[12.5px] text-ink-faint">
               No conversations yet. Ask a question to start one.
+            </p>
+          ) : groups.length === 0 ? (
+            <p className="px-1 py-3 text-[12.5px] text-ink-faint">
+              No conversations match &ldquo;{query}&rdquo;.
             </p>
           ) : (
             groups.map((group) => (
