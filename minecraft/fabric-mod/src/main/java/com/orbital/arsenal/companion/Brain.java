@@ -156,7 +156,7 @@ public final class Brain {
         String[] facts = Task.onServer(server, () -> {
             Companion companion = Companion.of(player);
             return new String[] {
-                player.getGameProfile().getName(),
+                player.getName().getString(),
                 String.format("%.0f, %.0f, %.0f", player.getX(), player.getY(), player.getZ()),
                 companion == null ? "not summoned" : companion.state(),
                 companion == null ? "unknown"

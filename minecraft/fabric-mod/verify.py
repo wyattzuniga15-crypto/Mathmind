@@ -135,6 +135,7 @@ def main():
     # goes in this list so it cannot come back.
     absent = {
         "net/minecraft/entity/Entity.java": ["velocityModified", "getPos"],
+        "com/mojang/authlib/GameProfile.java": ["getName"],
     }
     for rel, members in absent.items():
         stub = ROOT / "stubs" / rel
