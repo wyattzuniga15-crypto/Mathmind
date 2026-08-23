@@ -161,72 +161,120 @@ const STRIPS_PER_TICK = 80; // crater rows cleared per tick (~5.7s total)
  */
 let clearRow = null;
 
-const CLEAR_CANDIDATES = [
-  ["fillBlocks(volume)", (dim, a, b) => dim.fillBlocks({ from: a, to: b }, "minecraft:air")],
-  ["fillBlocks(from,to)", (dim, a, b) => dim.fillBlocks(a, b, "minecraft:air")],
-  ["fill command", (dim, a, b) =>
-    dim.runCommand(`fill ${a.x} ${a.y} ${a.z} ${b.x} ${b.y} ${b.z} air`)],
-  ["setType", (dim, a, b) => {
+/**
+ * Ways to clear a row of blocks, best first. `fillBlocks` clears thousands of
+ * blocks per call; `setType` does one at a time and is a last resort.
+ *
+ * Both `fillBlocks` forms are offered twice: once with the block named as a
+ * string, once with a real air permutation. Older runtimes reject the string
+ * and demand a BlockPermutation, which is very likely why both string forms
+ * were refused in testing. The permutation is lifted off an existing air block
+ * rather than imported, because importing a name a runtime doesn't export
+ * fails the whole module at load — the mistake that cost two releases.
+ */
+function clearCandidates(airPermutation) {
+  const list = [
+    ["fillBlocks(volume,string)", (dim, a, b) =>
+      dim.fillBlocks({ from: a, to: b }, "minecraft:air")],
+    ["fillBlocks(from,to,string)", (dim, a, b) =>
+      dim.fillBlocks(a, b, "minecraft:air")]
+  ];
+  if (airPermutation) {
+    list.push(
+      ["fillBlocks(volume,permutation)", (dim, a, b) =>
+        dim.fillBlocks({ from: a, to: b }, airPermutation)],
+      ["fillBlocks(from,to,permutation)", (dim, a, b) =>
+        dim.fillBlocks(a, b, airPermutation)]
+    );
+  }
+  list.push(["fill command", (dim, a, b) => {
+    const result = dim.runCommand(
+      `fill ${a.x} ${a.y} ${a.z} ${b.x} ${b.y} ${b.z} air`
+    );
+    // A command that runs but changes nothing reports zero successes. Without
+    // this the call looks like it worked and the whole crater comes out empty.
+    if (result && result.successCount === 0) {
+      throw new Error("fill affected no blocks");
+    }
+  }]);
+  if (airPermutation) {
+    list.push(["setPermutation", (dim, a, b) => {
+      for (let z = a.z; z <= b.z; z++) {
+        dim.getBlock({ x: a.x, y: a.y, z }).setPermutation(airPermutation);
+      }
+    }]);
+  }
+  list.push(["setType", (dim, a, b) => {
     for (let z = a.z; z <= b.z; z++) {
       dim.getBlock({ x: a.x, y: a.y, z }).setType("minecraft:air");
     }
-  }]
-];
+  }]);
+  return list;
+}
 
-function blockTypeAt(dimension, at) {
+function blockAt(dimension, at) {
   try {
-    const block = dimension.getBlock(at);
-    return block ? block.typeId : null;
+    return dimension.getBlock(at) || null;
   } catch {
     return null;
   }
 }
 
-/**
- * Pick a way to clear blocks, and prove it works before trusting it.
- *
- * Accepting whatever didn't throw was the bug: an API can exist, accept these
- * arguments, raise nothing, and still clear nothing — leaving a nuke that runs
- * its whole sequence over untouched ground. The probe aims at a block known to
- * be solid (the one the player targeted) and only accepts a candidate that
- * actually turns it to air.
- */
-function resolveClearRow(dimension, probe) {
-  for (const [name, candidate] of CLEAR_CANDIDATES) {
-    const before = blockTypeAt(dimension, probe);
-    const canVerify = before !== null && before !== "minecraft:air";
-    try {
-      candidate(dimension, probe, probe);
-    } catch {
-      continue; // not available on this runtime
+function typeAt(dimension, at) {
+  const block = blockAt(dimension, at);
+  return block ? block.typeId : null;
+}
+
+/** An air permutation, taken from real air rather than an import. */
+function findAirPermutation(dimension, near) {
+  for (const up of [40, 60, 80]) {
+    const block = blockAt(dimension, { x: near.x, y: near.y + up, z: near.z });
+    if (block && block.typeId === "minecraft:air") {
+      try {
+        if (block.permutation) return block.permutation;
+      } catch {}
     }
-    if (!canVerify) return { name: name + " (unverified)", fn: candidate };
-    if (blockTypeAt(dimension, probe) === "minecraft:air") {
-      return { name, fn: candidate };
-    }
-    // Raised nothing but changed nothing — keep looking.
+  }
+  return null;
+}
+
+/** A solid block to test against — air proves nothing when clearing to air. */
+function findSolidProbe(dimension, target) {
+  const x = Math.floor(target.x);
+  const z = Math.floor(target.z);
+  for (let down = 0; down <= 12; down++) {
+    const at = { x, y: Math.floor(target.y) - down, z };
+    const type = typeAt(dimension, at);
+    if (type && type !== "minecraft:air") return at;
   }
   return null;
 }
 
 /**
- * One blast. Deliberately the exact call the cannon has proven works, rather
- * than the breaksBlocks:false variant this used to use — that flag was never
- * exercised by any working build, and if a runtime renders nothing for it then
- * every fireball, cloud puff and shockwave ring silently disappears. Up in the
- * air there are no blocks to break, so breaking is free and looks the same.
+ * Pick a way to clear blocks, and prove it works before trusting it.
+ *
+ * Two things make this fussy. An API can exist, accept these arguments, raise
+ * nothing and still clear nothing — so a candidate is only accepted once a
+ * block known to be solid has actually turned to air. And the probe has to run
+ * before the opening fireball, which would otherwise clear the probe block
+ * itself and leave nothing to verify against.
  */
-function blast(dimension, at, radius) {
-  try {
-    dimension.createExplosion(at, radius, {
-      breaksBlocks: true,
-      causesFire: false,
-      allowUnderwater: true
-    });
-    return true;
-  } catch {
-    return false;
+function resolveClearRow(dimension, target) {
+  const airPermutation = findAirPermutation(dimension, target);
+  for (const [name, candidate] of clearCandidates(airPermutation)) {
+    const probe = findSolidProbe(dimension, target);
+    if (!probe) return { name: "unprovable (no solid ground found)", fn: candidate, verified: false };
+    try {
+      candidate(dimension, probe, probe);
+    } catch {
+      continue; // unavailable, or refused these arguments
+    }
+    if (typeAt(dimension, probe) === "minecraft:air") {
+      return { name, fn: candidate, verified: true };
+    }
+    // Raised nothing but changed nothing — keep looking.
   }
+  return null;
 }
 
 /** How wide the crater is at `dy` blocks above (positive) or below the aim. */
@@ -396,23 +444,23 @@ function detonateNuke(dimension, target, player) {
     });
   } catch {}
 
-  // Fire one real blast before anything clever happens. If every other part of
-  // this fails, the nuke still visibly goes off — and if even this produces
-  // nothing, the report below says so instead of leaving you guessing.
+  // Probe FIRST, while the ground is still intact. The opening fireball below
+  // clears everything around the aim point, including the block the probe
+  // needs to test against — run it first and there is nothing left to prove a
+  // candidate works, so the first one that merely doesn't throw gets trusted.
+  // Only a verified strategy is cached; an unproven one is retried next time.
+  if (clearRow === null || clearRow.verified !== true) {
+    clearRow = resolveClearRow(dimension, target);
+  }
+
+  // Now the fireball. If everything below fails the nuke still visibly goes off.
   const fired = blast(dimension, { x: target.x, y: target.y + 3, z: target.z }, 14);
 
-  if (clearRow === null) {
-    clearRow = resolveClearRow(dimension, {
-      x: Math.floor(target.x),
-      y: Math.floor(target.y),
-      z: Math.floor(target.z)
-    });
-  }
   if (clearRow) {
     carveCrater(dimension, target, clearRow.fn);
   } else {
-    // Nothing can clear blocks on this runtime — dig it the slow, expensive
-    // way rather than leave the ground untouched.
+    // Nothing on this runtime can clear blocks in bulk — dig it the slow,
+    // expensive way rather than leave the ground untouched.
     carveByExplosion(dimension, target);
   }
   shockwave(dimension, target);
@@ -422,7 +470,9 @@ function detonateNuke(dimension, target, player) {
   // failure can't take the pack down, which also means a failure is invisible —
   // this line is the only thing standing between a silent dud and knowing why.
   try {
-    const how = clearRow ? clearRow.name : "explosions (no block clear available)";
+    const how = clearRow
+      ? `${clearRow.name}${clearRow.verified ? "" : " §c(UNPROVEN)§7"}`
+      : "explosions (nothing can clear blocks)";
     world.sendMessage(
       `§4☢ §cNuke detonated §7— blast:${fired ? "ok" : "§cFAILED§7"} crater:${how}`
     );

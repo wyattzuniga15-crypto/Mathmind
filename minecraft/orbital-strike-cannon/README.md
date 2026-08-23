@@ -144,7 +144,20 @@ Crucially the probe *verifies* rather than trusting: it aims at a block known to
 be solid and only accepts a candidate that actually turns it to air. Accepting
 whatever merely didn't raise an error was a real bug — an API can exist, take
 these arguments, raise nothing and clear nothing, leaving a nuke that runs its
-whole sequence over untouched ground.
+whole sequence over untouched ground. A `fill` command that runs but reports
+zero successes counts as failure for the same reason.
+
+Getting that verification to actually happen took two goes. The probe originally
+ran *after* the opening fireball, which had already cleared the block it needed
+to test against — so it could never prove anything and fell through to trusting
+whatever didn't throw. It now runs first, on ground that is still intact, and
+only a proven strategy is cached; an unproven one is retried next detonation.
+
+Each `fillBlocks` form is offered twice, once naming the block as a string and
+once with a real air permutation, because older runtimes reject the string and
+demand a `BlockPermutation`. That permutation is lifted off an existing air
+block rather than imported: importing a name a runtime doesn't export fails the
+whole module at load, which is what cost two earlier releases.
 
 Every blast uses `breaksBlocks: true`, the one configuration confirmed working
 in game. The `false` variant shipped once and rendered nothing at all, which
