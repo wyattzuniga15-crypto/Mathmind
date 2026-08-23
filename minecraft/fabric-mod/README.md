@@ -1,8 +1,9 @@
 # Orbital Arsenal — Fabric mod source
 
-Four genuinely registered items — `orbital:strike_cannon`,
-`orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole` — with
-their own textures, names, creative tab entries and crafting recipes.
+Five genuinely registered items — `orbital:strike_cannon`,
+`orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
+`orbital:orbital_laser` — with their own textures, names, creative tab entries
+and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
 Yarn mappings and the Fabric loader downloaded from Mojang's and Fabric's maven
@@ -113,6 +114,26 @@ chunks don't exist to be removed — a bigger radius would just delete air. A
 leaves bedrock alone: punching through the world floor opens a hole into the
 void that can never be repaired.
 
+**Orbital Laser** — right-click to bring it online, right-click again to cease
+fire, or let it run its twenty seconds. While it burns it cuts a **15-block
+column from above your aim straight down to bedrock**, and it re-reads where
+you are looking *every tick* — so walking or turning drags a canyon behind you
+instead of stamping out one crater.
+
+That steering is the whole point of it. Every other weapon here decides its
+shape at the instant it fires; this one is aimed continuously, which makes it
+the only one you can cut a line with.
+
+It costs much less than its reach suggests. The beam sits over ground it
+cleared last tick, so almost every block it looks at is already air and only
+the leading edge does real work — sweeping it is cheaper than holding it still
+is expensive.
+
+Two things worth knowing before you fire it: it explodes at the impact point
+every half second, which is what makes it hurt anything standing in the beam —
+including you, if you aim at your own feet. And what it cuts goes all the way
+down, so looking straight down opens a hole to bedrock underneath you.
+
 ## How it's put together
 
 ```
@@ -122,6 +143,7 @@ Scheduler.java          a tick queue
 weapons/Formation.java  concentric ring layout
 weapons/Strikes.java    aiming, explosions, particles
 items/*.java            one class per weapon
+make_icon.py            generates the Orbital Laser's item icon
 ```
 
 Every weapon spreads its work across ticks through `Scheduler` rather than
@@ -133,4 +155,5 @@ blocks, and doing that in a single tick would stall the server outright.
 Constants sit at the top of each item class: `SHELLS` / `RADIUS` / `RINGS` and
 `DROP_HEIGHT` for the cannon, `RADIUS` / `DEPTH` / `BLOCKS_PER_TICK` for the
 nuke (lower the last one if it stutters — it stretches the dig rather than
-shrinking the crater), `RANGE` / `BORE` / `STRIDE` for the kamehameha.
+shrinking the crater), `RANGE` / `BORE` / `STRIDE` for the kamehameha, and
+`BORE` / `MAX_TICKS` / `FLOOR` for the laser.

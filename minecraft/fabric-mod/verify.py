@@ -75,7 +75,7 @@ def main():
     # --- every registered item has a name, a model and a texture ---
     items_java = (ROOT / "src/main/java/com/orbital/arsenal/ModItems.java").read_text()
     registered = set(re.findall(r'register\("([a-z_]+)"', items_java))
-    check(len(registered) >= 3, f"expected 3 registered items, found {len(registered)}")
+    check(len(registered) >= 5, f"expected at least 5 registered items, found {len(registered)}")
     lang_path = RES / "assets/orbital/lang/en_us.json"
     lang = {}
     if lang_path.exists():
