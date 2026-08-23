@@ -146,12 +146,31 @@ Newest-first is the only order that gets a block changed several times inside
 the window right — it ends on the state it held at the start rather than
 somewhere in the middle.
 
+Mobs need the opposite treatment, which is why they are recorded separately. A
+block only ever exists at a position, so replaying its changes restores it
+exactly. A mob moves, and can also stop existing — so it takes two records:
+where everything was standing, sampled a few times a second, and a list of
+what died. Positions need only the *oldest* sample replayed rather than every
+one, since walking all 150 of them backwards ends in exactly the same place
+having done the work 150 times.
+
 Three limits, all of them reachable in normal use of this mod:
 
-**It restores blocks, not everything.** Mobs killed in the blast stay dead and
-items dropped stay dropped. Recording every entity's full state every tick
-costs far more than recording block changes does, and blocks are what these
-weapons actually take away.
+**Mobs come back, but as new animals.** Everything that died inside the window
+is put back on its feet where it fell, keeping its name, and every surviving
+mob is returned to where it was standing. What does not survive the trip is
+everything else about it: a tamed wolf comes back wild, a villager comes back
+without its trades, and nothing comes back holding what it was carrying.
+Restoring that needs a mob's full saved state, and those calls were reworked in
+recent versions to something I had no way to verify — so this does the part
+that can be done correctly instead of the part that might silently do nothing.
+
+Players are deliberately left out of both halves. A dead player is put back by
+the game's own respawn, with their inventory and their bed, and quietly
+duplicating one here would be worse than doing nothing; and dragging the person
+holding the clock backwards through the world is not an undo, it is a shove.
+
+Dropped items also stay dropped.
 
 **Very large events overrun it.** The record caps at two million changes, which
 is about forty megabytes. The black hole alone makes twenty-two million, so its

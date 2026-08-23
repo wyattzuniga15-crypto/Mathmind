@@ -22,4 +22,10 @@ public class Entity {
     public boolean isOnGround() { return false; }
     public Vec3d getRotationVec(float t) { return null; }
     public BlockPos getBlockPos() { return null; }
+    public void setPosition(double x, double y, double z) {}
+    public boolean isRemoved() { return false; }
+    public EntityType<?> getType() { return null; }
+    public net.minecraft.text.Text getCustomName() { return null; }
+    public void setCustomName(net.minecraft.text.Text name) {}
+    public net.minecraft.world.World getEntityWorld() { return null; }
 }
