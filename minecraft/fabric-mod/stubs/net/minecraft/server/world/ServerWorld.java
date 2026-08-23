@@ -14,4 +14,7 @@ public class ServerWorld extends World {
     public void createExplosion(Entity source, double x, double y, double z, float power, ExplosionSourceType type) {}
     public BlockState getBlockState(BlockPos pos) { return null; }
     public void setBlockState(BlockPos pos, BlockState state, int flags) {}
+    public java.util.List<Entity> getOtherEntities(Entity except, net.minecraft.util.math.Box box) {
+        return java.util.List.of();
+    }
 }

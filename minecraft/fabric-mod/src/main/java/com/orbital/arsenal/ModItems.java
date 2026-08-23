@@ -1,5 +1,6 @@
 package com.orbital.arsenal;
 
+import com.orbital.arsenal.items.BlackHoleItem;
 import com.orbital.arsenal.items.KamehamehaItem;
 import com.orbital.arsenal.items.StrikeCannonItem;
 import com.orbital.arsenal.items.TacticalNukeItem;
@@ -17,6 +18,7 @@ public final class ModItems {
     public static Item STRIKE_CANNON;
     public static Item TACTICAL_NUKE;
     public static Item KAMEHAMEHA;
+    public static Item BLACK_HOLE;
 
     private ModItems() {}
 
@@ -36,11 +38,13 @@ public final class ModItems {
         STRIKE_CANNON = register("strike_cannon", StrikeCannonItem::new);
         TACTICAL_NUKE = register("tactical_nuke", TacticalNukeItem::new);
         KAMEHAMEHA = register("kamehameha", KamehamehaItem::new);
+        BLACK_HOLE = register("black_hole", BlackHoleItem::new);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
             entries.add(KAMEHAMEHA);
+            entries.add(BLACK_HOLE);
         });
     }
 }

@@ -1,8 +1,8 @@
 # Orbital Arsenal — Fabric mod source
 
-Three genuinely registered items — `orbital:strike_cannon`,
-`orbital:tactical_nuke`, `orbital:kamehameha` — with their own textures, names,
-creative tab entries and crafting recipes.
+Four genuinely registered items — `orbital:strike_cannon`,
+`orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole` — with
+their own textures, names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
 Yarn mappings and the Fabric loader downloaded from Mojang's and Fabric's maven
@@ -92,6 +92,19 @@ Here the beam is drawn with particles — `end_rod` for the white-hot core,
 `soul_fire_flame` for the blue sheath. The Bedrock version had to string
 hundreds of cube entities along the line to get a visible shaft; this costs no
 entities at all.
+
+**Black Hole** — a singularity that eats a sphere **350 blocks across**: about
+22.4 million blocks, roughly eighteen times the nuke. It opens at the centre and
+spreads outward rather than raining down, drags every entity within 220 blocks
+toward the middle, and tears loose blocks near its edge into falling debris that
+spirals in. Then it collapses.
+
+Eighteen times, not more, because more isn't possible. Minecraft only keeps
+chunks loaded a couple of hundred blocks around a player, and blocks in unloaded
+chunks don't exist to be removed — a bigger radius would just delete air. A
+175-block radius sits about eleven chunks out, just inside that edge. It also
+leaves bedrock alone: punching through the world floor opens a hole into the
+void that can never be repaired.
 
 ## How it's put together
 

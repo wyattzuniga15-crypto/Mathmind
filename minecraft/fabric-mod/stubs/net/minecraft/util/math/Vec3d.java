@@ -8,4 +8,5 @@ public class Vec3d {
     public Vec3d multiply(double s) { return this; }
     public Vec3d normalize() { return this; }
     public double length() { return 0.0; }
+    public static Vec3d ofCenter(BlockPos pos) { return null; }
 }
