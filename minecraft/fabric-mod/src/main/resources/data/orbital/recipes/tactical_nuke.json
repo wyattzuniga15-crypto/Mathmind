@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "NTN",
+    "TST",
+    "NTN"
+  ],
+  "key": {
+    "N": "minecraft:netherite_ingot",
+    "T": "minecraft:tnt",
+    "S": "minecraft:nether_star"
+  },
+  "result": {
+    "id": "orbital:tactical_nuke",
+    "count": 1
+  }
+}\n

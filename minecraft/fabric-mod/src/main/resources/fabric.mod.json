@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "orbital",
+  "version": "1.0.0",
+  "name": "Orbital Arsenal",
+  "description": "Orbital strike cannon, tactical nuke and kamehameha.",
+  "authors": [
+    "Orbital Arsenal"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.orbital.arsenal.OrbitalArsenal"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "*",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}\n
