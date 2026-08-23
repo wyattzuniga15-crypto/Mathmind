@@ -46,7 +46,6 @@ public class KamehamehaItem extends Item {
         if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.SUCCESS;
         }
-        Journal.arm();
         charge(serverWorld, user, 0);
         ItemStack stack = user.getStackInHand(hand);
         user.getItemCooldownManager().set(stack, COOLDOWN);

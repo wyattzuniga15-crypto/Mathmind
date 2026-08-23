@@ -26,8 +26,10 @@ import net.minecraft.text.Text;
  *   Position — where every surviving mob stood at the start of the window.
  *   Death    — everything that died inside the window, brought back.
  *
- * Both ride the window Journal is already keeping, and both only run while a
- * weapon has armed it. A world where nobody owns a clock pays nothing.
+ * Both ride the window Journal is already keeping, and both run all the time,
+ * so a creeper that blows up your pigs is as undoable as a black hole. The
+ * sampling is what costs here rather than the deaths, which is why it runs a
+ * few times a second rather than every tick and stops counting past a ceiling.
  */
 public final class Souls {
     /** Matches Journal's window, in ticks. */
@@ -45,6 +47,13 @@ public final class Souls {
      * out of the window.
      */
     private static final int MAX_DEATHS = 4000;
+    /**
+     * A ceiling on how many entities one snapshot will hold. Sampling runs
+     * constantly now, so a world with a pathological number of entities — a mob
+     * farm, an item flood — must not be able to turn this into the reason the
+     * server is slow.
+     */
+    private static final int MAX_SAMPLED = 4000;
 
     /** Where a set of entities stood at one moment. */
     private static final class Snapshot {
@@ -93,7 +102,7 @@ public final class Souls {
         // Players are deliberately left out. A player is put back by the game's
         // own respawn, with their inventory and their bed — quietly duplicating
         // one here would be worse than doing nothing.
-        if (entity instanceof PlayerEntity || !Journal.recording()) {
+        if (entity instanceof PlayerEntity) {
             return;
         }
         if (!(entity.getEntityWorld() instanceof ServerWorld world)) {
@@ -109,14 +118,6 @@ public final class Souls {
 
     public static void tick(MinecraftServer server) {
         now++;
-        if (!Journal.recording()) {
-            // Nothing is being recorded, so let anything held go rather than
-            // pinning dead entities in memory until the window rolls past.
-            if (!RECORDS.isEmpty()) {
-                RECORDS.clear();
-            }
-            return;
-        }
         for (ServerWorld world : server.getWorlds()) {
             Record record = RECORDS.computeIfAbsent(world, key -> new Record());
             if (now % SAMPLE_EVERY == 0) {
@@ -133,6 +134,9 @@ public final class Souls {
             // clock backwards through the world is not an undo, it is a shove.
             if (!(entity instanceof PlayerEntity)) {
                 found.add(entity);
+                if (found.size() >= MAX_SAMPLED) {
+                    break;
+                }
             }
         }
         Entity[] who = found.toArray(new Entity[0]);

@@ -30,10 +30,10 @@ public abstract class WorldChunkMixin {
     @Inject(method = "setBlockState", at = @At("HEAD"), require = 0)
     private void orbital$journal(BlockPos pos, BlockState state, int flags,
                                  CallbackInfoReturnable<BlockState> info) {
-        // Both of these are a static field read, which matters: this method
-        // runs on every block change in the game, including ones no weapon of
-        // this mod had anything to do with.
-        if (Journal.suppressed || !Journal.recording()) {
+        // A static field read, which matters: this method runs on every block
+        // change in the game. The one case to skip is the clock's own replay,
+        // or undoing would file itself as something new to undo.
+        if (Journal.suppressed) {
             return;
         }
         WorldChunk self = (WorldChunk) (Object) this;

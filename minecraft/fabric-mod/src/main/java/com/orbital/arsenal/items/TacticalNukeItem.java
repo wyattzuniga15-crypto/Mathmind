@@ -45,7 +45,6 @@ public class TacticalNukeItem extends Item {
             return ActionResult.SUCCESS;
         }
 
-        Journal.arm();
         Vec3d target = Strikes.aim(user, 300.0);
         countdown(serverWorld, user, target, FUSE_SECONDS);
 

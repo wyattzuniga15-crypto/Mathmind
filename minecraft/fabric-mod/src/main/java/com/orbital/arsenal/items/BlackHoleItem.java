@@ -57,7 +57,6 @@ public class BlackHoleItem extends Item {
             return ActionResult.SUCCESS;
         }
 
-        Journal.arm();
         Vec3d centre = Strikes.aim(user, AIM_DISTANCE);
         user.sendMessage(Text.literal("§5● SINGULARITY FORMING"), true);
         serverWorld.playSound(null, BlockPos.ofFloored(centre), SoundEvents.ENTITY_WARDEN_SONIC_BOOM,

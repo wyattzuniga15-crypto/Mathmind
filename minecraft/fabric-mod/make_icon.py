@@ -93,10 +93,42 @@ CLOCK = [
     [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
 ]
 
+# Potato Bomb: a fat brown potato belted with a metal band, fuse lit.
+_t = (0, 0, 0, 0)          # transparent
+_o = (52, 34, 18, 255)     # outline
+_1 = (140, 96, 52, 255)    # skin, shadowed
+_2 = (178, 128, 72, 255)   # skin
+_3 = (208, 160, 100, 255)  # skin, lit
+_e = (92, 62, 34, 255)     # the eyes of the potato
+_m = (70, 72, 80, 255)     # metal band
+_h = (120, 124, 134, 255)  # band highlight
+_f = (196, 190, 170, 255)  # fuse cord
+_Y = (255, 214, 90, 255)   # spark
+_R = (255, 132, 40, 255)   # spark, hot
+
+POTATO = [
+    [_t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _R, _Y, _t, _t, _t],
+    [_t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _Y, _R, _Y, _R, _t, _t],
+    [_t, _t, _t, _t, _t, _t, _t, _t, _t, _f, _Y, _t, _R, _t, _t, _t],
+    [_t, _t, _t, _t, _t, _t, _t, _t, _f, _t, _t, _t, _t, _t, _t, _t],
+    [_t, _t, _t, _o, _o, _o, _o, _f, _o, _o, _t, _t, _t, _t, _t, _t],
+    [_t, _t, _o, _2, _3, _3, _2, _2, _1, _1, _o, _t, _t, _t, _t, _t],
+    [_t, _o, _2, _3, _3, _e, _2, _2, _2, _1, _1, _o, _t, _t, _t, _t],
+    [_o, _1, _m, _m, _m, _m, _m, _m, _m, _m, _m, _m, _o, _t, _t, _t],
+    [_o, _1, _h, _h, _m, _m, _h, _h, _m, _m, _h, _m, _1, _o, _t, _t],
+    [_o, _2, _3, _2, _2, _2, _2, _e, _2, _1, _1, _1, _1, _o, _t, _t],
+    [_o, _2, _3, _3, _2, _e, _2, _2, _2, _2, _1, _1, _1, _o, _t, _t],
+    [_o, _1, _2, _2, _2, _2, _2, _2, _2, _1, _1, _1, _o, _t, _t, _t],
+    [_t, _o, _1, _1, _2, _2, _2, _1, _1, _1, _1, _o, _t, _t, _t, _t],
+    [_t, _t, _o, _o, _1, _1, _1, _1, _1, _o, _o, _t, _t, _t, _t, _t],
+    [_t, _t, _t, _t, _o, _o, _o, _o, _o, _t, _t, _t, _t, _t, _t, _t],
+    [_t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t],
+]
+
 
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
-    for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK)):
+    for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO)):
         out = art / f"{name}.png"
         assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
         assert len(pixels) == 16, f"{name} is not 16 tall"

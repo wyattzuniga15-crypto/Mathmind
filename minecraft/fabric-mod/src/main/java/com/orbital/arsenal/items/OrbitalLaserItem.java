@@ -66,7 +66,6 @@ public class OrbitalLaserItem extends Item {
             return ActionResult.SUCCESS;
         }
 
-        Journal.arm();
         Beam running = FIRING.get(user);
         if (running != null) {
             // Holding right-click re-fires use() about every four ticks, so a

@@ -3,6 +3,7 @@ package com.orbital.arsenal;
 import com.orbital.arsenal.items.BlackHoleItem;
 import com.orbital.arsenal.items.KamehamehaItem;
 import com.orbital.arsenal.items.OrbitalLaserItem;
+import com.orbital.arsenal.items.PotatoBombItem;
 import com.orbital.arsenal.items.RewindClockItem;
 import com.orbital.arsenal.items.StrikeCannonItem;
 import com.orbital.arsenal.items.TacticalNukeItem;
@@ -22,6 +23,7 @@ public final class ModItems {
     public static Item KAMEHAMEHA;
     public static Item BLACK_HOLE;
     public static Item ORBITAL_LASER;
+    public static Item POTATO_BOMB;
     public static Item REWIND_CLOCK;
 
     private ModItems() {}
@@ -44,6 +46,7 @@ public final class ModItems {
         KAMEHAMEHA = register("kamehameha", KamehamehaItem::new);
         BLACK_HOLE = register("black_hole", BlackHoleItem::new);
         ORBITAL_LASER = register("orbital_laser", OrbitalLaserItem::new);
+        POTATO_BOMB = register("potato_bomb", PotatoBombItem::new);
         REWIND_CLOCK = register("rewind_clock", RewindClockItem::new);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
@@ -52,6 +55,7 @@ public final class ModItems {
             entries.add(KAMEHAMEHA);
             entries.add(BLACK_HOLE);
             entries.add(ORBITAL_LASER);
+            entries.add(POTATO_BOMB);
             entries.add(REWIND_CLOCK);
         });
     }

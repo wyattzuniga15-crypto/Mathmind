@@ -1,8 +1,9 @@
 # Orbital Arsenal — Fabric mod source
 
-Six genuinely registered items — `orbital:strike_cannon`,
+Seven genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
-`orbital:orbital_laser`, `orbital:rewind_clock` — with their own textures,
+`orbital:orbital_laser`, `orbital:rewind_clock`,
+`orbital:potato_bomb` — with their own textures,
 names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
@@ -179,10 +180,15 @@ restores only the last part of it. The cap is there because the alternative is
 running the game out of memory, which is a worse answer than an incomplete
 undo. The nuke, at 1.27 million, fits comfortably.
 
-**It only records while a weapon is in play.** Firing anything in this arsenal
-switches the record on for a minute; outside that, block changes are not
-recorded at all. A world where nobody owns a clock should not pay for one on
-every block placed, broken or flowed.
+**It records everything, always.** Not just this mod's weapons — a creeper, a
+fire, a pickaxe, another mod. That is affordable because a normal world barely
+changes: a few hundred blocks a second at the very outside, against a record
+sized for the twenty-two million a black hole makes. An idle world costs a map
+lookup and an array append per block change.
+
+The sharp edge of that is worth saying plainly: the clock undoes the last
+thirty seconds of *everything*. Blocks you placed in that window are un-placed
+too. It is an undo, not a repair tool.
 
 That last point is also why this is the only part of the mod that needs a
 mixin. The cannon and the meteor storm break blocks through vanilla's explosion
@@ -192,6 +198,17 @@ that method's shape ever moves, the hook quietly does nothing rather than
 refusing to load the mod, the clock keeps its reach over everything this mod
 clears directly, and the rest of the arsenal is unaffected.
 
+**Potato Bomb** — 300 charges over a **70-block circle**, and then the crater
+gets planted. Once the last shell has gone off, the whole floor is tilled and
+sown with potatoes, so the thing that just flattened the hillside also feeds
+you. The only weapon here that gives something back.
+
+The planting waits on the blast rather than running alongside it. Shells go off
+when they land, and the last of them can still be falling several seconds after
+the first detonates — sowing any earlier would plant a field and then blow it
+up. It also walks *down* to find the floor rather than planting at the height it
+was aimed at, because after a blast the ground is nowhere near where it started.
+
 ## How it's put together
 
 ```
@@ -199,6 +216,7 @@ OrbitalArsenal.java     mod entrypoint, registers items and the tick hook
 ModItems.java           the three registrations and the creative tab
 Scheduler.java          a tick queue
 weapons/Formation.java  concentric ring layout
+weapons/Shells.java     TNT that detonates on impact rather than on a timer
 weapons/Strikes.java    aiming, explosions, particles
 items/*.java            one class per weapon
 time/Journal.java       the rolling record the rewind clock replays

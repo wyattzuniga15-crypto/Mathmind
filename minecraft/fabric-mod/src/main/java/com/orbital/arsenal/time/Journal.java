@@ -15,6 +15,16 @@ import net.minecraft.util.math.BlockPos;
  * Every block change is filed with the state that was there before it, grouped
  * by the tick it happened on. Replaying those backwards puts the world back.
  *
+ * Recording runs all the time, for every change in the world whoever made it —
+ * a creeper, a fire, a pickaxe, another mod. It is affordable because a normal
+ * world simply does not change much: a few hundred blocks a second at the
+ * outside, against a cap sized for the twenty-two million a black hole makes.
+ * The cost of an idle world is a map lookup and an array append per change.
+ *
+ * Note what that means, since it is the whole point and also the sharp edge:
+ * the clock undoes the last thirty seconds of *everything*. Blocks you placed
+ * in that window are un-placed too. It is an undo, not a repair tool.
+ *
  * Two limits are worth stating plainly, because both are reachable in normal
  * use of this mod:
  *
@@ -33,31 +43,12 @@ public final class Journal {
     private static final int WINDOW = 600;             // 30 seconds
     private static final int MAX_ENTRIES = 2_000_000;
     private static final int RESTORE_PER_TICK = 40_000;
-    /**
-     * How long firing a weapon keeps the record running. Longer than the window
-     * on purpose: the black hole digs for nearly thirty seconds and the
-     * cannon's shells can be in the air for a further thirty after that, so
-     * arming for only the rewind window would stop recording partway through
-     * the very thing the clock exists to undo.
-     */
-    private static final int ARM_DURATION = 1200;
 
     /**
      * Set while this class is writing a block itself, so the mixin that watches
      * every change in the world does not file the undo as a new change to undo.
      */
     public static boolean suppressed = false;
-
-    /**
-     * Recording is off until a weapon fires.
-     *
-     * The alternative — journalling every block change in the world all the
-     * time — would mean a world where nobody owns a clock still pays for one on
-     * every block placed, broken, or flowed. That is a real cost for a feature
-     * nobody is using. Firing anything in this arsenal switches it on, and it
-     * switches itself off again a minute later.
-     */
-    private static int armedUntil = Integer.MIN_VALUE;
 
     /** One tick's worth of changes, in the order they happened. */
     private static final class Frame {
@@ -94,21 +85,8 @@ public final class Journal {
 
     private Journal() {}
 
-    /** Start recording. Every weapon calls this as it fires. */
-    public static void arm() {
-        armedUntil = now + ARM_DURATION;
-    }
-
-    /** Cheap enough for the mixin to ask on every block change in the game. */
-    public static boolean recording() {
-        return now <= armedUntil;
-    }
-
     /** File one change. `was` is the state standing there before it. */
     public static void record(ServerWorld world, BlockPos pos, BlockState was) {
-        if (!recording()) {
-            return;
-        }
         Log log = LOGS.get(world);
         if (log == null) {
             log = new Log();
