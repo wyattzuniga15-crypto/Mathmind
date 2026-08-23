@@ -7,7 +7,10 @@ export const metadata: Metadata = {
     'A general-purpose AI assistant with a dedicated Code mode. Math and calculations are checked by an exact symbolic engine rather than produced from memory.',
   manifest: '/manifest.json',
   icons: {
-    icon: [{ url: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: {

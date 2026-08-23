@@ -4,11 +4,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   Lock,
+  MessageCircle,
   MessageSquarePlus,
   MoreHorizontal,
   Pencil,
   Search,
-  Sigma,
   Trash2,
   X,
 } from './icons';
@@ -226,7 +226,7 @@ export function Sidebar(props: Props) {
         <div className="flex items-center justify-between px-3 py-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-white">
-              <Sigma size={16} />
+              <MessageCircle size={16} />
             </div>
             <span className="text-[15px] font-semibold tracking-tight">Mercury</span>
           </div>
