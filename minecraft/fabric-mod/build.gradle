@@ -35,7 +35,13 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    shipped "com.anthropic:anthropic-java:${project.anthropic_version}"
+    shipped("com.anthropic:anthropic-java:${project.anthropic_version}") {
+        // Minecraft already provides slf4j. Shipping a second copy inside the
+        // mod puts two bindings on the classpath, and logging then either
+        // duplicates or silently stops — a bad failure for the one thing you
+        // need working when diagnosing everything else.
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
 }
 
 afterEvaluate {

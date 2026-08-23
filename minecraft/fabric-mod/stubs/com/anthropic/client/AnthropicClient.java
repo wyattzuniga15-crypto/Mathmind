@@ -1,6 +1,14 @@
 package com.anthropic.client;
 
-// Stub only — see the note in stubs/net/minecraft/entity/Entity.java about
-// keeping these honest. Nothing here is trusted until a real build agrees.
+import com.anthropic.models.beta.messages.BetaMessage;
+import com.anthropic.models.beta.messages.MessageCreateParams;
+
 public interface AnthropicClient {
+    Beta beta();
+
+    interface Beta { Messages messages(); }
+
+    interface Messages {
+        Iterable<BetaMessage> toolRunner(MessageCreateParams params);
+    }
 }

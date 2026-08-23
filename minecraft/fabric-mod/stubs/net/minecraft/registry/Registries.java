@@ -1,3 +1,5 @@
 package net.minecraft.registry;
 
-public class Registries { public static final Object ITEM = new Object(); }
+public final class Registries {
+    public static final ItemRegistry ITEM = new ItemRegistry();
+}
