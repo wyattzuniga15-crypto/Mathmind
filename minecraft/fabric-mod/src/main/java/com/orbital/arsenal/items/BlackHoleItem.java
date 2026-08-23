@@ -161,7 +161,6 @@ public class BlackHoleItem extends Item {
             block.dropItem = false;
             Vec3d inward = centre.subtract(Vec3d.ofCenter(at)).normalize();
             block.setVelocity(inward.multiply(0.55));
-            block.velocityModified = true;
         }
     }
 
@@ -174,15 +173,18 @@ public class BlackHoleItem extends Item {
                 centre.x - PULL_RADIUS, centre.y - PULL_RADIUS, centre.z - PULL_RADIUS,
                 centre.x + PULL_RADIUS, centre.y + PULL_RADIUS, centre.z + PULL_RADIUS);
         for (Entity entity : world.getOtherEntities(null, field)) {
-            Vec3d toCentre = centre.subtract(entity.getPos());
+            Vec3d toCentre = centre.subtract(entity.getX(), entity.getY(), entity.getZ());
             double distance = toCentre.length();
             if (distance < 1.5) {
                 continue;
             }
             // Inverse falloff, floored so nothing gets flung at the very centre.
             double strength = PULL_STRENGTH / Math.max(6.0, distance);
-            entity.setVelocity(entity.getVelocity().add(toCentre.normalize().multiply(strength)));
-            entity.velocityModified = true;
+            Vec3d nudge = toCentre.normalize().multiply(strength);
+            // addVelocity rather than setVelocity: it flags the change as needing
+            // to be sent to the client, which setVelocity alone does not — without
+            // that a player being dragged in feels nothing on their own screen.
+            entity.addVelocity(nudge.x, nudge.y, nudge.z);
         }
         Scheduler.after(1, () -> pull(world, centre, tick + 1));
     }

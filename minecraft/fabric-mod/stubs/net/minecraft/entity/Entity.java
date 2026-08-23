@@ -4,13 +4,22 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
+// Kept honest against Yarn 1.21.11. Two members that used to be here are
+// deliberately absent, because the real class does not have them and a stub
+// that lied about it let a build pass verification and then fail to compile:
+//
+//   getPos()          -> renamed; use getX()/getY()/getZ()
+//   velocityModified  -> gone; use addVelocity(), which marks it itself
 public class Entity {
-    public boolean velocityModified;
     public HitResult raycast(double d, float t, boolean f) { return null; }
     public Vec3d getEyePos() { return null; }
-    public Vec3d getPos() { return null; }
+    public double getX() { return 0.0; }
+    public double getY() { return 0.0; }
+    public double getZ() { return 0.0; }
     public Vec3d getVelocity() { return null; }
     public void setVelocity(Vec3d v) {}
+    public void addVelocity(double x, double y, double z) {}
+    public boolean isOnGround() { return false; }
     public Vec3d getRotationVec(float t) { return null; }
     public BlockPos getBlockPos() { return null; }
 }

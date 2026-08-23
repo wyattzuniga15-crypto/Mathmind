@@ -66,10 +66,17 @@ mod expects from each class, and nothing more.
 ## What the weapons do
 
 **Orbital Strike Cannon** — 5000 TNT dropped in a ring formation **200 blocks
-across** from 55 blocks up, spawned 200 per tick. Their fuse outlasts the fall
-on purpose, so the volley lands before any of it goes off rather than
-airbursting on the way down — and that has to hold for the *last* shell
-spawned, not the first: it lands at tick 89 against a fuse that fires at 105.
+across** from 55 blocks up, spawned 200 per tick.
+
+**Each shell detonates when it lands, not on a timer.** A timed fuse cannot
+work at this size: the ring is 200 blocks wide, so its edges hang over whatever
+terrain happens to be there. A shell falling into a ravine or over open ocean
+drops several times as far as one landing at the aim point, and there is no
+single fuse length that suits both — one of them always airbursts. So the
+shells are given a fuse long enough that none of them ever reaches it, and a
+watcher fires each one the tick it touches down. Anything still airborne after
+30 seconds — dropped over the void, or orphaned by an unloading chunk — is
+fired anyway, so a volley never leaves live TNT behind.
 
 The radius scales with the shell count rather than staying put. Five thousand
 shells inside the old 40-block radius would sit a third of a block apart,

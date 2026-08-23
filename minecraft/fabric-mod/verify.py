@@ -105,6 +105,25 @@ def main():
         used = {c for row in recipe.get("pattern", []) for c in row if c != " "}
         check(used <= keys, f"{path.name} uses undefined keys: {sorted(used - keys)}")
 
+    # --- stubs may not re-declare members the real API has been proven to lack ---
+    #
+    # A stub is only as useful as it is honest. These two were declared on
+    # Entity, compiled clean here, and then failed the real build — so the
+    # compile check above passed on a lie. Anything a real build has rejected
+    # goes in this list so it cannot come back.
+    absent = {
+        "net/minecraft/entity/Entity.java": ["velocityModified", "getPos"],
+    }
+    for rel, members in absent.items():
+        stub = ROOT / "stubs" / rel
+        if not stub.exists():
+            continue
+        body = stub.read_text()
+        for member in members:
+            declared = re.search(rf"^\s*public\s+\S+\s+{member}\b", body, re.M)
+            check(declared is None,
+                  f"stubs/{rel} declares '{member}', which Yarn 1.21.11 does not have")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:
