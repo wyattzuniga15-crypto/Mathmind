@@ -15,11 +15,18 @@ on:
       - ".github/workflows/build-mod.yml"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Check out the branch itself rather than a detached commit, so the built
+      # jar can be committed back at the end.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       # Two JDKs, and the order matters. Recent Loom releases refuse to run on
       # anything below 25, while Minecraft 1.21 is compiled against 21 — so
@@ -129,7 +136,31 @@ jobs:
         working-directory: minecraft/fabric-mod
         run: ls -la build/libs/ || echo "no jars produced"
 
-      # The jar lands here as a download on the run's summary page.
+      # A run artifact is only downloadable by someone signed in to GitHub,
+      # which is a poor last step for anyone who just wants the file. Commit it
+      # into the repository as well, where it can be fetched and handed over
+      # directly.
+      - name: Commit the jar into the repository
+        run: |
+          set -euo pipefail
+          mkdir -p minecraft/fabric-mod/dist
+          rm -f minecraft/fabric-mod/dist/*.jar
+          # Skip the sources jar; only the mod itself is any use in mods/.
+          for jar in minecraft/fabric-mod/build/libs/*.jar; do
+            case "$jar" in
+              *sources*) continue ;;
+              *) cp "$jar" minecraft/fabric-mod/dist/ ;;
+            esac
+          done
+          ls -la minecraft/fabric-mod/dist/
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f minecraft/fabric-mod/dist
+          # [skip ci] or committing here would trigger this workflow again.
+          git diff --cached --quiet || git commit -m "Publish built mod jar [skip ci]"
+          git push
+
       - name: Upload the jar
         uses: actions/upload-artifact@v4
         with:
