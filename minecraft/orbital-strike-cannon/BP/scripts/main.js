@@ -161,33 +161,72 @@ const STRIPS_PER_TICK = 80; // crater rows cleared per tick (~5.7s total)
  */
 let clearRow = null;
 
-function resolveClearRow(dimension, probe) {
-  const candidates = [
-    (dim, a, b) => dim.fillBlocks({ from: a, to: b }, "minecraft:air"),
-    (dim, a, b) => dim.fillBlocks(a, b, "minecraft:air"),
-    (dim, a, b) =>
-      dim.runCommand(`fill ${a.x} ${a.y} ${a.z} ${b.x} ${b.y} ${b.z} air`)
-  ];
-  for (const candidate of candidates) {
-    try {
-      candidate(dimension, probe, probe);
-      return candidate;
-    } catch {
-      // Not this one.
+const CLEAR_CANDIDATES = [
+  ["fillBlocks(volume)", (dim, a, b) => dim.fillBlocks({ from: a, to: b }, "minecraft:air")],
+  ["fillBlocks(from,to)", (dim, a, b) => dim.fillBlocks(a, b, "minecraft:air")],
+  ["fill command", (dim, a, b) =>
+    dim.runCommand(`fill ${a.x} ${a.y} ${a.z} ${b.x} ${b.y} ${b.z} air`)],
+  ["setType", (dim, a, b) => {
+    for (let z = a.z; z <= b.z; z++) {
+      dim.getBlock({ x: a.x, y: a.y, z }).setType("minecraft:air");
     }
+  }]
+];
+
+function blockTypeAt(dimension, at) {
+  try {
+    const block = dimension.getBlock(at);
+    return block ? block.typeId : null;
+  } catch {
+    return null;
   }
-  return null; // nothing available — the caller falls back to explosions
 }
 
-/** A cosmetic blast: all flash and noise, no block damage. */
-function puff(dimension, at, radius) {
+/**
+ * Pick a way to clear blocks, and prove it works before trusting it.
+ *
+ * Accepting whatever didn't throw was the bug: an API can exist, accept these
+ * arguments, raise nothing, and still clear nothing — leaving a nuke that runs
+ * its whole sequence over untouched ground. The probe aims at a block known to
+ * be solid (the one the player targeted) and only accepts a candidate that
+ * actually turns it to air.
+ */
+function resolveClearRow(dimension, probe) {
+  for (const [name, candidate] of CLEAR_CANDIDATES) {
+    const before = blockTypeAt(dimension, probe);
+    const canVerify = before !== null && before !== "minecraft:air";
+    try {
+      candidate(dimension, probe, probe);
+    } catch {
+      continue; // not available on this runtime
+    }
+    if (!canVerify) return { name: name + " (unverified)", fn: candidate };
+    if (blockTypeAt(dimension, probe) === "minecraft:air") {
+      return { name, fn: candidate };
+    }
+    // Raised nothing but changed nothing — keep looking.
+  }
+  return null;
+}
+
+/**
+ * One blast. Deliberately the exact call the cannon has proven works, rather
+ * than the breaksBlocks:false variant this used to use — that flag was never
+ * exercised by any working build, and if a runtime renders nothing for it then
+ * every fireball, cloud puff and shockwave ring silently disappears. Up in the
+ * air there are no blocks to break, so breaking is free and looks the same.
+ */
+function blast(dimension, at, radius) {
   try {
     dimension.createExplosion(at, radius, {
-      breaksBlocks: false,
+      breaksBlocks: true,
       causesFire: false,
       allowUnderwater: true
     });
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** How wide the crater is at `dy` blocks above (positive) or below the aim. */
@@ -291,7 +330,7 @@ function shockwave(dimension, target) {
     const count = Math.max(8, Math.round(r / 4));
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 + r;
-      puff(
+      blast(
         dimension,
         { x: target.x + Math.cos(a) * r, y: target.y + 2, z: target.z + Math.sin(a) * r },
         5
@@ -312,10 +351,10 @@ function mushroomCloud(dimension, target) {
     if (stemY <= TOP) {
       // The stem widens as it climbs.
       const spread = 3 + (stemY / TOP) * 7;
-      puff(dimension, { x: target.x, y: target.y + stemY, z: target.z }, 6);
+      blast(dimension, { x: target.x, y: target.y + stemY, z: target.z }, 6);
       for (let i = 0; i < 2; i++) {
         const a = (tick * 0.9 + i * Math.PI) % (Math.PI * 2);
-        puff(
+        blast(
           dimension,
           {
             x: target.x + Math.cos(a) * spread,
@@ -333,7 +372,7 @@ function mushroomCloud(dimension, target) {
       const count = Math.max(6, Math.round(capR / 4));
       for (let i = 0; i < count; i++) {
         const a = (i / count) * Math.PI * 2 + age * 0.4;
-        puff(
+        blast(
           dimension,
           {
             x: target.x + Math.cos(a) * capR,
@@ -356,12 +395,11 @@ function detonateNuke(dimension, target, player) {
       fadeOutDuration: 20
     });
   } catch {}
-  try {
-    world.sendMessage("§4☢ §cTactical nuke detonated.");
-  } catch {}
 
-  // Opening fireball, right on the deck.
-  puff(dimension, { x: target.x, y: target.y + 3, z: target.z }, 14);
+  // Fire one real blast before anything clever happens. If every other part of
+  // this fails, the nuke still visibly goes off — and if even this produces
+  // nothing, the report below says so instead of leaving you guessing.
+  const fired = blast(dimension, { x: target.x, y: target.y + 3, z: target.z }, 14);
 
   if (clearRow === null) {
     clearRow = resolveClearRow(dimension, {
@@ -371,14 +409,24 @@ function detonateNuke(dimension, target, player) {
     });
   }
   if (clearRow) {
-    carveCrater(dimension, target, clearRow);
+    carveCrater(dimension, target, clearRow.fn);
   } else {
-    // No usable fill on this runtime — dig it the slow, expensive way rather
-    // than leave the ground untouched.
+    // Nothing can clear blocks on this runtime — dig it the slow, expensive
+    // way rather than leave the ground untouched.
     carveByExplosion(dimension, target);
   }
   shockwave(dimension, target);
   mushroomCloud(dimension, target);
+
+  // Say what actually happened. Everything in the nuke's path is wrapped so a
+  // failure can't take the pack down, which also means a failure is invisible —
+  // this line is the only thing standing between a silent dud and knowing why.
+  try {
+    const how = clearRow ? clearRow.name : "explosions (no block clear available)";
+    world.sendMessage(
+      `§4☢ §cNuke detonated §7— blast:${fired ? "ok" : "§cFAILED§7"} crater:${how}`
+    );
+  } catch {}
 }
 
 function armNuke(player, dimension) {

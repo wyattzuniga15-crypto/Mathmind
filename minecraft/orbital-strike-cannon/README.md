@@ -140,6 +140,18 @@ handler, where a wrong guess costs one strike instead of the whole pack. If none
 work it falls back to a lattice of real explosions: slower and rougher, but the
 ground still goes.
 
+Crucially the probe *verifies* rather than trusting: it aims at a block known to
+be solid and only accepts a candidate that actually turns it to air. Accepting
+whatever merely didn't raise an error was a real bug — an API can exist, take
+these arguments, raise nothing and clear nothing, leaving a nuke that runs its
+whole sequence over untouched ground.
+
+Every blast uses `breaksBlocks: true`, the one configuration confirmed working
+in game. The `false` variant shipped once and rendered nothing at all, which
+took a while to spot because every call here is wrapped against load failures
+and so fails silently. For that reason a detonation also prints a line saying
+which clear strategy it used and whether the opening blast fired.
+
 ## Changing it
 
 The dials are at the top of `BP/scripts/main.js`: `TNT_COUNT`, `STRIKE_RADIUS`,

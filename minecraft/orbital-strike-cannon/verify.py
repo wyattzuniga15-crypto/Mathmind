@@ -155,6 +155,13 @@ def main():
         check(events is not None and used in events,
               f"script triggers '{used}', which the entity does not define")
 
+    # Only one explosion configuration has ever been confirmed working in game.
+    # breaksBlocks:false shipped once and produced no visible blast at all,
+    # which is invisible from here because every call is wrapped.
+    check("breaksBlocks: false" not in script,
+          "main.js uses breaksBlocks:false, which shipped once and rendered "
+          "nothing — use breaksBlocks:true (in mid-air it breaks nothing anyway)")
+
     # Anything at the top level of main.js runs while the module loads, and a
     # throw there fails the script module — which Minecraft surfaces only as a
     # pack that won't activate, and a world that won't create. So top-level
