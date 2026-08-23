@@ -79,6 +79,18 @@ jobs:
             fi
           done
 
+          # The Anthropic SDK lives on Maven Central rather than Fabric's
+          # repository, but the reasoning is the same: ask what is published
+          # instead of committing a guess that goes stale.
+          SDK=$(versions "https://repo1.maven.org/maven2/com/anthropic/anthropic-java/maven-metadata.xml" \
+                | grep -E '^[0-9.]+$' | tail -1)
+          echo "anthropic-java=$SDK"
+          if [ -z "$SDK" ]; then
+            echo "::error::could not resolve an anthropic-java version"
+            exit 1
+          fi
+          sed -i "s|^anthropic_version=.*|anthropic_version=$SDK|" gradle.properties
+
           sed -i "s|^loom_version=.*|loom_version=$LOOM|" gradle.properties
           sed -i "s|^fabric_version=.*|fabric_version=$API|" gradle.properties
           sed -i "s|^yarn_mappings=.*|yarn_mappings=$YARN|" gradle.properties
@@ -135,6 +147,33 @@ jobs:
         if: always()
         working-directory: minecraft/fabric-mod
         run: ls -la build/libs/ || echo "no jars produced"
+
+      # A green build does not prove the SDK actually ships. Loom's include()
+      # is non-transitive, so a missing dependency surfaces as a
+      # NoClassDefFoundError at Minecraft launch — long after CI has gone green
+      # and reported success. Check the jar really carries them.
+      - name: Check the bundled SDK really shipped
+        working-directory: minecraft/fabric-mod
+        run: |
+          set -euo pipefail
+          jar=$(ls build/libs/*.jar | grep -v sources | head -1)
+          echo "inspecting $jar"
+          nested=$(unzip -l "$jar" | grep -oE 'META-INF/jars/[^ ]+\.jar' || true)
+          if [ -z "$nested" ]; then
+            echo "::error::no jar-in-jar entries — the SDK was not bundled"
+            exit 1
+          fi
+          echo "$nested" | sed 's|^|  bundled: |'
+          echo "$nested" | grep -q 'anthropic' \
+            || { echo "::error::anthropic-java itself is missing from the bundle"; exit 1; }
+          count=$(echo "$nested" | wc -l)
+          echo "$count nested jars bundled"
+          # The SDK alone means the transitive include did nothing, which is the
+          # exact failure this step exists to catch.
+          if [ "$count" -lt 2 ]; then
+            echo "::error::only $count nested jar — transitive dependencies did not ship"
+            exit 1
+          fi
 
       # A run artifact is only downloadable by someone signed in to GitHub,
       # which is a poor last step for anyone who just wants the file. Commit it
