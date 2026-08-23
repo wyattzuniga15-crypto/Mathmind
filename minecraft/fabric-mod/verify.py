@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""Check the mod project before it goes anywhere near a build.
+
+Written after shipping a version where every JSON file ended in a literal
+backslash-n rather than a newline. All fourteen were invalid, and the only
+symptom was one line buried in a Gradle failure — the sort of thing that costs
+a round trip when the person building it isn't the person who broke it.
+
+Also compiles the sources against the stubs in stubs/, which catches Java
+mistakes without needing Minecraft to compile against.
+
+Run: python3 verify.py
+"""
+import json
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).parent
+RES = ROOT / "src/main/resources"
+problems = []
+checks = 0
+
+
+def check(condition, message):
+    global checks
+    checks += 1
+    if not condition:
+        problems.append(message)
+
+
+def main():
+    global checks
+    # --- every JSON parses, and has nothing trailing the closing brace ---
+    for path in sorted(RES.rglob("*.json")):
+        rel = path.relative_to(ROOT)
+        raw = path.read_text()
+        try:
+            json.loads(raw)
+            checks += 1
+        except json.JSONDecodeError as exc:
+            tail = repr(raw[-12:])
+            problems.append(f"{rel}: invalid JSON — {exc} (ends {tail})")
+            checks += 1
+
+    # --- the mod metadata points at code that exists ---
+    meta_path = RES / "fabric.mod.json"
+    if meta_path.exists():
+        try:
+            meta = json.loads(meta_path.read_text())
+        except json.JSONDecodeError:
+            meta = None
+        if meta:
+            for field in ("schemaVersion", "id", "version", "entrypoints"):
+                check(field in meta, f"fabric.mod.json has no '{field}'")
+            for entry in meta.get("entrypoints", {}).get("main", []):
+                source = ROOT / "src/main/java" / (entry.replace(".", "/") + ".java")
+                check(source.exists(),
+                      f"entrypoint {entry} has no source file at {source.relative_to(ROOT)}")
+
+    # --- every model's texture is actually on disk ---
+    for path in sorted((RES / "assets/orbital/models/item").glob("*.json")):
+        try:
+            model = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        for layer in model.get("textures", {}).values():
+            namespace, name = layer.split(":", 1)
+            png = RES / "assets" / namespace / "textures" / (name + ".png")
+            check(png.exists(), f"{path.name}: texture missing at {png.relative_to(ROOT)}")
+
+    # --- every registered item has a name, a model and a texture ---
+    items_java = (ROOT / "src/main/java/com/orbital/arsenal/ModItems.java").read_text()
+    registered = set(re.findall(r'register\("([a-z_]+)"', items_java))
+    check(len(registered) >= 3, f"expected 3 registered items, found {len(registered)}")
+    lang_path = RES / "assets/orbital/lang/en_us.json"
+    lang = {}
+    if lang_path.exists():
+        try:
+            lang = json.loads(lang_path.read_text())
+        except json.JSONDecodeError:
+            pass
+    for name in sorted(registered):
+        check(f"item.orbital.{name}" in lang, f"{name} has no en_us.lang entry")
+        check((RES / f"assets/orbital/models/item/{name}.json").exists(),
+              f"{name} has no item model")
+        check((RES / f"assets/orbital/textures/item/{name}.png").exists(),
+              f"{name} has no texture")
+        check((RES / f"assets/orbital/items/{name}.json").exists(),
+              f"{name} has no 1.21.4+ item definition")
+
+    # --- every recipe makes something this mod registers ---
+    for path in sorted((RES / "data/orbital/recipe").glob("*.json")):
+        try:
+            recipe = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        result = recipe.get("result", {}).get("id", "")
+        check(result.replace("orbital:", "") in registered,
+              f"{path.name} makes '{result}', which is not registered")
+        keys = set(recipe.get("key", {}))
+        used = {c for row in recipe.get("pattern", []) for c in row if c != " "}
+        check(used <= keys, f"{path.name} uses undefined keys: {sorted(used - keys)}")
+
+    # --- the Java itself compiles against the stubs ---
+    sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
+    with tempfile.TemporaryDirectory() as out:
+        result = subprocess.run(
+            ["javac", "-nowarn", "-d", out] + [str(s) for s in sources],
+            capture_output=True, text=True,
+        )
+        checks += 1
+        if result.returncode != 0:
+            errors = [ln for ln in result.stderr.splitlines() if "error:" in ln]
+            problems.append("Java does not compile against the stubs:")
+            problems.extend("    " + e for e in errors[:8])
+
+    report(len(sources))
+
+
+def report(source_count=0):
+    if problems:
+        print(f"FAILED — {len(problems)} problem(s) across {checks} checks:")
+        for p in problems:
+            print(f"  - {p}")
+        sys.exit(1)
+    print(f"OK — {checks} checks passed ({source_count} java files compile)")
+
+
+if __name__ == "__main__":
+    if shutil.which("javac") is None:
+        print("javac not found — install a JDK to run the compile check")
+        sys.exit(1)
+    main()
