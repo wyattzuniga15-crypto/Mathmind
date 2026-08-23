@@ -65,10 +65,16 @@ mod expects from each class, and nothing more.
 
 ## What the weapons do
 
-**Orbital Strike Cannon** — 300 TNT dropped in a ring formation 80 blocks
-across from 55 blocks up, spawned 60 per tick. Their fuse outlasts the fall on
-purpose, so the volley lands before any of it goes off rather than airbursting
-on the way down.
+**Orbital Strike Cannon** — 5000 TNT dropped in a ring formation **200 blocks
+across** from 55 blocks up, spawned 200 per tick. Their fuse outlasts the fall
+on purpose, so the volley lands before any of it goes off rather than
+airbursting on the way down — and that has to hold for the *last* shell
+spawned, not the first: it lands at tick 89 against a fuse that fires at 105.
+
+The radius scales with the shell count rather than staying put. Five thousand
+shells inside the old 40-block radius would sit a third of a block apart,
+sixteen deep in the same crater; at 100 they land about 1.6 blocks apart, which
+is still heavy overlap for a blast that clears four.
 
 **Tactical Nuke** — a five-second countdown, then a bowl **200 blocks across
 and 30 deep**, carved out block by block at 12,000 blocks a tick under a rising

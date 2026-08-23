@@ -19,11 +19,15 @@ import net.minecraft.world.World;
 
 /** A ring of TNT dropped from the sky, landing before it detonates. */
 public class StrikeCannonItem extends Item {
-    private static final int SHELLS = 300;
-    private static final double RADIUS = 40.0;
-    private static final int RINGS = 10;
+    private static final int SHELLS = 5000;
+    // Radius scales with the shell count rather than staying put: 5000 shells
+    // packed into the old 40-block radius would sit a third of a block apart,
+    // sixteen deep in the same crater. At 100 they land ~1.6 blocks apart —
+    // still heavy overlap for a blast that clears four, and 200 blocks across.
+    private static final double RADIUS = 100.0;
+    private static final int RINGS = 24;
     private static final int DROP_HEIGHT = 55;
-    private static final int PER_TICK = 60;
+    private static final int PER_TICK = 200;
     private static final int COOLDOWN = 200;
     private static final int FUSE = 80;
 
