@@ -21,11 +21,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      # Two JDKs, and the order matters. Recent Loom releases refuse to run on
+      # anything below 25, while Minecraft 1.21 is compiled against 21 — so
+      # Gradle runs on the last one listed (25) and the toolchain compiles
+      # with 21.
+      - name: Set up JDK 21 and 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: |
+            21
+            25
 
       - name: Resolve Fabric versions
         working-directory: minecraft/fabric-mod
@@ -70,6 +76,12 @@ jobs:
           sed -i "s|^fabric_version=.*|fabric_version=$API|" gradle.properties
           sed -i "s|^yarn_mappings=.*|yarn_mappings=$YARN|" gradle.properties
           sed -i "s|^loader_version=.*|loader_version=$LOADER|" gradle.properties
+
+          # Gradle won't find the runner's other JDKs on its own; setup-java
+          # leaves each one in a JAVA_HOME_<version>_<arch> variable.
+          if ! grep -q '^org.gradle.java.installations.fromEnv' gradle.properties; then
+            echo "org.gradle.java.installations.fromEnv=JAVA_HOME_21_X64,JAVA_HOME_25_X64" >> gradle.properties
+          fi
 
           echo "--- gradle.properties ---"
           cat gradle.properties
