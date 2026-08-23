@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "TEST A - no script",
+    "description": "Diagnostic only. Activates if basic behavior packs load at all.",
+    "uuid": "70a6b3c3-d082-4c13-bb7c-325574a258d9",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 30]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "ea5027e7-c7ee-4803-bf1c-2e25fb8e5421",
+      "version": [1, 0, 0]
+    }
+  ]
+}

@@ -138,14 +138,19 @@ function buildRingFormation(count, radius, ringCount) {
 // Tells you at a glance that the pack is active and its script is running —
 // if this line never appears, the add-on isn't loaded and nothing else will
 // work either.
-world.afterEvents.playerSpawn.subscribe((event) => {
-  if (!event.initialSpawn) return;
+//
+// Anything at the top level of this file runs while the module is loading, and
+// a throw there fails the whole script module, which stops the pack activating
+// and can abort world creation. So this greeting sticks to world.sendMessage on
+// a timer, both long-standing APIs, rather than subscribing to a newer event
+// that may not exist on every runtime — and it is wrapped either way.
+system.runTimeout(() => {
   try {
-    event.player.sendMessage(
-      `§aOrbital Strike Cannon loaded §7— ${TNT_COUNT} TNT per strike`
+    world.sendMessage(
+      `§aOrbital Strike Cannon loaded §7— ${TNT_COUNT} shells per strike`
     );
   } catch {}
-});
+}, 100);
 
 world.afterEvents.itemUse.subscribe((event) => {
   if (event.itemStack?.typeId !== CANNON_ID) return;
@@ -160,12 +165,14 @@ world.afterEvents.itemUse.subscribe((event) => {
     if (hit?.block) target = hit.block.location;
   } catch {}
 
-  player.onScreenDisplay.setTitle("§c☄ ORBITAL STRIKE ☄", {
-    subtitle: `§6Incoming: ${TNT_COUNT} TNT`,
-    fadeInDuration: 5,
-    stayDuration: 40,
-    fadeOutDuration: 10
-  });
+  try {
+    player.onScreenDisplay.setTitle("§c☄ ORBITAL STRIKE ☄", {
+      subtitle: `§6Incoming: ${TNT_COUNT} TNT`,
+      fadeInDuration: 5,
+      stayDuration: 40,
+      fadeOutDuration: 10
+    });
+  } catch {}
   try {
     player.playSound("mob.wither.spawn");
   } catch {}

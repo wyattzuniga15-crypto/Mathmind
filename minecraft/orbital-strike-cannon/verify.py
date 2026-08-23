@@ -136,6 +136,26 @@ def main():
         check(events is not None and used in events,
               f"script triggers '{used}', which the entity does not define")
 
+    # Anything at the top level of main.js runs while the module loads, and a
+    # throw there fails the script module — which Minecraft surfaces only as a
+    # pack that won't activate, and a world that won't create. So top-level
+    # calls are held to APIs proven to exist on the runtimes this targets.
+    PROVEN_TOP_LEVEL = {
+        "system.runInterval",
+        "system.runTimeout",
+        "world.afterEvents.itemUse.subscribe",
+    }
+    for line in script.splitlines():
+        if not re.match(r"^(world|system)\.", line):
+            continue
+        call = re.match(r"^([A-Za-z0-9_.]+)\(", line)
+        if call:
+            check(call.group(1) in PROVEN_TOP_LEVEL,
+                  f"unproven API '{call.group(1)}' called at the top level of "
+                  "main.js — if it doesn't exist the pack won't activate. Move "
+                  "it inside a handler, or add it to PROVEN_TOP_LEVEL once "
+                  "confirmed working in game.")
+
     report()
 
 

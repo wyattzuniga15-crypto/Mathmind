@@ -26,7 +26,7 @@ moment it hits the ground with twice the blast radius of vanilla TNT.
 3. In your world settings, activate **Orbital Strike Cannon v2 [BP]** under
    Behavior Packs. The resource pack comes along as a dependency.
 4. Join the world. The cannon announces itself in chat:
-   `Orbital Strike Cannon loaded — 500 TNT per strike`. **If that line doesn't
+   `Orbital Strike Cannon loaded — 500 shells per strike`. **If that line doesn't
    appear, the add-on isn't running** and nothing else will work.
 
 Requires Minecraft 1.21.30 or newer. No experimental toggles needed — the script
@@ -44,6 +44,27 @@ can fail outright.
 v2 carries entirely fresh UUIDs, so it cannot collide with any v1.x install.
 Its version stays at `2.0.0` from here on: re-importing at the same version
 overwrites in place, so future updates won't stack up again.
+
+## If it won't activate
+
+A behavior pack that refuses to activate — the button appears to do nothing, and
+world creation may fail — almost always means something in it failed to load,
+not that the button is broken. Two causes have bitten this pack:
+
+- **A script that throws while loading.** Everything at the top level of
+  `main.js` runs at module load, and a throw there fails the whole module. An
+  event that doesn't exist on the runtime (`world.afterEvents.playerSpawn`, in
+  one release) is enough. `verify.py` now holds top-level calls to a list of
+  APIs proven to work here.
+- **An entity that won't parse.** A component the runtime rejects fails the
+  entity, which fails the pack. Keep the shell's components boring.
+
+Older copies still sitting in **Settings → Storage** are worth clearing even
+when they aren't activated — the pack list is scanned as a whole.
+
+`../load-test/LoadTest.mcaddon` is a diagnostic: two near-empty packs, one with
+a script module and one without, sharing the cannon's engine and API versions.
+Whether each activates isolates a pack-loading problem from a script-module one.
 
 ## Getting the cannon
 
