@@ -68,24 +68,42 @@ def main():
         check((ROOT / "BP" / script_mod["entry"]).exists(),
               f"script entry missing: BP/{script_mod['entry']}")
 
-    # --- item ---
-    item = load("BP/items/orbital_strike_cannon.item.json")
-    item_id = item["minecraft:item"]["description"]["identifier"] if item else None
-    icon = item["minecraft:item"]["components"]["minecraft:icon"] if item else None
+    # --- every item: icon is in the atlas, and the texture is on disk ---
     atlas = load("RP/textures/item_texture.json")
-    if icon and atlas:
-        check(icon in atlas["texture_data"],
-              f"item icon '{icon}' is not in item_texture.json")
-        rel = atlas["texture_data"].get(icon, {}).get("textures", "")
-        check((ROOT / "RP" / (rel + ".png")).exists(),
-              f"item texture missing: RP/{rel}.png")
+    lang = (ROOT / "RP/texts/en_US.lang").read_text()
+    item_ids = set()
+    for path in sorted((ROOT / "BP/items").glob("*.json")):
+        item = load(path.relative_to(ROOT))
+        if not item:
+            continue
+        body = item["minecraft:item"]
+        item_id = body["description"]["identifier"]
+        item_ids.add(item_id)
+        icon = body["components"].get("minecraft:icon")
+        check(icon is not None, f"{item_id} has no icon component")
+        if icon and atlas:
+            check(icon in atlas["texture_data"],
+                  f"item icon '{icon}' is not in item_texture.json")
+            rel = atlas["texture_data"].get(icon, {}).get("textures", "")
+            check((ROOT / "RP" / (rel + ".png")).exists(),
+                  f"item texture missing: RP/{rel}.png")
+        check(f"item.{item_id}.name=" in lang,
+              f"{item_id} has no en_US.lang entry")
 
-    # --- recipe points at the real item ---
-    recipe = load("BP/recipes/orbital_strike_cannon.recipe.json")
-    if recipe and item_id:
-        result = recipe["minecraft:recipe_shaped"]["result"]["item"]
-        check(result == item_id,
-              f"recipe makes '{result}' but the item is '{item_id}'")
+    # --- every recipe makes an item that exists ---
+    for path in sorted((ROOT / "BP/recipes").glob("*.json")):
+        recipe = load(path.relative_to(ROOT))
+        if not recipe:
+            continue
+        shaped = recipe.get("minecraft:recipe_shaped", {})
+        result = shaped.get("result", {}).get("item")
+        check(result in item_ids,
+              f"{path.name} makes '{result}', which is not an item in this pack")
+        # Every key in the pattern must be defined, or the recipe silently fails.
+        keys = set(shaped.get("key", {}))
+        used = {c for row in shaped.get("pattern", []) for c in row if c != " "}
+        check(used <= keys,
+              f"{path.name} uses undefined pattern keys: {sorted(used - keys)}")
 
     # --- shell entity, behavior side ---
     ent = load("BP/entities/sky_tnt.behavior.json")
@@ -128,8 +146,9 @@ def main():
     def const(name):
         m = re.search(rf'const {name} = "([^"]+)"', script)
         return m.group(1) if m else None
-    check(const("CANNON_ID") == item_id,
-          f"script fires on '{const('CANNON_ID')}' but the item is '{item_id}'")
+    for name in ("CANNON_ID", "NUKE_ID"):
+        check(const(name) in item_ids,
+              f"script's {name} is '{const(name)}', which is not an item in this pack")
     check(const("SHELL_ID") == ent_id,
           f"script spawns '{const('SHELL_ID')}' but the entity is '{ent_id}'")
     for used in set(re.findall(r'triggerEvent\("([^"]+)"\)', script)):

@@ -162,6 +162,46 @@ def shell_texture():
     return sheet
 
 
+# --- Tactical nuke item icon -------------------------------------------------
+# The radiation trefoil: a yellow disc with three black blades and a hub. Drawn
+# from geometry rather than a pixel grid so the blades stay symmetrical at 16px.
+import math
+
+HAZARD = (245, 205, 40, 255)
+HAZARD_DARK = (206, 168, 26, 255)
+TREFOIL = (24, 24, 26, 255)
+
+
+def nuke_icon():
+    size = 16
+    centre = (size - 1) / 2
+    tile = []
+    for y in range(size):
+        row = []
+        for x in range(size):
+            dx, dy = x - centre, y - centre
+            dist = math.hypot(dx, dy)
+            if dist > 7.6:
+                row.append((0, 0, 0, 0))
+                continue
+            if dist > 7.0:
+                row.append(TREFOIL)  # rim
+                continue
+            pixel = HAZARD if (x + y) % 5 else HAZARD_DARK
+            if dist < 1.7:
+                pixel = TREFOIL  # hub
+            elif 2.7 < dist < 6.6:
+                # Three blades, 60 degrees wide, spaced a third of a turn apart.
+                angle = math.degrees(math.atan2(dy, dx)) % 360
+                for blade in (90, 210, 330):
+                    if abs((angle - blade + 180) % 360 - 180) < 30:
+                        pixel = TREFOIL
+                        break
+            row.append(pixel)
+        tile.append(row)
+    return tile
+
+
 if __name__ == "__main__":
     root = Path(__file__).parent
     out = root / "RP" / "textures" / "items" / "orbital_strike_cannon.png"
@@ -174,3 +214,6 @@ if __name__ == "__main__":
     shell = root / "RP" / "textures" / "entity" / "sky_tnt.png"
     write_png(shell, shell_texture())
     print(f"wrote {shell}")
+    nuke = root / "RP" / "textures" / "items" / "tactical_nuke.png"
+    write_png(nuke, nuke_icon())
+    print(f"wrote {nuke}")

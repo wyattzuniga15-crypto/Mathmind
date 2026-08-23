@@ -1,21 +1,24 @@
-# Orbital Strike Cannon (Minecraft Bedrock Add-On)
+# Orbital Arsenal (Minecraft Bedrock Add-On)
 
-A Bedrock Edition add-on that adds one very dangerous item: the **Orbital Strike
-Cannon**. Use it and **500 heavy shells** fall from the sky as a flat circle
+A Bedrock Edition add-on with two very dangerous items.
+
+**Orbital Strike Cannon** — 500 heavy shells fall from the sky as a flat circle
 **96 blocks across** onto whatever block you're aiming at, each detonating the
 moment it hits the ground with twice the blast radius of vanilla TNT.
 
+**Tactical Nuke** — a five-second fuse, then a crater **200 blocks across** and
+30 deep, under a mushroom cloud, with a shockwave racing out across the ground.
+
 ## What's in the box
 
-- `BP/` — behavior pack: the custom item, a crafting recipe, the fuseless shell
-  entity, and the script (`BP/scripts/main.js`) that lays out the barrage and
-  detonates each shell on impact.
-- `RP/` — resource pack: the item's pixel-art icon, the shell's TNT texture and
+- `BP/` — behavior pack: both items, their recipes, the fuseless shell entity,
+  and the script (`BP/scripts/main.js`) driving both weapons.
+- `RP/` — resource pack: the pixel-art item icons, the shell's TNT texture and
   model, and display names.
 - `OrbitalStrikeCannon.mcaddon` — both packs zipped up, ready to import.
 - `verify.py` — cross-checks the pack for the mistakes that stop it activating.
 - `build.py` — verifies, then rebuilds the `.mcaddon`.
-- `make_icon.py` — regenerates the item texture, shell texture and pack icons.
+- `make_icon.py` — regenerates the item icons, shell texture and pack icons.
 
 ## Install
 
@@ -25,9 +28,9 @@ moment it hits the ground with twice the blast radius of vanilla TNT.
 2. Open `OrbitalStrikeCannon.mcaddon`. Minecraft imports both packs.
 3. In your world settings, activate **Orbital Strike Cannon v2 [BP]** under
    Behavior Packs. The resource pack comes along as a dependency.
-4. Join the world. The cannon announces itself in chat:
-   `Orbital Strike Cannon loaded — 500 shells per strike`. **If that line doesn't
-   appear, the add-on isn't running** and nothing else will work.
+4. Join the world. The pack announces itself in chat:
+   `Orbital arsenal loaded — cannon (500 shells) and tactical nuke`. **If that
+   line doesn't appear, the add-on isn't running** and nothing else will work.
 
 Requires Minecraft 1.21.30 or newer. No experimental toggles needed — the script
 uses only stable `@minecraft/server` APIs.
@@ -66,16 +69,18 @@ when they aren't activated — the pack list is scanned as a whole.
 a script module and one without, sharing the cannon's engine and API versions.
 Whether each activates isolates a pack-loading problem from a script-module one.
 
-## Getting the cannon
+## Getting the weapons
 
-- Creative: search "Orbital Strike Cannon" in the inventory.
-- Command: `/give @s orbital:strike_cannon`
-- Survival crafting (crafting table):
+Both appear in the creative inventory, or:
+
+- `/give @s orbital:strike_cannon` · `/give @s orbital:tactical_nuke`
+- Crafting table:
 
   ```
-  gunpowder  TNT        gunpowder
-  TNT        eye ender  TNT
-  gunpowder  iron block gunpowder
+  CANNON                          NUKE
+  gunpowder  TNT        gunpowder    netherite  TNT          netherite
+  TNT        eye ender  TNT          TNT        nether star  TNT
+  gunpowder  iron block gunpowder    netherite  TNT          netherite
   ```
 
 ## How the strike works
@@ -106,6 +111,35 @@ runtime ever reports a freshly spawned shell as already on the ground.
 
 There's a 15-second cooldown on the item, so one use is one strike.
 
+## The nuke
+
+Use it and a five-second countdown starts, ticking down on screen — it aims up
+to 300 blocks out, further than the blast reaches, so there is somewhere to run
+to. Then:
+
+- **The crater** is 200 blocks across and 30 deep at ground zero, a bowl rising
+  to ground level at the rim, clearing 25 blocks above the aim point so hills
+  and trees standing in it go too.
+- **A mushroom cloud** climbs out of the crater and curls over into a cap.
+- **A shockwave** of blasts races outward across the ground, damaging what it
+  passes.
+
+### Why the crater isn't made of explosions
+
+Carving this bowl with power-8 blasts would take **6,256 of them** — twelve
+times the cannon's volley — and about 26 seconds at a rate a phone can stand.
+Explosions are the wrong tool at this size, so the crater is dug by clearing its
+blocks directly, one row at a time, which does the same 1.27 million blocks in
+under six seconds. Explosions are kept for what they're good at: the fireball,
+the cloud and the shockwave, none of which break blocks.
+
+Clearing blocks is the one thing here the cannon never did, and `fillBlocks` has
+changed signature between Minecraft versions. Rather than pick one and hope, the
+candidates are tried the first time a nuke goes off — at runtime, inside a
+handler, where a wrong guess costs one strike instead of the whole pack. If none
+work it falls back to a lattice of real explosions: slower and rougher, but the
+ground still goes.
+
 ## Changing it
 
 The dials are at the top of `BP/scripts/main.js`: `TNT_COUNT`, `STRIKE_RADIUS`,
@@ -124,8 +158,14 @@ is the most expensive change you can make; raising `STRIKE_RADIUS` alone is the
 cheapest, though past about 56 blocks the 500 shells spread far enough apart
 that the crater turns lumpy instead of solid.
 
+The nuke's dials are `NUKE_RADIUS`, `NUKE_DEPTH`, `NUKE_CLEAR_ABOVE`,
+`NUKE_FUSE_SECONDS` and `STRIPS_PER_TICK`. That last one is the lever for
+performance: it sets how many rows of crater are cleared each tick, so lowering
+it stretches the dig out rather than making it heavier.
+
 Run `python3 build.py` after any edit. It runs `verify.py` first and refuses to
 package a pack that wouldn't activate.
 
-**Fair warning:** this now flattens a 96-block-wide circle and digs deep. Don't
-fire it anywhere near anything you want to keep.
+**Fair warning:** the cannon flattens a 96-block circle; the nuke takes out 200
+blocks across and 30 down, and will kill you if you're still standing in it when
+the count reaches zero. Don't fire either near anything you want to keep.
