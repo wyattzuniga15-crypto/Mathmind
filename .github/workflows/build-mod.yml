@@ -1,0 +1,98 @@
+name: Build Fabric mod
+
+# Builds minecraft/fabric-mod into a downloadable jar.
+#
+# This exists because the machine the mod was written on cannot reach Mojang's
+# or Fabric's maven repositories — they are blocked by egress policy — so it
+# could never produce a jar itself. GitHub's runners can, which turns "install
+# a JDK and run Gradle yourself" into "download the jar from the Actions tab".
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "minecraft/fabric-mod/**"
+      - ".github/workflows/build-mod.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Resolve Fabric versions
+        working-directory: minecraft/fabric-mod
+        run: |
+          set -euo pipefail
+
+          # Every Fabric version number is tied to a Minecraft release and moves
+          # with it, so rather than commit a guess that rots, ask the maven
+          # repository what actually exists for the version being targeted.
+          versions() {
+            curl -sSL "$1" \
+              | grep -o '<version>[^<]*</version>' \
+              | sed 's/<[^>]*>//g'
+          }
+
+          MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
+          echo "Targeting Minecraft $MC"
+
+          BASE=https://maven.fabricmc.net
+          LOOM=$(versions "$BASE/fabric-loom/fabric-loom.gradle.plugin/maven-metadata.xml" \
+                 | grep -v SNAPSHOT | tail -1)
+          API=$(versions "$BASE/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml" \
+                 | grep -- "+${MC}\$" | tail -1)
+          YARN=$(versions "$BASE/net/fabricmc/yarn/maven-metadata.xml" \
+                 | grep "^${MC}+" | tail -1)
+          LOADER=$(versions "$BASE/net/fabricmc/fabric-loader/maven-metadata.xml" \
+                 | grep -E '^[0-9.]+$' | tail -1)
+
+          echo "loom=$LOOM  api=$API  yarn=$YARN  loader=$LOADER"
+
+          # An empty result means nothing is published for this Minecraft
+          # version yet. Fail loudly here rather than letting Gradle report it
+          # as an unresolved dependency ten lines into a stack trace.
+          for pair in "loom:$LOOM" "api:$API" "yarn:$YARN" "loader:$LOADER"; do
+            if [ -z "${pair#*:}" ]; then
+              echo "::error::no ${pair%%:*} version published for Minecraft $MC"
+              exit 1
+            fi
+          done
+
+          sed -i "s|^loom_version=.*|loom_version=$LOOM|" gradle.properties
+          sed -i "s|^fabric_version=.*|fabric_version=$API|" gradle.properties
+          sed -i "s|^yarn_mappings=.*|yarn_mappings=$YARN|" gradle.properties
+          sed -i "s|^loader_version=.*|loader_version=$LOADER|" gradle.properties
+
+          echo "--- gradle.properties ---"
+          cat gradle.properties
+
+      - name: Check the project before building
+        working-directory: minecraft/fabric-mod
+        run: python3 verify.py
+
+      - name: Build
+        working-directory: minecraft/fabric-mod
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon --stacktrace
+
+      - name: Show what was produced
+        if: always()
+        working-directory: minecraft/fabric-mod
+        run: ls -la build/libs/ || echo "no jars produced"
+
+      # The jar lands here as a download on the run's summary page.
+      - name: Upload the jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbital-arsenal-mod
+          path: minecraft/fabric-mod/build/libs/*.jar
+          if-no-files-found: error
