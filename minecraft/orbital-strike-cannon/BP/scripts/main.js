@@ -178,7 +178,7 @@ function launchVolley(dimension, target, formation) {
 // comes out on its own — the centre is hit by every wave and ends ~28 blocks
 // down, the rim by one and stays shallow.
 
-const BUILD = "b9";
+const BUILD = "b10";
 const NUKE_ID = "orbital:tactical_nuke";
 const NUKE_AIM_DISTANCE = 300; // aim further than the blast reaches
 const NUKE_FUSE_SECONDS = 5; // time to run
@@ -351,6 +351,184 @@ function armNuke(player, dimension) {
   }, 20);
 }
 
+// ============================================================================
+// Kamehameha
+// ============================================================================
+// A held beam that bores straight through whatever it meets. Terrain is broken
+// the same way everything else here breaks it — explosions along the beam line
+// — which is cheap at this scale: one bore costs a fraction of a cannon volley
+// because it only clears a tunnel rather than a crater.
+//
+// The visible beam is made of small ki entities strung along the line. They
+// carry no gravity so the shaft stays dead straight, and the script removes
+// them on a timer rather than the entity doing it, keeping the entity itself
+// as plain as the shell that has been running since the start.
+
+const KAME_ID = "orbital:kamehameha";
+const KI_ID = "orbital:ki_beam";
+const KAME_RANGE = 160; // how far the beam reaches
+const KAME_SPEED = 8; // blocks the head advances per tick — 20 ticks to full
+const KAME_BORE = 6; // explosion radius carving the tunnel
+const KAME_BORE_STEPS = 4; // bore blasts per tick along the new segment
+const KAME_IMPACT = 12; // detonation where the beam ends
+const KI_SPACING = 1.0; // blocks between beam nodes
+const KI_LIFETIME = 26; // ticks a node lasts — long enough to show the shaft
+const CHARGE_SYLLABLES = ["KA", "ME", "HA", "ME", "HAAA!"];
+const CHARGE_TICKS = 10; // per syllable
+
+/** Beam nodes waiting to expire, as { entity, until }. */
+const kiNodes = [];
+
+system.runInterval(() => {
+  if (kiNodes.length === 0) return;
+  const now = system.currentTick;
+  let write = 0;
+  for (let i = 0; i < kiNodes.length; i++) {
+    const node = kiNodes[i];
+    if (now >= node.until) {
+      try {
+        node.entity.remove();
+      } catch {}
+    } else {
+      kiNodes[write++] = node;
+    }
+  }
+  kiNodes.length = write;
+}, 1);
+
+function spawnKi(dimension, at, lifetime) {
+  try {
+    const node = dimension.spawnEntity(KI_ID, at);
+    kiNodes.push({ entity: node, until: system.currentTick + lifetime });
+  } catch {
+    // Chunk not loaded or entity cap reached — the beam just thins out.
+  }
+}
+
+/**
+ * Where the player is looking, as a unit vector. Falls back to aiming at the
+ * block in the crosshair, which is the call the rest of the pack already uses.
+ */
+function aimVector(player) {
+  try {
+    const view = player.getViewDirection();
+    if (view && typeof view.x === "number") return view;
+  } catch {}
+  try {
+    const hit = player.getBlockFromViewDirection({ maxDistance: 64 });
+    if (hit?.block) {
+      const to = hit.block.location;
+      const from = player.location;
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dz = to.z - from.z;
+      const length = Math.hypot(dx, dy, dz) || 1;
+      return { x: dx / length, y: dy / length, z: dz / length };
+    }
+  } catch {}
+  return null;
+}
+
+function pointAlong(origin, direction, distance) {
+  return {
+    x: origin.x + direction.x * distance,
+    y: origin.y + direction.y * distance,
+    z: origin.z + direction.z * distance
+  };
+}
+
+/** Send the beam out, boring as it goes. */
+function fireKamehameha(player, dimension, origin, direction) {
+  try {
+    player.onScreenDisplay.setTitle("§b§lHAAAAA!", {
+      fadeInDuration: 0,
+      stayDuration: 30,
+      fadeOutDuration: 10
+    });
+  } catch {}
+  try {
+    player.playSound("mob.wither.shoot");
+  } catch {}
+
+  let reached = 0;
+  const runId = system.runInterval(() => {
+    const from = reached;
+    const to = Math.min(KAME_RANGE, reached + KAME_SPEED);
+
+    // The visible shaft: nodes strung along the new segment.
+    for (let d = from; d < to; d += KI_SPACING) {
+      spawnKi(dimension, pointAlong(origin, direction, d), KI_LIFETIME);
+    }
+
+    // The tunnel: blasts spaced along the same segment. Several per tick, or
+    // the beam outruns its own bore and leaves the terrain standing.
+    for (let i = 1; i <= KAME_BORE_STEPS; i++) {
+      const d = from + ((to - from) * i) / KAME_BORE_STEPS;
+      blast(dimension, pointAlong(origin, direction, d), KAME_BORE);
+    }
+
+    reached = to;
+    if (reached >= KAME_RANGE) {
+      system.clearRun(runId);
+      blast(dimension, pointAlong(origin, direction, KAME_RANGE), KAME_IMPACT);
+      try {
+        player.playSound("random.explode");
+      } catch {}
+    }
+  }, 1);
+}
+
+/** Charge up, one syllable at a time, then fire along the current aim. */
+function chargeKamehameha(player, dimension) {
+  let step = 0;
+  const runId = system.runInterval(() => {
+    const direction = aimVector(player);
+    if (!direction) {
+      system.clearRun(runId);
+      return;
+    }
+    const hands = pointAlong(
+      { x: player.location.x, y: player.location.y + 1.4, z: player.location.z },
+      direction,
+      1.3
+    );
+
+    if (step < CHARGE_SYLLABLES.length) {
+      try {
+        player.onScreenDisplay.setTitle(`§b§l${CHARGE_SYLLABLES[step]}`, {
+          fadeInDuration: 0,
+          stayDuration: CHARGE_TICKS + 4,
+          fadeOutDuration: 2
+        });
+      } catch {}
+      try {
+        player.playSound("random.orb");
+      } catch {}
+      // A ball of ki that swells with each syllable.
+      const size = 0.35 + step * 0.22;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + step;
+        spawnKi(
+          dimension,
+          {
+            x: hands.x + Math.cos(angle) * size,
+            y: hands.y + Math.sin(angle * 2) * size * 0.5,
+            z: hands.z + Math.sin(angle) * size
+          },
+          CHARGE_TICKS + 4
+        );
+      }
+      step++;
+      return;
+    }
+
+    system.clearRun(runId);
+    // Aim is read fresh at the moment of firing, so the beam goes where the
+    // player is looking now rather than where they were when they started.
+    fireKamehameha(player, dimension, hands, direction);
+  }, CHARGE_TICKS);
+}
+
 // Tells you at a glance that the pack is active and its script is running —
 // if this line never appears, the add-on isn't loaded and nothing else will
 // work either.
@@ -363,20 +541,24 @@ function armNuke(player, dimension) {
 system.runTimeout(() => {
   try {
     world.sendMessage(
-      `§aOrbital arsenal loaded §7[${BUILD}] — cannon (${TNT_COUNT} shells) and tactical nuke`
+      `§aOrbital arsenal loaded §7[${BUILD}] — cannon, nuke and kamehameha`
     );
   } catch {}
 }, 100);
 
 world.afterEvents.itemUse.subscribe((event) => {
   const used = event.itemStack?.typeId;
-  if (used !== CANNON_ID && used !== NUKE_ID) return;
+  if (used !== CANNON_ID && used !== NUKE_ID && used !== KAME_ID) return;
 
   const player = event.source;
   const dimension = player.dimension;
 
   if (used === NUKE_ID) {
     armNuke(player, dimension);
+    return;
+  }
+  if (used === KAME_ID) {
+    chargeKamehameha(player, dimension);
     return;
   }
 

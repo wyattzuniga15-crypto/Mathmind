@@ -105,55 +105,76 @@ def main():
         check(used <= keys,
               f"{path.name} uses undefined pattern keys: {sorted(used - keys)}")
 
-    # --- shell entity, behavior side ---
-    ent = load("BP/entities/sky_tnt.behavior.json")
-    ent_id = groups = events = None
-    if ent:
+    # --- every entity: behavior side lines up with resource side ---
+    entity_ids = set()
+    events_by_id = {}
+    for path in sorted((ROOT / "BP/entities").glob("*.json")):
+        ent = load(path.relative_to(ROOT))
+        if not ent:
+            continue
         body = ent["minecraft:entity"]
         ent_id = body["description"]["identifier"]
+        entity_ids.add(ent_id)
         groups = set(body.get("component_groups", {}))
-        events = set(body.get("events", {}))
+        events_by_id[ent_id] = set(body.get("events", {}))
         check(body["description"].get("is_summonable") is True,
-              "shell entity is not summonable — spawnEntity will fail")
+              f"{ent_id} is not summonable — spawnEntity will fail")
         for name, event in body.get("events", {}).items():
-            for group in [event.get("add", {}).get("component_group")]:
-                if group:
-                    check(group in groups,
-                          f"event '{name}' adds unknown component group '{group}'")
+            group = event.get("add", {}).get("component_group")
+            if group:
+                check(group in groups,
+                      f"{ent_id} event '{name}' adds unknown group '{group}'")
+        check(f"entity.{ent_id}.name=" in lang,
+              f"{ent_id} has no en_US.lang entry")
 
-    # --- shell entity, resource side ---
-    client = load("RP/entity/sky_tnt.entity.json")
-    if client and ent_id:
+        # The matching client entity, found by identifier rather than filename.
+        client = None
+        for candidate in sorted((ROOT / "RP/entity").glob("*.json")):
+            data = load(candidate.relative_to(ROOT))
+            if data and data["minecraft:client_entity"]["description"]["identifier"] == ent_id:
+                client = data
+                break
+        check(client is not None,
+              f"{ent_id} has no client entity in RP/entity — it would be invisible")
+        if not client:
+            continue
         desc = client["minecraft:client_entity"]["description"]
-        check(desc["identifier"] == ent_id,
-              f"RP entity '{desc['identifier']}' does not match BP entity '{ent_id}'")
         for rel in desc["textures"].values():
             check((ROOT / "RP" / (rel + ".png")).exists(),
-                  f"entity texture missing: RP/{rel}.png")
-        geo = load("RP/models/entity/sky_tnt.geo.json")
-        if geo:
-            have = {g["description"]["identifier"] for g in geo["minecraft:geometry"]}
-            for want in desc["geometry"].values():
-                check(want in have, f"geometry '{want}' is not defined")
-        rc = load("RP/render_controllers/sky_tnt.render_controllers.json")
-        if rc:
-            have = set(rc["render_controllers"])
-            for want in desc["render_controllers"]:
-                check(want in have, f"render controller '{want}' is not defined")
+                  f"{ent_id} texture missing: RP/{rel}.png")
+        # Geometry and render controllers must be defined somewhere in the RP.
+        geometries = set()
+        for geo_file in sorted((ROOT / "RP/models/entity").glob("*.json")):
+            geo = load(geo_file.relative_to(ROOT))
+            if geo:
+                geometries |= {g["description"]["identifier"]
+                               for g in geo["minecraft:geometry"]}
+        for want in desc["geometry"].values():
+            check(want in geometries, f"{ent_id}: geometry '{want}' is not defined")
+        controllers = set()
+        for rc_file in sorted((ROOT / "RP/render_controllers").glob("*.json")):
+            rc = load(rc_file.relative_to(ROOT))
+            if rc:
+                controllers |= set(rc["render_controllers"])
+        for want in desc["render_controllers"]:
+            check(want in controllers,
+                  f"{ent_id}: render controller '{want}' is not defined")
 
     # --- script lines up with the JSON it drives ---
     script = (ROOT / "BP/scripts/main.js").read_text()
     def const(name):
         m = re.search(rf'const {name} = "([^"]+)"', script)
         return m.group(1) if m else None
-    for name in ("CANNON_ID", "NUKE_ID"):
+    for name in ("CANNON_ID", "NUKE_ID", "KAME_ID"):
         check(const(name) in item_ids,
               f"script's {name} is '{const(name)}', which is not an item in this pack")
-    check(const("SHELL_ID") == ent_id,
-          f"script spawns '{const('SHELL_ID')}' but the entity is '{ent_id}'")
+    for name in ("SHELL_ID", "KI_ID"):
+        check(const(name) in entity_ids,
+              f"script spawns '{const(name)}', which is not an entity in this pack")
+    all_events = set().union(*events_by_id.values()) if events_by_id else set()
     for used in set(re.findall(r'triggerEvent\("([^"]+)"\)', script)):
-        check(events is not None and used in events,
-              f"script triggers '{used}', which the entity does not define")
+        check(used in all_events,
+              f"script triggers '{used}', which no entity defines")
 
     # Only one explosion configuration has ever been confirmed working in game.
     # breaksBlocks:false shipped once and produced no visible blast at all,

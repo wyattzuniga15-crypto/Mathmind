@@ -1,0 +1,22 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "orbital:kamehameha_recipe"
+    },
+    "tags": ["crafting_table"],
+    "pattern": [
+      "GDG",
+      "DHD",
+      "GDG"
+    ],
+    "key": {
+      "G": { "item": "minecraft:glowstone_dust" },
+      "D": { "item": "minecraft:diamond" },
+      "H": { "item": "minecraft:heart_of_the_sea" }
+    },
+    "result": {
+      "item": "orbital:kamehameha"
+    }
+  }
+}

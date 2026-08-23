@@ -7,6 +7,9 @@
     },
     "tactical_nuke": {
       "textures": "textures/items/tactical_nuke"
+    },
+    "kamehameha": {
+      "textures": "textures/items/kamehameha"
     }
   }
 }

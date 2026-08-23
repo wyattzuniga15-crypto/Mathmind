@@ -1,6 +1,6 @@
 # Orbital Arsenal (Minecraft Bedrock Add-On)
 
-A Bedrock Edition add-on with two very dangerous items.
+A Bedrock Edition add-on with three very dangerous items.
 
 **Orbital Strike Cannon** — 500 heavy shells fall from the sky as a flat circle
 **96 blocks across** onto whatever block you're aiming at, each detonating the
@@ -9,6 +9,10 @@ moment it hits the ground with twice the blast radius of vanilla TNT.
 **Tactical Nuke** — a five-second fuse, then four waves of shells carve a crater
 **120 blocks across** and 28 deep, under a mushroom cloud, with a shockwave
 racing out across the ground.
+
+**Kamehameha** — charge it through KA-ME-HA-ME-HAAA, then a beam of ki punches
+**160 blocks** straight ahead, boring a 12-block-wide tunnel through anything in
+the way. Aim it at a mountain and you get a hole out the other side.
 
 ## What's in the box
 
@@ -74,14 +78,15 @@ Whether each activates isolates a pack-loading problem from a script-module one.
 
 Both appear in the creative inventory, or:
 
-- `/give @s orbital:strike_cannon` · `/give @s orbital:tactical_nuke`
+- `/give @s orbital:strike_cannon` · `/give @s orbital:tactical_nuke` ·
+  `/give @s orbital:kamehameha`
 - Crafting table:
 
   ```
-  CANNON                          NUKE
-  gunpowder  TNT        gunpowder    netherite  TNT          netherite
-  TNT        eye ender  TNT          TNT        nether star  TNT
-  gunpowder  iron block gunpowder    netherite  TNT          netherite
+  CANNON                            NUKE                          KAMEHAMEHA
+  gunpowder  TNT        gunpowder   netherite  TNT      netherite  glowstone  diamond   glowstone
+  TNT        eye ender  TNT         TNT     nether star  TNT       diamond  heart of sea diamond
+  gunpowder  iron block gunpowder   netherite  TNT      netherite  glowstone  diamond   glowstone
   ```
 
 ## How the strike works
@@ -149,6 +154,30 @@ capability-probing went in the bin.
 The trade is size — 120 blocks across instead of 200, since explosions cost far
 more per block cleared than a bulk fill would. A working 120 beats a
 theoretical 200.
+
+## The kamehameha
+
+Use it and the charge runs KA — ME — HA — ME — HAAA, half a second a syllable,
+with a ball of ki swelling at your hands. Aim is read at the moment of firing,
+not when you started, so you can track a target while charging. Then the beam
+goes out 160 blocks in one second, boring a tunnel about 12 blocks wide through
+whatever stands in the way, and detonates where it ends.
+
+The tunnel is cut by explosions spaced along the beam line — four per tick, two
+blocks apart, each with a radius of six, so they overlap and leave no standing
+rock between them. The whole beam costs about a seventh of the cannon's
+per-tick budget: boring a tunnel is far cheaper than digging a crater, because
+it only clears what it passes through.
+
+The visible shaft is a string of small ki entities placed a block apart along
+the beam. They carry no gravity, so the shaft stays dead straight rather than
+sagging, and the script removes them on a timer instead of the entity managing
+its own lifetime — keeping the entity itself as plain as the shell that has run
+since the beginning.
+
+Dials: `KAME_RANGE`, `KAME_SPEED`, `KAME_BORE` (tunnel radius), `KAME_BORE_STEPS`
+(blasts per tick — lower it and the beam starts outrunning its own bore, leaving
+terrain standing) and `KI_SPACING` / `KI_LIFETIME` for how solid the shaft looks.
 
 ## Changing it
 

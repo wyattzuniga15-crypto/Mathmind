@@ -1,0 +1,18 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "orbital:ki_beam",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/ki_beam"
+      },
+      "geometry": {
+        "default": "geometry.orbital_ki_beam"
+      },
+      "render_controllers": ["controller.render.orbital_ki_beam"]
+    }
+  }
+}

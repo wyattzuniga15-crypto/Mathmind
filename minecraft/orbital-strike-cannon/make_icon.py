@@ -202,6 +202,89 @@ def nuke_icon():
     return tile
 
 
+# --- Kamehameha: item icon and beam texture ---------------------------------
+# Ki energy reads as a white-hot core bleeding out through cyan into deep blue.
+# Keeping the core pure white and the falloff tight is what makes it look like
+# light rather than a flat blue ball.
+KI_CORE = (255, 255, 255, 255)
+KI_INNER = (198, 245, 255, 255)
+KI_MID = (110, 214, 255, 255)
+KI_EDGE = (46, 150, 246, 255)
+KI_OUTER = (24, 86, 200, 255)
+
+
+def kamehameha_icon():
+    """A ki orb with eight radiating spikes, so it reads as energy in flight."""
+    size = 16
+    centre = (size - 1) / 2
+    tile = []
+    for y in range(size):
+        row = []
+        for x in range(size):
+            dx, dy = x - centre, y - centre
+            dist = math.hypot(dx, dy)
+            angle = math.degrees(math.atan2(dy, dx)) % 360
+            # Spikes every 45 degrees let the orb reach further out.
+            on_spike = min(
+                abs((angle - k * 45 + 180) % 360 - 180) for k in range(8)
+            ) < 8
+            reach = 7.6 if on_spike else 5.9
+            if dist > reach:
+                row.append((0, 0, 0, 0))
+            elif dist < 1.7:
+                row.append(KI_CORE)
+            elif dist < 3.0:
+                row.append(KI_INNER)
+            elif dist < 4.3:
+                row.append(KI_MID)
+            elif dist < 5.6:
+                row.append(KI_EDGE)
+            else:
+                row.append(KI_OUTER)
+        tile.append(row)
+    return tile
+
+
+def _ki_face():
+    """One 8x8 face of a beam node: hot centre, cooler at the edges."""
+    face = []
+    for y in range(8):
+        row = []
+        for x in range(8):
+            dist = math.hypot(x - 3.5, y - 3.5)
+            if dist < 1.5:
+                pixel = KI_CORE
+            elif dist < 2.6:
+                pixel = KI_INNER
+            elif dist < 3.6:
+                pixel = KI_MID
+            else:
+                pixel = KI_EDGE
+            # A little sparkle so a wall of these doesn't look like flat plastic.
+            if _speckle(x, y, 0, 1, 2) == 1:
+                pixel = KI_CORE if dist < 3.0 else KI_INNER
+            row.append(pixel)
+        face.append(row)
+    return face
+
+
+def ki_texture():
+    """Box-UV sheet for an 8x8x8 beam node on a 32x16 atlas."""
+    sheet = [[(0, 0, 0, 0)] * 32 for _ in range(16)]
+    face = _ki_face()
+
+    def blit(at_x, at_y):
+        for y, row in enumerate(face):
+            for x, px in enumerate(row):
+                sheet[at_y + y][at_x + x] = px
+
+    blit(8, 0)   # down
+    blit(16, 0)  # up
+    for i in range(4):
+        blit(i * 8, 8)  # the four sides
+    return sheet
+
+
 if __name__ == "__main__":
     root = Path(__file__).parent
     out = root / "RP" / "textures" / "items" / "orbital_strike_cannon.png"
@@ -217,3 +300,9 @@ if __name__ == "__main__":
     nuke = root / "RP" / "textures" / "items" / "tactical_nuke.png"
     write_png(nuke, nuke_icon())
     print(f"wrote {nuke}")
+    kame = root / "RP" / "textures" / "items" / "kamehameha.png"
+    write_png(kame, kamehameha_icon())
+    print(f"wrote {kame}")
+    ki = root / "RP" / "textures" / "entity" / "ki_beam.png"
+    write_png(ki, ki_texture())
+    print(f"wrote {ki}")
