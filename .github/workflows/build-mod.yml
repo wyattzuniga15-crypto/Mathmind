@@ -86,6 +86,34 @@ jobs:
           echo "--- gradle.properties ---"
           cat gradle.properties
 
+      # The wrapper ships pinned to the Gradle available where this project was
+      # written, which predates Java 25 and refuses to start on it ("unsupported
+      # class file major version 69"). Since Loom now requires 25, Gradle has to
+      # move too — so take whatever release is current rather than pinning a
+      # number that will age into the same problem.
+      - name: Use a Gradle that runs on this JDK
+        working-directory: minecraft/fabric-mod
+        run: |
+          set -euo pipefail
+          python3 - <<'EOF'
+          import json
+          import urllib.request
+          from pathlib import Path
+
+          version = json.load(urllib.request.urlopen(
+              "https://services.gradle.org/versions/current"))["version"]
+          props = Path("gradle/wrapper/gradle-wrapper.properties")
+          out = []
+          for line in props.read_text().splitlines():
+              if line.startswith("distributionUrl="):
+                  line = ("distributionUrl=https\\://services.gradle.org"
+                          f"/distributions/gradle-{version}-bin.zip")
+              out.append(line)
+          props.write_text("\n".join(out) + "\n")
+          print("Gradle", version)
+          EOF
+          cat gradle/wrapper/gradle-wrapper.properties
+
       - name: Check the project before building
         working-directory: minecraft/fabric-mod
         run: python3 verify.py
