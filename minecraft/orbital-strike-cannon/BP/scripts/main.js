@@ -14,19 +14,24 @@ import { world, system } from "@minecraft/server";
 
 const CANNON_ID = "orbital:strike_cannon";
 const SHELL_ID = "orbital:sky_tnt";
-const TNT_COUNT = 2000; // total TNT per strike
+const TNT_COUNT = 500; // total TNT per strike
 const DROP_HEIGHT = 60; // how far above the target the circle assembles
-const STRIKE_RADIUS = 30; // radius of the target circle
-const RING_COUNT = 16; // concentric rings the volley is laid out on
+const STRIKE_RADIUS = 16; // radius of the target circle
+const RING_COUNT = 10; // concentric rings the volley is laid out on
 
 // Rates. Each of these caps how much work a single tick can be asked to do,
 // which is what keeps a strike from locking up a phone.
 const SPAWN_PER_TICK = 50; // assembling the formation
-const RELEASE_PER_TICK = 500; // switching gravity on, so ~4 ticks for 2000
+const RELEASE_PER_TICK = 250; // switching gravity on, so ~2 ticks for 500
 const DETONATIONS_PER_TICK = 100; // explosions, the most expensive part by far
 const SCAN_PER_TICK = 800; // shells checked for touchdown
 
-const SETTLE_TICKS = 10; // a shell can't have landed before this many ticks
+const EXPLOSION_RADIUS = 4; // same blast as vanilla TNT
+// A shell needs ~67 ticks to fall 60 blocks, so nothing can genuinely have
+// landed inside this window. Holding the check off protects against a runtime
+// reporting a weightless, motionless shell as already resting on the ground —
+// which would airburst the entire volley the instant it was released.
+const MIN_FLIGHT_TICKS = 20;
 const MAX_FLIGHT_TICKS = 400; // failsafe: one stuck in water blows anyway
 
 /** Shells falling, as { entity, dropTick }. */
@@ -34,11 +39,38 @@ const inFlight = [];
 let cursor = 0;
 
 function hasLanded(shell, now) {
+  if (now - shell.dropTick < MIN_FLIGHT_TICKS) return false;
   const onGround = shell.entity.isOnGround;
   if (typeof onGround === "boolean") return onGround;
   // Runtimes without isOnGround: a shell that has stopped falling has landed.
-  if (now - shell.dropTick < SETTLE_TICKS) return false;
   return Math.abs(shell.entity.getVelocity().y) < 0.01;
+}
+
+/**
+ * Blow one shell up. The explosion is driven from script rather than left to
+ * the shell's own explode component, so a detonation can't be quietly lost to
+ * a component quirk; the component stays as a fallback if the call fails.
+ */
+function detonate(entity) {
+  const where = entity.location;
+  const dimension = entity.dimension;
+  let exploded = false;
+  try {
+    dimension.createExplosion(where, EXPLOSION_RADIUS, {
+      breaksBlocks: true,
+      causesFire: false,
+      allowUnderwater: true
+    });
+    exploded = true;
+  } catch {
+    // Fall through to the component below.
+  }
+  try {
+    if (exploded) entity.remove();
+    else entity.triggerEvent("orbital:detonate");
+  } catch {
+    // Shell already gone; nothing left to clean up.
+  }
 }
 
 system.runInterval(() => {
@@ -59,7 +91,7 @@ system.runInterval(() => {
     let finished = false;
     try {
       if (hasLanded(shell, now) || now - shell.dropTick > MAX_FLIGHT_TICKS) {
-        shell.entity.triggerEvent("orbital:detonate");
+        detonate(shell.entity);
         detonated++;
         finished = true;
       }

@@ -10,7 +10,7 @@
     "component_groups": {
       "orbital:detonating": {
         "minecraft:explode": {
-          "fuse_length": 0,
+          "fuse_length": 0.05,
           "fuse_lit": true,
           "power": 4,
           "causes_fire": false,
