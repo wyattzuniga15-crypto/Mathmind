@@ -26,13 +26,10 @@ const ALWAYS = ['calculate'];
 /** Sent when the question gives no signal about what it needs. */
 const FALLBACK = ['solve_equation', 'simplify_expression', 'check_equivalent'];
 
-/** Practice mode invents problems, so it cannot be narrowed by the prompt. */
-const PRACTICE = ['solve_equation', 'simplify_expression', 'factor_polynomial', 'check_equivalent'];
-
 /**
  * Ordered so the earliest match wins a place when the cap bites. Patterns are
- * matched against the student's own words, so they lean on how students
- * actually phrase things ("how likely", "at most") rather than on formal names.
+ * matched against the person's own words, so they lean on how people actually
+ * phrase things ("how likely", "at most") rather than on formal names.
  */
 const PATTERNS: { tool: string; test: RegExp }[] = [
   {
@@ -98,15 +95,13 @@ const PATTERNS: { tool: string; test: RegExp }[] = [
 const MAX_TOOLS = 8;
 
 export interface ToolSelectionInput {
-  /** Mode id: solve, learn, hint, practice, check, explain. */
-  mode: string;
-  /** The student's words — latest message, plus the problem under discussion. */
+  /** The person's words — latest message, plus the problem under discussion. */
   text: string;
 }
 
 export function selectMathTools(
   all: SubjectTool[],
-  { mode, text }: ToolSelectionInput,
+  { text }: ToolSelectionInput,
 ): SubjectTool[] {
   const byName = new Map(all.map((tool) => [tool.definition.name, tool]));
   const chosen: string[] = [];
@@ -117,16 +112,6 @@ export function selectMathTools(
 
   for (const name of ALWAYS) add(name);
 
-  // Check My Work is a diagnosis, not a computation: the tool that walks the
-  // student's lines is the whole point of the mode.
-  if (mode === 'check') {
-    add('check_work');
-    add('check_equivalent');
-  }
-  if (mode === 'practice') {
-    for (const name of PRACTICE) add(name);
-  }
-
   const haystack = text.toLowerCase();
   for (const { tool, test } of PATTERNS) {
     if (test.test(haystack)) add(tool);
@@ -136,8 +121,8 @@ export function selectMathTools(
   // never uses the word: "2x + 3y = 12, x - y = 1".
   if ((haystack.match(/=/g) ?? []).length > 1) add('solve_system');
 
-  // A follow-up like "why did you subtract 5?" carries no signal of its own.
-  // Send the everyday set rather than arithmetic alone.
+  // A context-free follow-up carries no signal of its own. Send the
+  // everyday set rather than arithmetic alone.
   if (chosen.length === ALWAYS.length) {
     for (const name of FALLBACK) add(name);
   }

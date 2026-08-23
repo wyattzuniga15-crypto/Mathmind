@@ -2,12 +2,15 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'MathMind — AI Math Tutor',
+  title: 'Mercury — AI Assistant',
   description:
-    'A step-by-step AI math tutor backed by an exact symbolic computation engine. Arithmetic through calculus.',
+    'A general-purpose AI assistant with a dedicated Code mode. Math and calculations are checked by an exact symbolic engine rather than produced from memory.',
   manifest: '/manifest.json',
   icons: {
-    icon: [{ url: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: {
@@ -16,7 +19,7 @@ export const metadata: Metadata = {
     // browser tab with address bar chrome.
     capable: true,
     statusBarStyle: 'default',
-    title: 'MathMind',
+    title: 'Mercury',
   },
 };
 

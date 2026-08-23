@@ -10,12 +10,12 @@ import { fingerprint, resolveIdentity, clientKey } from '../src/lib/core/auth';
 import { AiClient } from '../src/lib/core/ai/client';
 import { runAgent } from '../src/lib/core/ai/agent';
 import { registerSubject, getSubject, listSubjects, __resetRegistry } from '../src/lib/core/registry';
-import { mathSubject } from '../src/lib/subjects/math';
+import { generalSubject } from '../src/lib/subjects/math';
 import type { StreamEvent } from '../src/lib/core/types';
 
 const baseRequest = {
-  subjectId: 'math',
-  mode: 'solve',
+  subjectId: 'general',
+  mode: 'chat',
   level: 'auto',
   messages: [{ role: 'user', content: '2x + 5 = 15' }],
 };
@@ -24,7 +24,7 @@ const baseRequest = {
 
 test('accepts a well-formed chat request', () => {
   const parsed = parseChatRequest(baseRequest);
-  assert.equal(parsed.subjectId, 'math');
+  assert.equal(parsed.subjectId, 'general');
   assert.equal(parsed.messages.length, 1);
   assert.equal(parsed.level, 'auto');
 });
@@ -209,10 +209,10 @@ test('sse parser survives malformed frames', () => {
 
 test('registry exposes subjects and rejects duplicates', () => {
   __resetRegistry();
-  registerSubject(mathSubject);
-  assert.equal(getSubject('math').id, 'math');
+  registerSubject(generalSubject);
+  assert.equal(getSubject('general').id, 'general');
   assert.equal(listSubjects().length, 1);
-  assert.throws(() => registerSubject(mathSubject), /already registered/);
+  assert.throws(() => registerSubject(generalSubject), /already registered/);
   assert.throws(() => getSubject('science'), (e: AppError) => e.code === 'unknown_subject');
 });
 
@@ -265,7 +265,7 @@ function toolTurn(name: string, input: Record<string, unknown>) {
   ];
 }
 
-async function collect(subject = mathSubject, responses: Response[] = []) {
+async function collect(subject = generalSubject, responses: Response[] = []) {
   let call = 0;
   const client = new AiClient({
     apiKey: 'test-key',
@@ -280,7 +280,7 @@ async function collect(subject = mathSubject, responses: Response[] = []) {
     model: 'test-model',
     maxTokens: 100,
     maxIterations: 4,
-    context: { subjectId: 'math', mode: 'solve', level: 'auto' },
+    context: { subjectId: 'general', mode: 'chat', level: 'auto' },
   })) {
     events.push(e);
   }
@@ -288,15 +288,15 @@ async function collect(subject = mathSubject, responses: Response[] = []) {
 }
 
 test('agent streams plain text turns', async () => {
-  const events = await collect(mathSubject, [mockStreamResponse(textTurn('Hello student'))]);
+  const events = await collect(generalSubject, [mockStreamResponse(textTurn('Hello there'))]);
   assert.equal(events[0].type, 'start');
-  assert.equal(events.filter((e) => e.type === 'text').map((e) => (e as { delta: string }).delta).join(''), 'Hello student');
+  assert.equal(events.filter((e) => e.type === 'text').map((e) => (e as { delta: string }).delta).join(''), 'Hello there');
   const done = events.find((e) => e.type === 'done');
   assert.ok(done);
 });
 
 test('agent executes real tools and feeds results back', async () => {
-  const events = await collect(mathSubject, [
+  const events = await collect(generalSubject, [
     mockStreamResponse(toolTurn('solve_equation', { equation: '2x + 5 = 15' })),
     mockStreamResponse(textTurn('The answer is x = 5.')),
   ]);
@@ -315,7 +315,7 @@ test('agent executes real tools and feeds results back', async () => {
 });
 
 test('agent reports a failing tool without crashing the turn', async () => {
-  const events = await collect(mathSubject, [
+  const events = await collect(generalSubject, [
     mockStreamResponse(toolTurn('solve_equation', { equation: 'this is not math ((' })),
     mockStreamResponse(textTurn('I could not parse that.')),
   ]);
@@ -336,13 +336,13 @@ test('agent surfaces upstream errors as error events', async () => {
   const events: StreamEvent[] = [];
   for await (const e of runAgent({
     client,
-    subject: mathSubject,
+    subject: generalSubject,
     system: 's',
     messages: [{ role: 'user', content: 'hi' }],
     model: 'm',
     maxTokens: 10,
     maxIterations: 2,
-    context: { subjectId: 'math', mode: 'solve', level: 'auto' },
+    context: { subjectId: 'general', mode: 'chat', level: 'auto' },
   })) {
     events.push(e);
   }
@@ -357,7 +357,7 @@ test('agent surfaces upstream errors as error events', async () => {
 });
 
 test('client sends uploaded images to the model as image parts', async () => {
-  // A photographed problem is the entire question for many students. If the
+  // A photographed problem or screenshot is the entire question sometimes. If the
   // image never reaches the wire, the model answers a blank prompt.
   let sent: { messages: { role: string; content: unknown }[] } | null = null;
   const client = new AiClient({
@@ -443,7 +443,7 @@ test('a model listing failure still produces an actionable 404', async () => {
 });
 
 test('a rate limit carries how long to wait', async () => {
-  // Without this the student sees "try again" with no idea when, and hammers
+  // Without this the person sees "try again" with no idea when, and hammers
   // a button that spends quota they are already out of.
   const client = new AiClient({
     apiKey: 'test-key',
@@ -499,18 +499,20 @@ test('client maps auth failures to a clear error', async () => {
 
 /* --------------------------- tool selection ----------------------------- */
 
-const pick = (mode: string, text: string) =>
-  mathSubject.selectTools!({ mode, text }).map((t) => t.definition.name);
+// mode is still part of the shared selectTools contract (a future
+// multi-mode subject could use it) but the general subject's own selection
+// logic no longer branches on it, so tests pass a constant here.
+const pick = (text: string) => generalSubject.selectTools!({ mode: 'chat', text }).map((t) => t.definition.name);
 
 test('tool selection always offers exact arithmetic', () => {
   for (const text of ['1+1', 'why did you subtract 5?', 'what is a derivative', '']) {
-    assert.ok(pick('solve', text).includes('calculate'), `calculate missing for ${JSON.stringify(text)}`);
+    assert.ok(pick(text).includes('calculate'), `calculate missing for ${JSON.stringify(text)}`);
   }
 });
 
-test('tool selection recognises each specialised tool from a student phrasing', () => {
+test('tool selection recognises each specialised tool from a natural phrasing', () => {
   // A regex regression here would silently hide a tool from the model, which
-  // looks like the tutor "forgetting" how to do a whole topic.
+  // looks like the assistant "forgetting" how to do a whole topic.
   const cases: [string, string][] = [
     ['What is the derivative of x^2*sin(x)?', 'differentiate'],
     ['Integrate x^2 from 0 to 3', 'integrate'],
@@ -528,29 +530,32 @@ test('tool selection recognises each specialised tool from a student phrasing', 
     ['Solve 2x + 5 = 15', 'solve_equation'],
   ];
   for (const [text, expected] of cases) {
-    assert.ok(pick('solve', text).includes(expected), `${JSON.stringify(text)} should offer ${expected}`);
+    assert.ok(pick(text).includes(expected), `${JSON.stringify(text)} should offer ${expected}`);
   }
 });
 
 test('tool selection narrows the payload instead of sending everything', () => {
-  const derivative = pick('solve', 'What is the derivative of x^2*sin(x)?');
-  assert.ok(derivative.length < mathSubject.tools.length);
+  const derivative = pick('What is the derivative of x^2*sin(x)?');
+  assert.ok(derivative.length < generalSubject.tools.length);
   assert.ok(!derivative.includes('matrix'), 'a derivative question does not need the matrix schema');
   assert.ok(!derivative.includes('probability'));
 });
 
 test('tool selection reads a bare pair of equations as a system', () => {
-  assert.ok(pick('solve', '2x + 3y = 12, x - y = 1').includes('solve_system'));
+  assert.ok(pick('2x + 3y = 12, x - y = 1').includes('solve_system'));
 });
 
 test('tool selection gives a context-free follow-up more than arithmetic', () => {
-  const names = pick('explain', 'why did you subtract 5?');
+  const names = pick('why did you subtract 5?');
   assert.ok(names.length > 1, 'a follow-up should still carry the everyday tools');
   assert.ok(names.includes('solve_equation'));
 });
 
-test('check mode always carries the tool that diagnoses student work', () => {
-  assert.ok(pick('check', 'x = 8').includes('check_work'));
+test('a diagnosis phrase reaches the check-work tool without needing a dedicated mode', () => {
+  // check/practice used to be dedicated pedagogical modes that force-added
+  // tools; now there is only one mode, so this has to work from the words
+  // alone -- which it already does, via the same pattern used above.
+  assert.ok(pick('did I do this right? x = 8').includes('check_work'));
 });
 
 test('tool selection stays bounded and always returns real tools', () => {
@@ -558,9 +563,9 @@ test('tool selection stays bounded and always returns real tools', () => {
     'graph the derivative and integral, find the limit, the matrix determinant, the mean, ' +
     'the probability, factor it, simplify it, solve 2x = 4 and x + y = 3, is it equivalent, ' +
     'did I do this right, and is 3x - 6 > 0';
-  const names = pick('solve', kitchenSink);
+  const names = pick(kitchenSink);
   assert.ok(names.length <= 8, `selection must stay bounded, got ${names.length}`);
-  const real = new Set(mathSubject.tools.map((t) => t.definition.name));
+  const real = new Set(generalSubject.tools.map((t) => t.definition.name));
   for (const name of names) assert.ok(real.has(name), `${name} is not a real tool`);
   assert.equal(new Set(names).size, names.length, 'no duplicates');
 });
@@ -568,7 +573,7 @@ test('tool selection stays bounded and always returns real tools', () => {
 test('a tool left out of the selection still executes if the model calls it', async () => {
   // This is what makes narrowing safe: the selection is an advertising choice,
   // not an access-control list. If it ever guesses wrong, the model can still
-  // reach the engine and the student still gets verified math.
+  // reach the engine and verified math still comes back.
   const events: StreamEvent[] = [];
   const client = new AiClient({
     apiKey: 'test-key',
@@ -577,15 +582,15 @@ test('a tool left out of the selection still executes if the model calls it', as
   });
   for await (const e of runAgent({
     client,
-    subject: mathSubject,
+    subject: generalSubject,
     system: 'test',
     messages: [{ role: 'user', content: '2x + 5 = 15' }],
     model: 'test-model',
     maxTokens: 100,
     maxIterations: 1,
-    context: { subjectId: 'math', mode: 'solve', level: 'auto' },
+    context: { subjectId: 'general', mode: 'chat', level: 'auto' },
     // Deliberately advertise only calculate, then have the model call something else.
-    advertisedTools: mathSubject.tools.filter((t) => t.definition.name === 'calculate'),
+    advertisedTools: generalSubject.tools.filter((t) => t.definition.name === 'calculate'),
   })) {
     events.push(e);
   }
@@ -599,7 +604,7 @@ test('a tool left out of the selection still executes if the model calls it', as
 });
 
 test('every math tool has a valid schema and executes', async () => {
-  for (const tool of mathSubject.tools) {
+  for (const tool of generalSubject.tools) {
     assert.match(tool.definition.name, /^[a-z_]+$/);
     assert.ok(tool.definition.description.length > 40, `${tool.definition.name} needs a real description`);
     assert.equal(tool.definition.input_schema.type, 'object');
@@ -610,7 +615,7 @@ test('every math tool has a valid schema and executes', async () => {
       );
     }
     // Missing required input must fail gracefully, never throw.
-    const result = await tool.execute({}, { subjectId: 'math', mode: 'solve', level: 'auto' });
+    const result = await tool.execute({}, { subjectId: 'general', mode: 'chat', level: 'auto' });
     assert.equal(typeof result.ok, 'boolean');
   }
 });

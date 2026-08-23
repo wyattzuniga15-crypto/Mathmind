@@ -1,33 +1,28 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   Lock,
+  MercuryMark,
   MessageSquarePlus,
   MoreHorizontal,
   Pencil,
-  Sigma,
+  Search,
   Trash2,
   X,
 } from './icons';
-import type { Conversation, StudentLevel } from '@/lib/core/types';
+import { SubjectIcon } from './subject-icons';
+import type { Conversation } from '@/lib/core/types';
 
 export interface SubjectSummary {
   id: string;
   name: string;
   tagline: string;
+  description: string;
   icon: string;
   status: 'available' | 'coming-soon';
 }
-
-const LEVELS: { id: StudentLevel; label: string }[] = [
-  { id: 'auto', label: 'Auto' },
-  { id: 'elementary', label: 'Elementary' },
-  { id: 'middle', label: 'Middle' },
-  { id: 'high', label: 'High' },
-  { id: 'college', label: 'College' },
-];
 
 interface Props {
   open: boolean;
@@ -41,8 +36,6 @@ interface Props {
   onNew: () => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
-  level: StudentLevel;
-  onLevelChange: (level: StudentLevel) => void;
 }
 
 function groupByDate(conversations: Conversation[]) {
@@ -192,11 +185,25 @@ export function Sidebar(props: Props) {
     onNew,
     onRename,
     onDelete,
-    level,
-    onLevelChange,
   } = props;
 
-  const groups = groupByDate(conversations);
+  const [query, setQuery] = useState('');
+
+  // Matches the title or any message, not just the title: "the one about
+  // circles" finds a conversation whose title never says "circle" but whose
+  // messages do. Only appears once history is long enough that scrolling to
+  // find something is actually a chore.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        c.messages.some((m) => m.content.toLowerCase().includes(q)),
+    );
+  }, [conversations, query]);
+
+  const groups = groupByDate(filtered);
 
   return (
     <>
@@ -219,9 +226,9 @@ export function Sidebar(props: Props) {
         <div className="flex items-center justify-between px-3 py-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-white">
-              <Sigma size={16} />
+              <MercuryMark size={15} />
             </div>
-            <span className="text-[15px] font-semibold tracking-tight">MathMind</span>
+            <span className="text-[15px] font-semibold tracking-tight">Mercury</span>
           </div>
           <button
             type="button"
@@ -266,7 +273,7 @@ export function Sidebar(props: Props) {
                         : 'hover:bg-surface-sunken'
                   }`}
                 >
-                  <Sigma size={14} className="shrink-0" />
+                  <SubjectIcon icon={s.icon} size={14} className="shrink-0" />
                   <span className="flex-1 truncate">{s.name}</span>
                   {disabled && <Lock size={12} />}
                 </button>
@@ -275,31 +282,39 @@ export function Sidebar(props: Props) {
           </div>
         </div>
 
-        <div className="px-3 pt-4">
-          <label
-            htmlFor="level-select"
-            className="mb-1.5 block px-1 text-[10.5px] font-semibold uppercase tracking-wider text-ink-faint"
-          >
-            Explanation level
-          </label>
-          <select
-            id="level-select"
-            value={level}
-            onChange={(e) => onLevelChange(e.target.value as StudentLevel)}
-            className="w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] outline-none focus:border-brand/60"
-          >
-            {LEVELS.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {conversations.length > 4 && (
+          <div className="px-3 pt-4">
+            <div className="relative">
+              <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-faint" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search conversations"
+                aria-label="Search conversations"
+                className="w-full rounded-lg border border-line bg-surface py-1.5 pl-8 pr-7 text-[13px] outline-none focus:border-brand/60"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  aria-label="Clear search"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-ink-faint hover:text-ink"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
           {conversations.length === 0 ? (
             <p className="px-1 py-3 text-[12.5px] text-ink-faint">
               No conversations yet. Ask a question to start one.
+            </p>
+          ) : groups.length === 0 ? (
+            <p className="px-1 py-3 text-[12.5px] text-ink-faint">
+              No conversations match &ldquo;{query}&rdquo;.
             </p>
           ) : (
             groups.map((group) => (

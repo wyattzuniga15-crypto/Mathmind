@@ -99,8 +99,8 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   level: 'auto',
-  lastSubjectId: 'math',
-  lastMode: 'solve',
+  lastSubjectId: 'general',
+  lastMode: 'chat',
   showToolTrace: true,
 };
 

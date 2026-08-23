@@ -1,8 +1,8 @@
-# MathMind
+# Mercury
 
-An AI math tutor built on a **deterministic computation engine**. The language model decides *which* computation to run and how to explain it; it never does the arithmetic itself. Every solution, derivative, statistic, and equivalence claim is verified by exact symbolic code before it reaches the student.
+A general-purpose AI assistant with a dedicated **Code** subject, built on top of a **deterministic math engine**. Ask it anything, the way you would ChatGPT or Claude; when a question touches arithmetic, an equation, a derivative, or a statistic, the language model decides *which* computation to run and calls an exact symbolic tool for it rather than doing the arithmetic itself. Every such answer is verified before it reaches you.
 
-Math is the first module of a subject-based platform. Science, History, and English can be added without touching the shared infrastructure.
+The platform is subject-based: **Chat** (general) and **Code** ship today, and a third subject (Science, research, whatever) can be added without touching the shared infrastructure.
 
 ---
 
@@ -29,7 +29,7 @@ If the key is missing, the app loads and tells you exactly what to fix rather th
 | --- | --- |
 | `npm run dev` | Start the dev server |
 | `npm run build` / `npm start` | Production build and serve |
-| `npm test` | Unit suite (92 tests, no network or API key needed) |
+| `npm test` | Unit suite (96 tests, no network or API key needed) |
 | `npm run test:e2e` | End-to-end browser test of the real UI (see below) |
 | `npm run typecheck` | TypeScript across the whole project |
 | `npm run typecheck:lib` | Strict check of the dependency-free core |
@@ -42,8 +42,10 @@ If the key is missing, the app loads and tells you exactly what to fix rather th
 ## End-to-end testing
 
 `npm run test:e2e` launches the real UI in Chromium against the real API routes,
-the real streaming agent loop, and the real math engine, then asserts 38 checks:
-every math scenario below, exporting a conversation to PDF, streaming and stop,
+the real streaming agent loop, and the real math engine, then asserts 51 checks:
+every math scenario below, exporting a conversation to PDF or Markdown,
+searching conversation history, jumping back to the latest message while
+scrolled up, an offline banner that disables the composer, streaming and stop,
 conversation create/rename/delete, persistence across reload, theme switching,
 error display, and that no secret reaches the client bundle.
 
@@ -81,14 +83,14 @@ emphasis, and `$5 and then $10` stays a pair of prices.
 
 ## Why this isn't a thin wrapper
 
-Language models are unreliable at arithmetic and confidently wrong in ways that are pedagogically toxic. The fix here is architectural: a **zero-dependency exact math engine** in `src/lib/subjects/math/engine/`, exposed to the model as 15 tools.
+Language models are unreliable at arithmetic and confidently wrong in ways that are hard to catch by reading the prose. The fix here is architectural: a **zero-dependency exact math engine** in `src/lib/subjects/math/engine/`, exposed to the Chat subject's model as 15 tools. (The Code subject has no tools of its own -- see "Subjects" below.)
 
 - **Exact rational arithmetic on BigInt.** `0.1 + 0.2` is `3/10`, not `0.30000000000000004`.
 - **Exact vs. approximate is tracked through every operation.** `sqrt(16)` returns exactly `4`; `sqrt(2)` is flagged irrational and can never be presented as exact. This flag propagates: one irrational input makes the whole result approximate, and the system prompt forbids showing an approximation as an exact answer.
 - **Every solution is substituted back and verified** before it is returned.
 - **Derivatives are cross-checked** against a numerical finite difference.
 - **Definite integrals** are computed symbolically *and* by adaptive Simpson quadrature, then compared.
-- **`check_work` walks a student's lines** and finds the *first* line that stops following from the previous one, with a counterexample. That is what makes "Check My Work" a real diagnosis instead of the model guessing.
+- **`check_work` walks a person's working line by line** and finds the *first* line that stops following from the one before it, with a counterexample -- so "did I do this right?" gets a real diagnosis instead of the model guessing.
 
 If a tool cannot solve something, it says so. The prompt instructs the model to report that rather than invent an answer.
 
@@ -102,18 +104,14 @@ Arithmetic · fractions · decimals · percentages · ratios and proportions · 
 
 ---
 
-## Modes
+## Subjects
 
-| Mode | Behaviour |
-| --- | --- |
-| **Solve** | Complete worked solution; every step justified, answer verified |
-| **Learn** | Teaches the concept from the ground up, ending with a comprehension check |
-| **Hint** | Exactly one hint, then stops. Never reveals the answer |
-| **Practice** | Generates problems, solving each with tools first so they are well-posed |
-| **Check My Work** | Finds the first wrong line and names the misconception |
-| **Explain** | Plain-language explanation of a concept |
+| Subject | id | Tools | What it's for |
+| --- | --- | --- | --- |
+| **Chat** | `general` | The 15 math tools | A normal AI assistant. Ask anything; math and calculations are verified rather than produced from memory. |
+| **Code** | `code` | None | Writing, debugging, reviewing, and explaining code. |
 
-Explanation level (Auto / Elementary / Middle / High / College) changes vocabulary and step granularity. Auto infers the level from the problem and the student's own wording.
+Each subject has exactly one mode, so the mode-switching UI (`Composer.tsx`) hides itself -- there is nothing to switch between within a subject. Switching *subjects*, in the sidebar, resumes the most recent conversation already in that subject or starts a fresh one; each conversation belongs to a single subject for its whole life.
 
 ---
 
@@ -143,7 +141,8 @@ src/
     │   └── sse         Event encoding/parsing
     └── subjects/
         ├── index.ts    Registration happens here
-        └── math/       modes · prompt · tools · engine/
+        ├── math/       the "Chat" subject: modes · prompt · tools · engine/
+        └── code/       the "Code" subject: modes · prompt (no tools)
 ```
 
 **Everything in `src/lib/` has zero runtime dependencies.** That is why the entire server path — engine, agent loop, tool dispatch, validation, rate limiting, memory — is unit-tested without mocks of our own logic. React and Next.js appear only at the UI edge.
@@ -159,9 +158,9 @@ src/
 
 ## Token budget
 
-Every tool schema is re-sent on each call of the agent loop, and one tutored
+Every tool schema is re-sent on each call of the agent loop, and one verified
 answer costs at least two calls: one to choose the tool, one to explain the
-verified result. All fifteen schemas together run about 2400 tokens, which is
+result. All fifteen schemas together run about 2400 tokens, which is
 enough on a small per-minute quota to exhaust the budget before the explanation
 can start.
 
@@ -210,6 +209,20 @@ survives into print and would put light text on the unprinted white page).
 `layout.tsx` make "Add to Home Screen" open as a standalone app -- own icon
 and window chrome, no browser address bar -- on both Android and iOS.
 
+## Convenience features
+
+- **Search** (`Sidebar.tsx`) appears once there are more than a handful of
+  conversations. It matches title or message content, so "the one about
+  circles" finds a conversation whose title never says "circle."
+- **Copy as Markdown** (`lib/client/markdown-export.ts`) is the plain-text
+  sibling of PDF export -- for pasting into notes or a homework doc rather
+  than producing a page. Never includes image data, only an image count.
+- **Jump to latest** (`MessageList.tsx`) appears once you scroll away from the
+  bottom during a live answer, so following along doesn't require staying
+  glued to the newest line.
+- **Offline banner** (`hooks/useOnlineStatus.ts`) disables the composer and
+  says so, rather than letting a send fail into a generic network error.
+
 ## When answers stop working
 
 Open `/api/diag` on the deployment. It runs the pipeline server-side and names
@@ -244,17 +257,17 @@ Subjects marked `status: 'coming-soon'` render as locked in the sidebar and are 
 
 ## Memory
 
-The tutor keeps the thread of a session. `buildContext` trims old turns to a character budget while always keeping recent ones, strips images from older messages first (they dominate payload size), and never starts a transcript on an assistant turn.
+The assistant keeps the thread of a conversation. `buildContext` trims old turns to a character budget while always keeping recent ones, strips images from older messages first (they dominate payload size), and never starts a transcript on an assistant turn.
 
-It also extracts the **active problem** and detects follow-ups. So this works:
+It also extracts the **current topic** and detects follow-ups. So this works:
 
 ```
-Student:  2x + 5 = 15
-Tutor:    ... subtract 5 from both sides ...
-Student:  why did you subtract 5?
+You:        2x + 5 = 15
+Assistant:  ... subtract 5 from both sides ...
+You:        why did you subtract 5?
 ```
 
-The system prompt carries `Current problem: 2x + 5 = 15` plus a note that the student is asking about the previous explanation — so "5" resolves without the student repeating themselves. This is covered by a test.
+The system prompt carries `Current topic: 2x + 5 = 15` plus a note that a follow-up question refers to the previous explanation -- so "5" resolves without repeating the problem. This is covered by a test.
 
 Conversations persist in `localStorage` behind a `ConversationStore` interface; implement that interface against your API to add accounts and cross-device history.
 
@@ -263,20 +276,21 @@ Conversations persist in `localStorage` behind a `ConversationStore` interface; 
 ## Testing
 
 ```
-npm test        # 63 tests
+npm test        # 96 tests
 ```
 
 - `engine-core` — rational arithmetic, parsing, LaTeX normalization, exact/approximate tracking, linear/quadratic/cubic solving, systems, inequalities
 - `engine-advanced` — simplification, calculus with verification, statistics, matrices, work-checking, plotting
 - `platform` — validation, rate limiting, auth, memory, SSE, registry, and the **full agent loop against a mocked transport with real tools executing**
-- `scenarios` — the cases a tutor must get right: arithmetic, algebra, word problems, multi-step chains, a student's wrong solution, follow-ups, hard calculus, approximation honesty, graceful failure
+- `scenarios` — the cases the assistant must get right: arithmetic, algebra, word problems, multi-step chains, a wrong solution someone worked through, follow-ups, hard calculus, approximation honesty, graceful failure
 - `markdown` — the markdown/math parser: delimiter handling, currency, nesting, streaming-safe partial input
-- `routes` — API handlers called directly: validation, missing key, rate limit headers
+- `client-export` — the Markdown export: readable formatting, images noted by count only, never by data
+- `routes` — API handlers called directly: validation, missing key, rate limit headers, vision-model routing
 
 No network or API key is required; the model transport is mocked, but the math engine under test is the real one.
 
 ```
-npm run test:e2e   # 35 browser checks against the running app
+npm run test:e2e   # 55 browser checks against the running app
 ```
 
 ---

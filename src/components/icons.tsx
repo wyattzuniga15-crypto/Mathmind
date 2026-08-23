@@ -70,10 +70,31 @@ export const TriangleAlert = (p: IconProps) => (
   </Icon>
 );
 
-export const Sigma = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M18 7V4H6l6 8-6 8h12v-3" />
-  </Icon>
+/**
+ * The Mercury brand mark: six tapered rays radiating from a common centre.
+ *
+ * Filled rather than stroked, so it is the one icon here that does not go
+ * through `Icon` — a stroked outline of six slivers turns to mush at the
+ * 16px the sidebar and favicon render it at.
+ */
+export const MercuryMark = ({ size = 16, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+  >
+    {[0, 60, 120, 180, 240, 300].map((angle) => (
+      <path
+        key={angle}
+        d="M12 12C11.06 9.19 11.06 5.81 12 3C12.94 5.81 12.94 9.19 12 12Z"
+        transform={`rotate(${angle} 12 12)`}
+      />
+    ))}
+  </svg>
 );
 
 export const ArrowUp = (p: IconProps) => (
@@ -190,6 +211,26 @@ export const CircleAlert = (p: IconProps) => (
     <circle cx="12" cy="12" r="10" />
     <line x1="12" y1="8" x2="12" y2="12" />
     <line x1="12" y1="16" x2="12.01" y2="16" />
+  </Icon>
+);
+
+export const MessageCircle = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </Icon>
+);
+
+export const CodeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </Icon>
+);
+
+export const Search = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </Icon>
 );
 

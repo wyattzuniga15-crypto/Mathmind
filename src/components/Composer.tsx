@@ -87,27 +87,31 @@ export function Composer({
   return (
     <div data-print-hide className="border-t border-line bg-surface/85 backdrop-blur">
       <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-2.5 sm:px-6 sm:pb-4">
-        {/* Wraps rather than scrolling: a mode hidden off the right edge of a
-            phone is a mode nobody finds. */}
-        <div className="mb-2 flex flex-wrap gap-1.5" role="tablist" aria-label="Tutoring mode">
-          {modes.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              role="tab"
-              aria-selected={m.id === mode}
-              title={m.description}
-              onClick={() => onModeChange(m.id)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-[12.5px] font-medium transition ${
-                m.id === mode
-                  ? 'bg-brand text-white shadow-sm'
-                  : 'border border-line bg-surface-raised text-ink-muted hover:text-ink'
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+        {/* A subject with exactly one mode has nothing to switch between --
+            showing a single, unclickable-feeling tab is worse than showing
+            nothing. Wraps rather than scrolling when there are several: a
+            mode hidden off the right edge of a phone is a mode nobody finds. */}
+        {modes.length > 1 && (
+          <div className="mb-2 flex flex-wrap gap-1.5" role="tablist" aria-label="Mode">
+            {modes.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                role="tab"
+                aria-selected={m.id === mode}
+                title={m.description}
+                onClick={() => onModeChange(m.id)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[12.5px] font-medium transition ${
+                  m.id === mode
+                    ? 'bg-brand text-white shadow-sm'
+                    : 'border border-line bg-surface-raised text-ink-muted hover:text-ink'
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {images.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
@@ -143,8 +147,8 @@ export function Composer({
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={disabled}
-            aria-label="Attach a photo of a problem"
-            title="Attach a photo of a problem"
+            aria-label="Attach an image"
+            title="Attach an image"
             className="rounded-xl p-2 text-ink-faint transition hover:bg-surface-sunken hover:text-ink disabled:opacity-40"
           >
             <ImagePlus size={18} />
@@ -180,7 +184,7 @@ export function Composer({
             }}
             rows={1}
             disabled={disabled}
-            placeholder={placeholder ?? activeMode?.hint ?? 'Ask a math question…'}
+            placeholder={placeholder ?? activeMode?.hint ?? 'Message the assistant…'}
             aria-label="Message"
             className="max-h-[220px] min-h-[40px] flex-1 resize-none bg-transparent px-1 py-2 text-[15px] leading-relaxed outline-none placeholder:text-ink-faint disabled:opacity-50"
           />
@@ -208,7 +212,7 @@ export function Composer({
         </div>
 
         <p className="mt-1.5 hidden text-center text-[11px] text-ink-faint sm:block">
-          Enter to send · Shift+Enter for a new line · every calculation is checked by an exact math engine
+          Enter to send · Shift+Enter for a new line
         </p>
       </div>
     </div>

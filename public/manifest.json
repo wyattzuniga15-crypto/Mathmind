@@ -1,7 +1,7 @@
 {
-  "name": "MathMind \u2014 AI Math Tutor",
-  "short_name": "MathMind",
-  "description": "A step-by-step AI math tutor backed by an exact symbolic computation engine.",
+  "name": "Mercury \u2014 AI Assistant",
+  "short_name": "Mercury",
+  "description": "A general-purpose AI assistant with a dedicated Code mode and an exact math engine.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

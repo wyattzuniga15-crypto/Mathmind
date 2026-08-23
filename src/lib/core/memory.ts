@@ -21,7 +21,7 @@ export interface BuiltContext {
   messages: ApiMessage[];
   droppedCount: number;
   sessionNotes: string[];
-  /** Text of the problem the student is currently working on, if detectable. */
+  /** Text of the topic currently being discussed, if detectable. */
   activeProblem: string | null;
 }
 
@@ -39,7 +39,7 @@ export function findActiveProblem(messages: Pick<ChatMessage, 'role' | 'content'
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
     if (m.role !== 'user') continue;
-    if (m.images?.length && !m.content.trim()) return '(a problem the student uploaded as an image)';
+    if (m.images?.length && !m.content.trim()) return '(something uploaded as an image)';
     const lines = m.content.split('\n').map((l) => l.trim()).filter(Boolean);
     const mathLines = lines.filter(looksLikeMath);
     if (mathLines.length) return mathLines.join(' ; ').slice(0, 400);
@@ -64,11 +64,11 @@ export function buildSessionNotes(
 ): string[] {
   const notes = [...extra];
   const active = findActiveProblem(messages);
-  if (active) notes.unshift(`Current problem the student is working on: ${active}`);
+  if (active) notes.unshift(`Current topic: ${active}`);
   const last = messages[messages.length - 1];
   if (last && last.role === 'user' && isFollowUp(last.content)) {
     notes.push(
-      'The student just asked a follow-up question that refers to your previous explanation. Resolve pronouns and phrases like "step 3", "that step", or "why did you subtract 5" against the solution you already gave, and do not restate the whole problem from scratch.',
+      'A follow-up question was just asked that refers to your previous message. Resolve pronouns and phrases like "step 3", "that step", or "why did you do that" against what you already said, and do not restate everything from scratch.',
     );
   }
   return notes;
@@ -81,7 +81,7 @@ function toApiContent(message: Pick<ChatMessage, 'role' | 'content' | 'images'>)
     source: { type: 'base64', media_type: img.mediaType, data: img.data },
   }));
   if (message.content.trim()) blocks.push({ type: 'text', text: message.content });
-  else blocks.push({ type: 'text', text: 'Please read the math problem in this image and help me with it.' });
+  else blocks.push({ type: 'text', text: 'Please look at this image and help me with it.' });
   return blocks;
 }
 
@@ -141,5 +141,5 @@ export function summarizeDropped(
     .map((m) => m.content.split('\n')[0].trim().slice(0, 120));
   const unique = [...new Set(problems)].slice(-8);
   if (!unique.length) return `Earlier in this session there were ${count} messages that are no longer shown in full.`;
-  return `Earlier in this session (${count} messages not shown in full) the student worked on: ${unique.join(' | ')}.`;
+  return `Earlier in this conversation (${count} messages not shown in full), these came up: ${unique.join(' | ')}.`;
 }

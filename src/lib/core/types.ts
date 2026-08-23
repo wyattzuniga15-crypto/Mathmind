@@ -64,7 +64,7 @@ export interface PromptContext {
   level: StudentLevel;
   /** Rolling summary of earlier turns, when the conversation was trimmed. */
   memorySummary?: string;
-  /** Facts the tutor should keep in mind (current problem, known weak spots). */
+  /** Facts the assistant should keep in mind (current problem, known context). */
   sessionNotes?: string[];
   hasImages?: boolean;
 }

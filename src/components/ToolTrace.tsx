@@ -19,7 +19,7 @@ const TOOL_LABELS: Record<string, string> = {
   probability: 'Computed probability',
   matrix: 'Matrix operation',
   check_equivalent: 'Checked equivalence',
-  check_work: 'Checked student work',
+  check_work: 'Checked the work',
   plot_function: 'Plotted',
 };
 

@@ -1,18 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mathSubject } from '../src/lib/subjects/math';
+import { generalSubject } from '../src/lib/subjects/math';
+import { codeSubject } from '../src/lib/subjects/code';
 import { buildContext } from '../src/lib/core/memory';
 import type { ToolExecutionContext, ToolResultPayload } from '../src/lib/core/types';
 
 /**
- * Scenario coverage for the cases a tutor must get right.
+ * Scenario coverage for the cases the assistant must get right.
  * These call the real tools the model calls, with the real engine behind them.
  */
 
-const ctx: ToolExecutionContext = { subjectId: 'math', mode: 'solve', level: 'auto' };
+const ctx: ToolExecutionContext = { subjectId: 'general', mode: 'chat', level: 'auto' };
 const tool = (name: string) => {
-  const found = mathSubject.tools.find((t) => t.definition.name === name);
+  const found = generalSubject.tools.find((t) => t.definition.name === name);
   assert.ok(found, `tool ${name} is missing`);
   return found!;
 };
@@ -107,8 +108,8 @@ test('scenario: follow-up question resolves against the current problem', () => 
     { role: 'user', content: 'why did you subtract 5?' },
   ]);
   assert.equal(ctxBuilt.activeProblem, '2x + 5 = 15');
-  const prompt = mathSubject.buildSystemPrompt({
-    mode: 'solve',
+  const prompt = generalSubject.buildSystemPrompt({
+    mode: 'chat',
     level: 'auto',
     sessionNotes: ctxBuilt.sessionNotes,
   });
@@ -201,21 +202,23 @@ test('scenario: graphing returns renderable data plus features', async () => {
   assert.equal(features.turningPoints.length, 1);
 });
 
-test('scenario: every mode produces a distinct, non-empty system prompt', () => {
-  const prompts = mathSubject.modes.map((m) =>
-    mathSubject.buildSystemPrompt({ mode: m.id, level: 'auto' }),
-  );
-  assert.equal(new Set(prompts).size, mathSubject.modes.length);
-  for (const p of prompts) assert.ok(p.length > 500);
+test('scenario: every subject produces a substantial, distinct system prompt', () => {
+  const generalPrompt = generalSubject.buildSystemPrompt({ mode: 'chat', level: 'auto' });
+  const codePrompt = codeSubject.buildSystemPrompt({ mode: 'chat', level: 'auto' });
+  assert.ok(generalPrompt.length > 500);
+  assert.ok(codePrompt.length > 500);
+  assert.notEqual(generalPrompt, codePrompt);
 
-  // Hint mode must actually forbid giving the answer.
-  const hint = mathSubject.buildSystemPrompt({ mode: 'hint', level: 'auto' });
-  assert.match(hint, /Never state the final answer/);
+  // The general assistant still requires tool-verified math -- that survived
+  // the move away from a tutoring persona, it just isn't framed as pedagogy.
+  assert.match(generalPrompt, /deterministic math tools/i);
+  assert.match(codePrompt, /programming/i);
 
-  // Levels must change the guidance.
-  const elementary = mathSubject.buildSystemPrompt({ mode: 'solve', level: 'elementary' });
-  const college = mathSubject.buildSystemPrompt({ mode: 'solve', level: 'college' });
-  assert.notEqual(elementary, college);
-  assert.match(elementary, /elementary/);
-  assert.match(college, /college/);
+  // Level no longer changes anything: there is no grade-level dial in a
+  // general assistant. This is a regression guard for that removal, not an
+  // oversight -- if this ever fails because level started mattering again,
+  // that is a real behaviour change worth a second look.
+  const auto = generalSubject.buildSystemPrompt({ mode: 'chat', level: 'auto' });
+  const college = generalSubject.buildSystemPrompt({ mode: 'chat', level: 'college' });
+  assert.equal(auto, college);
 });
