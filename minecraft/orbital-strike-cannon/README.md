@@ -6,8 +6,9 @@ A Bedrock Edition add-on with two very dangerous items.
 **96 blocks across** onto whatever block you're aiming at, each detonating the
 moment it hits the ground with twice the blast radius of vanilla TNT.
 
-**Tactical Nuke** — a five-second fuse, then a crater **200 blocks across** and
-30 deep, under a mushroom cloud, with a shockwave racing out across the ground.
+**Tactical Nuke** — a five-second fuse, then four waves of shells carve a crater
+**120 blocks across** and 28 deep, under a mushroom cloud, with a shockwave
+racing out across the ground.
 
 ## What's in the box
 
@@ -115,55 +116,39 @@ There's a 15-second cooldown on the item, so one use is one strike.
 
 Use it and a five-second countdown starts, ticking down on screen — it aims up
 to 300 blocks out, further than the blast reaches, so there is somewhere to run
-to. Then:
+to. Then a fireball, a mushroom cloud, a shockwave racing outward, and **four
+waves of shells** falling on the target.
 
-- **The crater** is 200 blocks across and 30 deep at ground zero, a bowl rising
-  to ground level at the rim, clearing 25 blocks above the aim point so hills
-  and trees standing in it go too.
-- **A mushroom cloud** climbs out of the crater and curls over into a cap.
-- **A shockwave** of blasts races outward across the ground, damaging what it
-  passes.
+Each wave is tighter than the last and timed to land in the hole the previous
+one dug, so the crater deepens as the barrage goes on. The bowl shape comes out
+on its own: the centre is hit by every wave and ends about 28 blocks down, while
+the rim takes one wave and stays shallow. About 120 blocks across, 680 shells,
+roughly eight seconds from the count reaching zero.
 
-### Why the crater isn't made of explosions
+| wave | radius | shells | spacing | depth at centre |
+|------|--------|--------|---------|-----------------|
+| 1 | 60 | 300 | 8.2 blocks | ~7 |
+| 2 | 45 | 200 | 7.8 blocks | ~14 |
+| 3 | 32 | 120 | 7.5 blocks | ~21 |
+| 4 | 20 | 60  | 7.3 blocks | ~28 |
 
-Carving this bowl with power-8 blasts would take **6,256 of them** — twelve
-times the cannon's volley — and about 26 seconds at a rate a phone can stand.
-Explosions are the wrong tool at this size, so the crater is dug by clearing its
-blocks directly, one row at a time, which does the same 1.27 million blocks in
-under six seconds. Explosions are kept for what they're good at: the fireball,
-the cloud and the shockwave, none of which break blocks.
+### Why it's built this way
 
-Clearing blocks is the one thing here the cannon never did, and `fillBlocks` has
-changed signature between Minecraft versions. Rather than pick one and hope, the
-candidates are tried the first time a nuke goes off — at runtime, inside a
-handler, where a wrong guess costs one strike instead of the whole pack. If none
-work it falls back to a lattice of real explosions: slower and rougher, but the
-ground still goes.
+Earlier versions dug the crater by clearing its blocks directly — far cheaper on
+paper, and it would have allowed 200 blocks across. In practice it never worked
+on a real device. `fillBlocks` changes signature between runtimes, wants a
+string on some and a `BlockPermutation` on others, and an API that exists and
+raises nothing can still change nothing. Several releases went by chasing it.
 
-Crucially the probe *verifies* rather than trusting: it aims at a block known to
-be solid and only accepts a candidate that actually turns it to air. Accepting
-whatever merely didn't raise an error was a real bug — an API can exist, take
-these arguments, raise nothing and clear nothing, leaving a nuke that runs its
-whole sequence over untouched ground. A `fill` command that runs but reports
-zero successes counts as failure for the same reason.
+So the nuke was rebuilt on the only destruction this pack has ever actually
+performed in game: the cannon's shells. Both weapons now go through the same
+`launchVolley`, and the nuke is simply several volleys with a delay between
+them. Nothing in its path is unproven, and about 200 lines of fragile
+capability-probing went in the bin.
 
-Getting that verification to actually happen took two goes. The probe originally
-ran *after* the opening fireball, which had already cleared the block it needed
-to test against — so it could never prove anything and fell through to trusting
-whatever didn't throw. It now runs first, on ground that is still intact, and
-only a proven strategy is cached; an unproven one is retried next detonation.
-
-Each `fillBlocks` form is offered twice, once naming the block as a string and
-once with a real air permutation, because older runtimes reject the string and
-demand a `BlockPermutation`. That permutation is lifted off an existing air
-block rather than imported: importing a name a runtime doesn't export fails the
-whole module at load, which is what cost two earlier releases.
-
-Every blast uses `breaksBlocks: true`, the one configuration confirmed working
-in game. The `false` variant shipped once and rendered nothing at all, which
-took a while to spot because every call here is wrapped against load failures
-and so fails silently. For that reason a detonation also prints a line saying
-which clear strategy it used and whether the opening blast fired.
+The trade is size — 120 blocks across instead of 200, since explosions cost far
+more per block cleared than a bulk fill would. A working 120 beats a
+theoretical 200.
 
 ## Changing it
 
@@ -183,10 +168,11 @@ is the most expensive change you can make; raising `STRIKE_RADIUS` alone is the
 cheapest, though past about 56 blocks the 500 shells spread far enough apart
 that the crater turns lumpy instead of solid.
 
-The nuke's dials are `NUKE_RADIUS`, `NUKE_DEPTH`, `NUKE_CLEAR_ABOVE`,
-`NUKE_FUSE_SECONDS` and `STRIPS_PER_TICK`. That last one is the lever for
-performance: it sets how many rows of crater are cleared each tick, so lowering
-it stretches the dig out rather than making it heavier.
+The nuke is shaped by `NUKE_WAVES` — a radius, ring count and shell count per
+wave — plus `WAVE_INTERVAL` and `NUKE_FUSE_SECONDS`. Add a wave to dig deeper;
+widen wave 1 to spread wider, but raise its shell count with it or the spacing
+opens past what a blast covers and the crater turns lumpy. `DETONATIONS_PER_TICK`
+is shared with the cannon and is the lever for frame rate.
 
 Run `python3 build.py` after any edit. It runs `verify.py` first and refuses to
 package a pack that wouldn't activate.

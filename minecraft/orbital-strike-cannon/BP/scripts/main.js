@@ -135,293 +135,76 @@ function buildRingFormation(count, radius, ringCount) {
   return offsets;
 }
 
+/**
+ * Spawn one formation of shells and hand them to the impact sweep above. Both
+ * weapons go through here, so the nuke rides the exact path the cannon has been
+ * running successfully rather than anything new.
+ */
+function launchVolley(dimension, target, formation) {
+  const dropY = target.y + DROP_HEIGHT;
+  let spawned = 0;
+  const runId = system.runInterval(() => {
+    const now = system.currentTick;
+    for (let i = 0; i < SPAWN_PER_TICK && spawned < formation.length; i++, spawned++) {
+      const offset = formation[spawned];
+      try {
+        const shell = dimension.spawnEntity(SHELL_ID, {
+          x: target.x + offset.x,
+          y: dropY,
+          z: target.z + offset.z
+        });
+        inFlight.push({ entity: shell, spawnTick: now });
+      } catch {
+        // Chunk not loaded or entity cap reached — skip this one.
+      }
+    }
+    if (spawned >= formation.length) {
+      system.clearRun(runId);
+    }
+  }, 1);
+}
+
 // ============================================================================
 // Tactical Nuke
 // ============================================================================
-// A 200-block-wide crater is far too much ground for explosions: carving this
-// bowl with power-8 blasts would take 6,256 of them and about 26 seconds, where
-// clearing the blocks directly does it in under four. So the crater is dug by
-// emptying it, and explosions are kept for what they're actually good at —
-// the fireball, the mushroom cloud and the shockwave.
+// Earlier versions tried to dig the crater by clearing its blocks directly,
+// which meant depending on block APIs whose shape varies between runtimes.
+// Several releases went by without that ever working here, so it is gone.
+//
+// The nuke is now built from the only destruction this pack has ever actually
+// performed on a real device: the cannon's shells, which spawn, fall and
+// detonate on impact. A nuke is simply several volleys, each tighter than the
+// last and timed to land in the hole the previous one made. The bowl shape
+// comes out on its own — the centre is hit by every wave and ends ~28 blocks
+// down, the rim by one and stays shallow.
 
-const BUILD = "b8";
+const BUILD = "b9";
 const NUKE_ID = "orbital:tactical_nuke";
-const NUKE_RADIUS = 100; // 200 blocks across
-const NUKE_DEPTH = 30; // how deep the bowl goes at ground zero
-const NUKE_CLEAR_ABOVE = 25; // hills and trees standing in the blast go too
 const NUKE_AIM_DISTANCE = 300; // aim further than the blast reaches
 const NUKE_FUSE_SECONDS = 5; // time to run
-const STRIPS_PER_TICK = 80; // crater rows cleared per tick (~5.7s total)
 
-/**
- * Clear one row of blocks. This is the only thing the add-on does that the
- * cannon never did, and `fillBlocks` has changed signature between runtimes,
- * so rather than pick one and hope, the candidates are tried the first time a
- * nuke goes off. Probing at runtime inside a handler means a wrong guess costs
- * one strike; probing at load time would cost the whole pack.
- */
-let clearRow = null;
-
-/**
- * Ways to clear a row of blocks, best first. `fillBlocks` clears thousands of
- * blocks per call; `setType` does one at a time and is a last resort.
- *
- * Both `fillBlocks` forms are offered twice: once with the block named as a
- * string, once with a real air permutation. Older runtimes reject the string
- * and demand a BlockPermutation, which is very likely why both string forms
- * were refused in testing. The permutation is lifted off an existing air block
- * rather than imported, because importing a name a runtime doesn't export
- * fails the whole module at load — the mistake that cost two releases.
- */
-function clearCandidates(airPermutation) {
-  const list = [
-    ["fillBlocks(volume,string)", (dim, a, b) =>
-      dim.fillBlocks({ from: a, to: b }, "minecraft:air")],
-    ["fillBlocks(from,to,string)", (dim, a, b) =>
-      dim.fillBlocks(a, b, "minecraft:air")]
-  ];
-  if (airPermutation) {
-    list.push(
-      ["fillBlocks(volume,permutation)", (dim, a, b) =>
-        dim.fillBlocks({ from: a, to: b }, airPermutation)],
-      ["fillBlocks(from,to,permutation)", (dim, a, b) =>
-        dim.fillBlocks(a, b, airPermutation)]
-    );
-  }
-  list.push(["fill command", (dim, a, b) => {
-    const result = dim.runCommand(
-      `fill ${a.x} ${a.y} ${a.z} ${b.x} ${b.y} ${b.z} air`
-    );
-    // A command that runs but changes nothing reports zero successes. Without
-    // this the call looks like it worked and the whole crater comes out empty.
-    if (result && result.successCount === 0) {
-      throw new Error("fill affected no blocks");
-    }
-  }]);
-  if (airPermutation) {
-    list.push(["setPermutation", (dim, a, b) => {
-      for (let z = a.z; z <= b.z; z++) {
-        dim.getBlock({ x: a.x, y: a.y, z }).setPermutation(airPermutation);
-      }
-    }]);
-  }
-  list.push(["setType", (dim, a, b) => {
-    for (let z = a.z; z <= b.z; z++) {
-      dim.getBlock({ x: a.x, y: a.y, z }).setType("minecraft:air");
-    }
-  }]);
-  return list;
-}
-
-function blockAt(dimension, at) {
-  try {
-    return dimension.getBlock(at) || null;
-  } catch {
-    return null;
-  }
-}
-
-function typeAt(dimension, at) {
-  const block = blockAt(dimension, at);
-  return block ? block.typeId : null;
-}
-
-/** An air permutation, taken from real air rather than an import. */
-function findAirPermutation(dimension, near) {
-  for (const up of [40, 60, 80]) {
-    const block = blockAt(dimension, { x: near.x, y: near.y + up, z: near.z });
-    if (block && block.typeId === "minecraft:air") {
-      try {
-        if (block.permutation) return block.permutation;
-      } catch {}
-    }
-  }
-  return null;
-}
-
-/**
- * A solid block to test against — clearing air to air proves nothing. Looked
- * for well outside the opening fireball's radius, so ground zero being gone
- * doesn't rob the probe of anything to test.
- */
-const PROBE_OFFSETS = [
-  { x: 40, z: 0 }, { x: -40, z: 0 }, { x: 0, z: 40 }, { x: 0, z: -40 },
-  { x: 25, z: 25 }, { x: -25, z: -25 }
+// radius, rings, shells. Shell spacing stays under ~8 blocks throughout, which
+// a power-8 blast (~6.4 effective) covers with overlap to spare.
+const NUKE_WAVES = [
+  { radius: 60, rings: 12, shells: 300 },
+  { radius: 45, rings: 10, shells: 200 },
+  { radius: 32, rings: 8, shells: 120 },
+  { radius: 20, rings: 6, shells: 60 }
 ];
+const WAVE_INTERVAL = 25; // ticks between waves, so each lands in the last crater
 
-function findSolidProbe(dimension, target) {
-  for (const offset of PROBE_OFFSETS) {
-    const x = Math.floor(target.x) + offset.x;
-    const z = Math.floor(target.z) + offset.z;
-    for (let down = 0; down <= 20; down++) {
-      const at = { x, y: Math.floor(target.y) - down, z };
-      const type = typeAt(dimension, at);
-      if (type && type !== "minecraft:air" && type !== "minecraft:water") return at;
-    }
+/** One blast, using the exact call the cannon has proven on this device. */
+function blast(dimension, at, radius) {
+  try {
+    dimension.createExplosion(at, radius, {
+      breaksBlocks: true,
+      causesFire: false,
+      allowUnderwater: true
+    });
+    return true;
+  } catch {
+    return false;
   }
-  return null;
-}
-
-/**
- * Pick a way to clear blocks, and prove it works before trusting it.
- *
- * Two things make this fussy. An API can exist, accept these arguments, raise
- * nothing and still clear nothing — so a candidate is only accepted once a
- * block known to be solid has actually turned to air. And the probe has to run
- * before the opening fireball, which would otherwise clear the probe block
- * itself and leave nothing to verify against.
- */
-/**
- * Try every way of clearing blocks and record what each one did. Returns the
- * first that provably works, plus a short outcome per candidate — after three
- * releases guessing at what this runtime supports, the guessing stops here and
- * the game reports the answer.
- *
- * The probe deliberately runs well away from ground zero. The opening fireball
- * fires first (it is the one thing guaranteed to work, so nothing may come
- * before it), and probing where it just landed would leave nothing solid to
- * test against — which is exactly how a broken method got trusted last time.
- */
-function resolveClearRow(dimension, target) {
-  const airPermutation = findAirPermutation(dimension, target);
-  const outcomes = [];
-  let winner = null;
-  for (const [name, candidate] of clearCandidates(airPermutation)) {
-    const probe = findSolidProbe(dimension, target);
-    if (!probe) {
-      outcomes.push(`${name}=noground`);
-      continue;
-    }
-    try {
-      candidate(dimension, probe, probe);
-    } catch {
-      outcomes.push(`${name}=err`);
-      continue;
-    }
-    if (typeAt(dimension, probe) === "minecraft:air") {
-      outcomes.push(`${name}=OK`);
-      if (!winner) winner = { name, fn: candidate, verified: true };
-    } else {
-      // Raised nothing but changed nothing — the failure that reads as success.
-      outcomes.push(`${name}=nochange`);
-    }
-  }
-  return { winner, outcomes };
-}
-
-/** How wide the crater is at `dy` blocks above (positive) or below the aim. */
-function craterRadiusAt(dy) {
-  if (dy >= 0) return dy <= NUKE_CLEAR_ABOVE ? NUKE_RADIUS : 0;
-  const below = -dy;
-  if (below > NUKE_DEPTH) return 0;
-  // Bowl: full depth at the centre, rising to aim level at the rim.
-  return NUKE_RADIUS * Math.sqrt(1 - below / NUKE_DEPTH);
-}
-
-/**
- * Empty the crater a row at a time, top down, so the ground appears to be
- * eaten away from above. Walking a cursor across levels rather than building
- * the whole list up front keeps this to a few numbers of state.
- */
-function carveCrater(dimension, target, clear) {
-  const cx = Math.floor(target.x);
-  const cy = Math.floor(target.y);
-  const cz = Math.floor(target.z);
-  let dy = NUKE_CLEAR_ABOVE;
-  let x = null;
-  let xMax = 0;
-
-  const runId = system.runInterval(() => {
-    let done = 0;
-    while (done < STRIPS_PER_TICK) {
-      if (dy < -NUKE_DEPTH) {
-        system.clearRun(runId);
-        return;
-      }
-      const r = craterRadiusAt(dy);
-      if (r <= 0) {
-        dy--;
-        x = null;
-        continue;
-      }
-      if (x === null) {
-        xMax = Math.floor(r);
-        x = -xMax;
-      }
-      const half = Math.floor(Math.sqrt(Math.max(0, r * r - x * x)));
-      const y = cy + dy;
-      try {
-        clear(
-          dimension,
-          { x: cx + x, y, z: cz - half },
-          { x: cx + x, y, z: cz + half }
-        );
-      } catch {
-        // Chunk not loaded, or outside the world's height — skip this row.
-      }
-      done++;
-      if (++x > xMax) {
-        dy--;
-        x = null;
-      }
-    }
-  }, 1);
-}
-
-// Sizing for the explosion-only crater. This is the path that runs when the
-// runtime offers no way to clear blocks in bulk, so it has to work from the one
-// call this device has proven: createExplosion with breaksBlocks. Explosion
-// cost climbs with the cube of the radius, so the rate is set to hold per-tick
-// cost at the cannon's proven 12 blasts of power 8, and the crater is sized to
-// what that rate can finish in about nine seconds — 120 blocks across rather
-// than 200, but real ground actually gone.
-const FALLBACK_RADIUS = 60;
-const FALLBACK_DEPTH = 25;
-const FALLBACK_ABOVE = 20;
-const FALLBACK_POWER = 12;
-const FALLBACK_STEP = 9;
-const FALLBACK_PER_TICK = 3;
-
-/** Lattice of real explosions, for runtimes with no working block clear. */
-function carveByExplosion(dimension, target) {
-  const points = [];
-  for (let dy = FALLBACK_ABOVE; dy >= -FALLBACK_DEPTH; dy -= FALLBACK_STEP) {
-    let r;
-    if (dy >= 0) {
-      r = FALLBACK_RADIUS;
-    } else {
-      const below = -dy;
-      r = below > FALLBACK_DEPTH
-        ? 0
-        : FALLBACK_RADIUS * Math.sqrt(1 - below / FALLBACK_DEPTH);
-    }
-    if (r <= 0) continue;
-    for (let ring = 0; ring * FALLBACK_STEP <= r; ring++) {
-      const rr = ring * FALLBACK_STEP;
-      const count = Math.max(1, Math.round((2 * Math.PI * rr) / FALLBACK_STEP));
-      for (let i = 0; i < count; i++) {
-        const a = (i / count) * Math.PI * 2 + ring;
-        points.push({
-          x: target.x + Math.cos(a) * rr,
-          y: target.y + dy,
-          z: target.z + Math.sin(a) * rr
-        });
-      }
-    }
-  }
-  // Centre outward, so the crater opens as a wave rather than at random.
-  points.sort((p, q) => {
-    const dp = (p.x - target.x) ** 2 + (p.z - target.z) ** 2;
-    const dq = (q.x - target.x) ** 2 + (q.z - target.z) ** 2;
-    return dp - dq;
-  });
-  let at = 0;
-  const runId = system.runInterval(() => {
-    for (let i = 0; i < FALLBACK_PER_TICK && at < points.length; i++, at++) {
-      blast(dimension, points[at], FALLBACK_POWER);
-    }
-    if (at >= points.length) system.clearRun(runId);
-  }, 1);
 }
 
 /** Shockwave: a ring of blasts racing outward across the ground. */
@@ -438,7 +221,7 @@ function shockwave(dimension, target) {
       );
     }
     r += 8;
-    if (r > NUKE_RADIUS) system.clearRun(runId);
+    if (r > 60) system.clearRun(runId);
   }, 1);
 }
 
@@ -450,7 +233,6 @@ function mushroomCloud(dimension, target) {
     tick++;
     const stemY = tick * 3;
     if (stemY <= TOP) {
-      // The stem widens as it climbs.
       const spread = 3 + (stemY / TOP) * 7;
       blast(dimension, { x: target.x, y: target.y + stemY, z: target.z }, 6);
       for (let i = 0; i < 2; i++) {
@@ -466,8 +248,7 @@ function mushroomCloud(dimension, target) {
         );
       }
     } else {
-      // Cap: a ring rolling outward and slightly up, the way the real thing
-      // curls over on itself.
+      // Cap: a ring rolling outward and up, the way the real thing curls over.
       const age = tick - Math.ceil(TOP / 3);
       const capR = 6 + age * 4;
       const count = Math.max(6, Math.round(capR / 4));
@@ -489,10 +270,9 @@ function mushroomCloud(dimension, target) {
 }
 
 function detonateNuke(dimension, target, player) {
-  // The fireball goes FIRST and nothing may be placed before it. It is the one
-  // call this device has demonstrably run, so putting anything ahead of it
-  // risks a throw that swallows the entire detonation — which is precisely
-  // what happened when the block probe was moved in front of it.
+  // The fireball first — nothing may be placed ahead of the one call this
+  // device is known to run. Every stage after it is wrapped on its own, so a
+  // failure anywhere costs that stage and nothing else.
   const fired = blast(dimension, { x: target.x, y: target.y + 3, z: target.z }, 14);
 
   try {
@@ -503,26 +283,23 @@ function detonateNuke(dimension, target, player) {
     });
   } catch {}
 
-  // Everything from here can fail without costing the blast above.
-  let outcomes = [];
-  try {
-    if (clearRow === null || clearRow.verified !== true) {
-      const probed = resolveClearRow(dimension, target);
-      outcomes = probed.outcomes;
-      clearRow = probed.winner;
-    }
-  } catch {
-    clearRow = null;
-    outcomes = ["probe threw"];
-  }
+  // Waves, each landing in the crater the last one dug.
+  let launched = 0;
+  NUKE_WAVES.forEach((wave, index) => {
+    try {
+      system.runTimeout(() => {
+        try {
+          launchVolley(
+            dimension,
+            target,
+            buildRingFormation(wave.shells, wave.radius, wave.rings)
+          );
+        } catch {}
+      }, index * WAVE_INTERVAL);
+      launched += wave.shells;
+    } catch {}
+  });
 
-  try {
-    if (clearRow) {
-      carveCrater(dimension, target, clearRow.fn);
-    } else {
-      carveByExplosion(dimension, target);
-    }
-  } catch {}
   try {
     shockwave(dimension, target);
   } catch {}
@@ -533,9 +310,8 @@ function detonateNuke(dimension, target, player) {
   try {
     world.sendMessage(
       `§4☢ §cNuke §7[${BUILD}] blast:${fired ? "ok" : "§cFAILED§7"} ` +
-      `crater:${clearRow ? clearRow.name : "explosions"}`
+      `waves:${NUKE_WAVES.length} shells:${launched}`
     );
-    if (outcomes.length) world.sendMessage(`§8probe: ${outcomes.join("  ")}`);
   } catch {}
 }
 
@@ -569,7 +345,9 @@ function armNuke(player, dimension) {
       return;
     }
     system.clearRun(runId);
-    detonateNuke(dimension, target, player);
+    try {
+      detonateNuke(dimension, target, player);
+    } catch {}
   }, 20);
 }
 
@@ -621,27 +399,9 @@ world.afterEvents.itemUse.subscribe((event) => {
     player.playSound("mob.wither.spawn");
   } catch {}
 
-  const formation = buildRingFormation(TNT_COUNT, STRIKE_RADIUS, RING_COUNT);
-  const dropY = target.y + DROP_HEIGHT;
-  let spawned = 0;
-
-  const runId = system.runInterval(() => {
-    const now = system.currentTick;
-    for (let i = 0; i < SPAWN_PER_TICK && spawned < formation.length; i++, spawned++) {
-      const offset = formation[spawned];
-      try {
-        const shell = dimension.spawnEntity(SHELL_ID, {
-          x: target.x + offset.x,
-          y: dropY,
-          z: target.z + offset.z
-        });
-        inFlight.push({ entity: shell, spawnTick: now });
-      } catch {
-        // Chunk not loaded or entity cap reached — skip this one.
-      }
-    }
-    if (spawned >= formation.length) {
-      system.clearRun(runId);
-    }
-  }, 1);
+  launchVolley(
+    dimension,
+    target,
+    buildRingFormation(TNT_COUNT, STRIKE_RADIUS, RING_COUNT)
+  );
 });
