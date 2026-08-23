@@ -178,7 +178,7 @@ function launchVolley(dimension, target, formation) {
 // comes out on its own — the centre is hit by every wave and ends ~28 blocks
 // down, the rim by one and stays shallow.
 
-const BUILD = "b10";
+const BUILD = "b11";
 const NUKE_ID = "orbital:tactical_nuke";
 const NUKE_AIM_DISTANCE = 300; // aim further than the blast reaches
 const NUKE_FUSE_SECONDS = 5; // time to run
@@ -371,8 +371,17 @@ const KAME_SPEED = 8; // blocks the head advances per tick — 20 ticks to full
 const KAME_BORE = 6; // explosion radius carving the tunnel
 const KAME_BORE_STEPS = 4; // bore blasts per tick along the new segment
 const KAME_IMPACT = 12; // detonation where the beam ends
-const KI_SPACING = 1.0; // blocks between beam nodes
-const KI_LIFETIME = 26; // ticks a node lasts — long enough to show the shaft
+// Beam shape. Nodes are two-block cubes, so the core spacing below overlaps
+// them heavily into one solid shaft rather than a row of beads. The aura is a
+// sparser sleeve of nodes around that core, and the flare is the cone the beam
+// opens into where it leaves the hands.
+const KI_SPACING = 1.5; // blocks between core nodes
+const KI_LIFETIME = 30; // ticks a node lasts — the whole beam stays lit
+const AURA_RADIUS = 1.8; // sleeve distance from the beam axis
+const AURA_SPACING = 4; // blocks between sleeve rings
+const AURA_COUNT = 4; // nodes per sleeve ring
+const FLARE_LENGTH = 14; // blocks over which the beam opens out at the hands
+const FLARE_RADIUS = 3.2; // widest point of that flare
 const CHARGE_SYLLABLES = ["KA", "ME", "HA", "ME", "HAAA!"];
 const CHARGE_TICKS = 10; // per syllable
 
@@ -429,12 +438,76 @@ function aimVector(player) {
   return null;
 }
 
+/**
+ * Two unit vectors at right angles to `direction`, so nodes can be placed
+ * around the beam rather than only along it. Which pair comes back doesn't
+ * matter — only that they're perpendicular and consistent for one shot.
+ */
+function perpendicularBasis(direction) {
+  const away = Math.abs(direction.y) < 0.9
+    ? { x: 0, y: 1, z: 0 }
+    : { x: 1, y: 0, z: 0 };
+  const ux = direction.y * away.z - direction.z * away.y;
+  const uy = direction.z * away.x - direction.x * away.z;
+  const uz = direction.x * away.y - direction.y * away.x;
+  const length = Math.hypot(ux, uy, uz) || 1;
+  const u = { x: ux / length, y: uy / length, z: uz / length };
+  const v = {
+    x: direction.y * u.z - direction.z * u.y,
+    y: direction.z * u.x - direction.x * u.z,
+    z: direction.x * u.y - direction.y * u.x
+  };
+  return [u, v];
+}
+
 function pointAlong(origin, direction, distance) {
   return {
     x: origin.x + direction.x * distance,
     y: origin.y + direction.y * distance,
     z: origin.z + direction.z * distance
   };
+}
+
+/**
+ * Lay down one slice of beam: the solid core, a sleeve of nodes around it, and
+ * near the hands the cone it flares out of. A single line of nodes reads as a
+ * dotted thread — the sleeve and the flare are what make it a beam.
+ */
+function paintBeamSlice(dimension, origin, direction, basis, from, to) {
+  const [u, v] = basis;
+  const ringPoint = (distance, radius, angle) => {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return {
+      x: origin.x + direction.x * distance + (u.x * cos + v.x * sin) * radius,
+      y: origin.y + direction.y * distance + (u.y * cos + v.y * sin) * radius,
+      z: origin.z + direction.z * distance + (u.z * cos + v.z * sin) * radius
+    };
+  };
+
+  for (let d = from; d < to; d += KI_SPACING) {
+    spawnKi(dimension, pointAlong(origin, direction, d), KI_LIFETIME);
+
+    // The flare: widest at the hands, tapering into the shaft.
+    if (d < FLARE_LENGTH) {
+      const taper = 1 - d / FLARE_LENGTH;
+      const radius = FLARE_RADIUS * taper * taper;
+      if (radius > 0.6) {
+        for (let i = 0; i < 4; i++) {
+          spawnKi(dimension, ringPoint(d, radius, (i / 4) * Math.PI * 2 + d), KI_LIFETIME);
+        }
+      }
+    }
+  }
+
+  // The sleeve, sparser than the core since it only has to suggest volume.
+  const firstRing = Math.ceil(from / AURA_SPACING) * AURA_SPACING;
+  for (let d = firstRing; d < to; d += AURA_SPACING) {
+    for (let i = 0; i < AURA_COUNT; i++) {
+      const angle = (i / AURA_COUNT) * Math.PI * 2 + d * 0.35;
+      spawnKi(dimension, ringPoint(d, AURA_RADIUS, angle), KI_LIFETIME);
+    }
+  }
 }
 
 /** Send the beam out, boring as it goes. */
@@ -450,15 +523,13 @@ function fireKamehameha(player, dimension, origin, direction) {
     player.playSound("mob.wither.shoot");
   } catch {}
 
+  const basis = perpendicularBasis(direction);
   let reached = 0;
   const runId = system.runInterval(() => {
     const from = reached;
     const to = Math.min(KAME_RANGE, reached + KAME_SPEED);
 
-    // The visible shaft: nodes strung along the new segment.
-    for (let d = from; d < to; d += KI_SPACING) {
-      spawnKi(dimension, pointAlong(origin, direction, d), KI_LIFETIME);
-    }
+    paintBeamSlice(dimension, origin, direction, basis, from, to);
 
     // The tunnel: blasts spaced along the same segment. Several per tick, or
     // the beam outruns its own bore and leaves the terrain standing.

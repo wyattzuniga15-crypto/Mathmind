@@ -169,15 +169,32 @@ rock between them. The whole beam costs about a seventh of the cannon's
 per-tick budget: boring a tunnel is far cheaper than digging a crater, because
 it only clears what it passes through.
 
-The visible shaft is a string of small ki entities placed a block apart along
-the beam. They carry no gravity, so the shaft stays dead straight rather than
-sagging, and the script removes them on a timer instead of the entity managing
-its own lifetime — keeping the entity itself as plain as the shell that has run
-since the beginning.
+### The beam itself
 
-Dials: `KAME_RANGE`, `KAME_SPEED`, `KAME_BORE` (tunnel radius), `KAME_BORE_STEPS`
-(blasts per tick — lower it and the beam starts outrunning its own bore, leaving
-terrain standing) and `KI_SPACING` / `KI_LIFETIME` for how solid the shaft looks.
+A single line of small nodes reads as a dotted thread, not a beam. The shaft is
+built in three parts instead:
+
+- **Core** — two-block nodes every 1.5 blocks, overlapping into one solid
+  white-hot shaft. Their texture keeps a large white centre because the nodes
+  overlap into a tube and only the outer surfaces are ever seen; a small core
+  would leave it looking like blue tubing.
+- **Sleeve** — rings of four nodes at 1.8 blocks out, every four blocks along
+  the beam, taking it to about 5.6 blocks across. Sparser than the core, since
+  it only has to suggest volume.
+- **Flare** — near the hands the beam opens into a cone about 8.4 blocks wide,
+  tapering into the shaft over the first 14 blocks.
+
+That comes to 291 nodes for a full beam, fewer than the cannon's 500 shells.
+They carry no gravity, so the shaft stays dead straight rather than sagging, and
+the script removes them on a timer instead of the entity managing its own
+lifetime — keeping the entity as plain as the shell that has run since the
+beginning.
+
+Dials: `KAME_RANGE`, `KAME_SPEED`, `KAME_BORE` (tunnel radius) and
+`KAME_BORE_STEPS` (blasts per tick — lower it and the beam starts outrunning its
+own bore, leaving terrain standing). For the look: `KI_SPACING` and
+`KI_LIFETIME` for the core, `AURA_RADIUS` / `AURA_SPACING` / `AURA_COUNT` for
+the sleeve, `FLARE_LENGTH` / `FLARE_RADIUS` for the cone at the hands.
 
 ## Changing it
 

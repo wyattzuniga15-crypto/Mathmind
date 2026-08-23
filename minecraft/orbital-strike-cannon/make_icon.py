@@ -246,31 +246,37 @@ def kamehameha_icon():
 
 
 def _ki_face():
-    """One 8x8 face of a beam node: hot centre, cooler at the edges."""
+    """One 32x32 face of a beam node.
+
+    The white core is deliberately large — over half the face — because the
+    nodes overlap into a tube and only their outer surfaces are ever seen. A
+    small core would leave the beam reading as blue tubing rather than the
+    white-hot shaft with a blue sheath that it should be.
+    """
     face = []
-    for y in range(8):
+    for y in range(32):
         row = []
-        for x in range(8):
-            dist = math.hypot(x - 3.5, y - 3.5)
-            if dist < 1.5:
+        for x in range(32):
+            dist = math.hypot(x - 15.5, y - 15.5)
+            if dist < 10.0:
                 pixel = KI_CORE
-            elif dist < 2.6:
+            elif dist < 13.5:
                 pixel = KI_INNER
-            elif dist < 3.6:
+            elif dist < 16.5:
                 pixel = KI_MID
             else:
                 pixel = KI_EDGE
-            # A little sparkle so a wall of these doesn't look like flat plastic.
+            # Sparkle, so a wall of these doesn't read as flat plastic.
             if _speckle(x, y, 0, 1, 2) == 1:
-                pixel = KI_CORE if dist < 3.0 else KI_INNER
+                pixel = KI_CORE if dist < 14.0 else KI_INNER
             row.append(pixel)
         face.append(row)
     return face
 
 
 def ki_texture():
-    """Box-UV sheet for an 8x8x8 beam node on a 32x16 atlas."""
-    sheet = [[(0, 0, 0, 0)] * 32 for _ in range(16)]
+    """Box-UV sheet for a 32x32x32 beam node on a 128x64 atlas."""
+    sheet = [[(0, 0, 0, 0)] * 128 for _ in range(64)]
     face = _ki_face()
 
     def blit(at_x, at_y):
@@ -278,10 +284,10 @@ def ki_texture():
             for x, px in enumerate(row):
                 sheet[at_y + y][at_x + x] = px
 
-    blit(8, 0)   # down
-    blit(16, 0)  # up
+    blit(32, 0)   # down
+    blit(64, 0)   # up
     for i in range(4):
-        blit(i * 8, 8)  # the four sides
+        blit(i * 32, 32)  # the four sides
     return sheet
 
 
