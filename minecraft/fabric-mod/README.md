@@ -1,9 +1,9 @@
 # Orbital Arsenal — Fabric mod source
 
-Five genuinely registered items — `orbital:strike_cannon`,
+Six genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
-`orbital:orbital_laser` — with their own textures, names, creative tab entries
-and crafting recipes.
+`orbital:orbital_laser`, `orbital:rewind_clock` — with their own textures,
+names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
 Yarn mappings and the Fabric loader downloaded from Mojang's and Fabric's maven
@@ -134,6 +134,45 @@ every half second, which is what makes it hurt anything standing in the beam —
 including you, if you aim at your own feet. And what it cuts goes all the way
 down, so looking straight down opens a hole to bedrock underneath you.
 
+**Rewind Clock** — right-click and the last **thirty seconds** of damage is put
+back. The only thing here that builds rather than destroys, and the only answer
+to the rest of the arsenal: fire the black hole into your own base and this is
+what gets it back.
+
+It works off a rolling record of what the world used to look like. Every block
+change is filed with the state that stood there before it, grouped by the tick
+it happened on; replaying those backwards, newest first, walks the world back.
+Newest-first is the only order that gets a block changed several times inside
+the window right — it ends on the state it held at the start rather than
+somewhere in the middle.
+
+Three limits, all of them reachable in normal use of this mod:
+
+**It restores blocks, not everything.** Mobs killed in the blast stay dead and
+items dropped stay dropped. Recording every entity's full state every tick
+costs far more than recording block changes does, and blocks are what these
+weapons actually take away.
+
+**Very large events overrun it.** The record caps at two million changes, which
+is about forty megabytes. The black hole alone makes twenty-two million, so its
+oldest changes are evicted while it is still digging and an undo afterwards
+restores only the last part of it. The cap is there because the alternative is
+running the game out of memory, which is a worse answer than an incomplete
+undo. The nuke, at 1.27 million, fits comfortably.
+
+**It only records while a weapon is in play.** Firing anything in this arsenal
+switches the record on for a minute; outside that, block changes are not
+recorded at all. A world where nobody owns a clock should not pay for one on
+every block placed, broken or flowed.
+
+That last point is also why this is the only part of the mod that needs a
+mixin. The cannon and the meteor storm break blocks through vanilla's explosion
+code, which the mod never sees — so the clock hooks the one place every block
+change in the game passes through. The injection is marked `require = 0`: if
+that method's shape ever moves, the hook quietly does nothing rather than
+refusing to load the mod, the clock keeps its reach over everything this mod
+clears directly, and the rest of the arsenal is unaffected.
+
 ## How it's put together
 
 ```
@@ -143,7 +182,9 @@ Scheduler.java          a tick queue
 weapons/Formation.java  concentric ring layout
 weapons/Strikes.java    aiming, explosions, particles
 items/*.java            one class per weapon
-make_icon.py            generates the Orbital Laser's item icon
+time/Journal.java       the rolling record the rewind clock replays
+mixin/*.java            the one hook that sees block changes this mod did not make
+make_icon.py            generates the newer item icons
 ```
 
 Every weapon spreads its work across ticks through `Scheduler` rather than

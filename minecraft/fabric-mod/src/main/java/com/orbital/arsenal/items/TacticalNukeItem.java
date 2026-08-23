@@ -1,7 +1,9 @@
 package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
+import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.weapons.Strikes;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -43,6 +45,7 @@ public class TacticalNukeItem extends Item {
             return ActionResult.SUCCESS;
         }
 
+        Journal.arm();
         Vec3d target = Strikes.aim(user, 300.0);
         countdown(serverWorld, user, target, FUSE_SECONDS);
 
@@ -102,10 +105,13 @@ public class TacticalNukeItem extends Item {
                 int half = (int) Math.sqrt(Math.max(0.0, r * r - x[0] * x[0]));
                 for (int z = -half; z <= half; z++) {
                     pos.set(cx + x[0], cy + dy[0], cz + z);
-                    if (!world.getBlockState(pos).isAir()) {
-                        // Flag 2 updates clients without kicking off a cascade
-                        // of neighbour updates, which at this scale matters.
-                        world.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
+                    BlockState state = world.getBlockState(pos);
+                    if (!state.isAir()) {
+                        // Through the journal so the rewind clock can put this
+                        // back. It uses flag 2 for the write: that updates
+                        // clients without kicking off a cascade of neighbour
+                        // updates, which at this scale matters.
+                        Journal.clear(world, pos, state, Blocks.AIR.getDefaultState());
                     }
                 }
                 budget -= (2 * half + 1);

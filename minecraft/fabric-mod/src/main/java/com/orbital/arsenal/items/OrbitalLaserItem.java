@@ -1,6 +1,7 @@
 package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
+import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.weapons.Strikes;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -65,6 +66,7 @@ public class OrbitalLaserItem extends Item {
             return ActionResult.SUCCESS;
         }
 
+        Journal.arm();
         Beam running = FIRING.get(user);
         if (running != null) {
             // Holding right-click re-fires use() about every four ticks, so a
@@ -123,7 +125,7 @@ public class OrbitalLaserItem extends Item {
                     // Bedrock stays, as with the nuke and the black hole: a hole
                     // through the world floor cannot be repaired.
                     if (!state.isAir() && !state.isOf(Blocks.BEDROCK)) {
-                        world.setBlockState(pos, air, 2);
+                        Journal.clear(world, pos, state, air);
                     }
                 }
             }

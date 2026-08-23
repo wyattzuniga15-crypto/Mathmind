@@ -1,7 +1,9 @@
 package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
+import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.weapons.Strikes;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -44,6 +46,7 @@ public class KamehamehaItem extends Item {
         if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.SUCCESS;
         }
+        Journal.arm();
         charge(serverWorld, user, 0);
         ItemStack stack = user.getStackInHand(hand);
         user.getItemCooldownManager().set(stack, COOLDOWN);
@@ -111,8 +114,9 @@ public class KamehamehaItem extends Item {
                         continue;
                     }
                     pos.set(cx + x, cy + y, cz + z);
-                    if (!world.getBlockState(pos).isAir()) {
-                        world.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
+                    BlockState state = world.getBlockState(pos);
+                    if (!state.isAir()) {
+                        Journal.clear(world, pos, state, Blocks.AIR.getDefaultState());
                     }
                 }
             }

@@ -1,5 +1,6 @@
 package com.orbital.arsenal;
 
+import com.orbital.arsenal.time.Journal;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import org.slf4j.Logger;
@@ -14,7 +15,10 @@ public class OrbitalArsenal implements ModInitializer {
         ModItems.register();
         // Every weapon spreads its work across ticks rather than doing it all
         // in one, so nothing here ever stalls the server for a second.
-        ServerTickEvents.END_SERVER_TICK.register(server -> Scheduler.tick());
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            Scheduler.tick();
+            Journal.tick();
+        });
         LOGGER.info("Orbital Arsenal ready");
     }
 }

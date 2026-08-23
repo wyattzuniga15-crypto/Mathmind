@@ -75,7 +75,7 @@ def main():
     # --- every registered item has a name, a model and a texture ---
     items_java = (ROOT / "src/main/java/com/orbital/arsenal/ModItems.java").read_text()
     registered = set(re.findall(r'register\("([a-z_]+)"', items_java))
-    check(len(registered) >= 5, f"expected at least 5 registered items, found {len(registered)}")
+    check(len(registered) >= 6, f"expected at least 6 registered items, found {len(registered)}")
     lang_path = RES / "assets/orbital/lang/en_us.json"
     lang = {}
     if lang_path.exists():
@@ -104,6 +104,28 @@ def main():
         keys = set(recipe.get("key", {}))
         used = {c for row in recipe.get("pattern", []) for c in row if c != " "}
         check(used <= keys, f"{path.name} uses undefined keys: {sorted(used - keys)}")
+
+    # --- the mixin config lines up with the code and the metadata ---
+    #
+    # A mixin that is declared but unreachable fails at game launch, not at
+    # build time, so nothing else here would catch a wrong package or a class
+    # listed under a name that does not exist.
+    mixin_path = RES / "orbital.mixins.json"
+    if mixin_path.exists():
+        try:
+            mixins = json.loads(mixin_path.read_text())
+        except json.JSONDecodeError:
+            mixins = None
+        if mixins:
+            package = mixins.get("package", "")
+            check(bool(package), "orbital.mixins.json has no 'package'")
+            for name in mixins.get("mixins", []):
+                source = ROOT / "src/main/java" / (package + "." + name).replace(".", "/")
+                check(source.with_suffix(".java").exists(),
+                      f"mixin {name} has no source at {source.relative_to(ROOT)}.java")
+            declared = json.loads((RES / "fabric.mod.json").read_text()).get("mixins", [])
+            check("orbital.mixins.json" in declared,
+                  "orbital.mixins.json exists but fabric.mod.json does not list it")
 
     # --- stubs may not re-declare members the real API has been proven to lack ---
     #

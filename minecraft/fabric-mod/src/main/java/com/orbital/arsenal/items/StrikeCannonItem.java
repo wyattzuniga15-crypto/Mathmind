@@ -1,6 +1,7 @@
 package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
+import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.weapons.Formation;
 import com.orbital.arsenal.weapons.Strikes;
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ public class StrikeCannonItem extends Item {
             return ActionResult.SUCCESS;
         }
 
+        Journal.arm();
         Vec3d target = Strikes.aim(user, 150.0);
         List<Formation.Offset> formation = Formation.rings(SHELLS, RADIUS, RINGS);
 

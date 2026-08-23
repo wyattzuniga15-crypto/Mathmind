@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the Orbital Laser's 16x16 item icon.
+"""Generate the 16x16 item icons this mod adds.
 
 Pure-stdlib PNG writer, no Pillow — the same approach as the Bedrock pack's
 make_icon.py, which is where the other four icons in this mod came from.
@@ -63,7 +63,42 @@ def write_png(path: Path, pixels) -> None:
     path.write_bytes(png)
 
 
+
+
+
+# --- Rewind Clock -----------------------------------------------------------
+# A clock face with the hands running backwards and a streak of cyan motion
+# coming off the top left, so it reads as "undo" and not as a vanilla clock.
+
+g = (222, 178, 60, 255)   # gold rim
+P = (232, 232, 220, 255)  # pale face
+d = (40, 40, 46, 255)     # hub
+
+CLOCK = [
+    [_, _, _, C, C, K, K, K, K, K, K, _, _, _, _, _],
+    [_, C, c, K, K, g, g, g, g, g, g, K, K, _, _, _],
+    [_, C, K, g, g, P, P, P, P, P, P, g, g, K, _, _],
+    [C, K, g, P, P, P, P, K, P, P, P, P, P, g, K, _],
+    [_, K, g, P, P, P, P, K, P, P, P, P, P, g, K, _],
+    [K, g, P, P, P, P, P, K, P, P, P, P, P, P, g, K],
+    [K, g, P, P, P, P, P, K, P, P, P, P, P, P, g, K],
+    [K, g, P, K, K, K, K, d, P, P, P, P, P, P, g, K],
+    [K, g, P, P, P, P, P, P, P, P, P, P, P, P, g, K],
+    [K, g, P, P, P, P, P, P, P, P, P, P, P, P, g, K],
+    [_, K, g, P, P, P, P, P, P, P, P, P, P, g, K, _],
+    [_, K, g, P, P, P, P, P, P, P, P, P, P, g, K, _],
+    [_, _, K, g, g, P, P, P, P, P, P, g, g, K, _, _],
+    [_, _, _, K, K, g, g, g, g, g, g, K, K, _, _, _],
+    [_, _, _, _, _, K, K, K, K, K, K, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
+]
+
+
 if __name__ == "__main__":
-    out = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item/orbital_laser.png"
-    write_png(out, PIXELS)
-    print(f"wrote {out} ({out.stat().st_size} bytes)")
+    art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
+    for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK)):
+        out = art / f"{name}.png"
+        assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
+        assert len(pixels) == 16, f"{name} is not 16 tall"
+        write_png(out, pixels)
+        print(f"wrote {out.name} ({out.stat().st_size} bytes)")

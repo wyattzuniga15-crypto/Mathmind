@@ -1,6 +1,7 @@
 package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
+import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.weapons.Strikes;
 import java.util.Random;
 import net.minecraft.block.BlockState;
@@ -56,6 +57,7 @@ public class BlackHoleItem extends Item {
             return ActionResult.SUCCESS;
         }
 
+        Journal.arm();
         Vec3d centre = Strikes.aim(user, AIM_DISTANCE);
         user.sendMessage(Text.literal("§5● SINGULARITY FORMING"), true);
         serverWorld.playSound(null, BlockPos.ofFloored(centre), SoundEvents.ENTITY_WARDEN_SONIC_BOOM,
@@ -111,9 +113,12 @@ public class BlackHoleItem extends Item {
                     // Leave bedrock: punching through the world floor leaves a
                     // hole into the void that can never be repaired.
                     if (!state.isAir() && !state.isOf(Blocks.BEDROCK)) {
-                        // Flag 2 skips neighbour updates. At this scale the
-                        // cascade would cost more than the removal itself.
-                        world.setBlockState(pos, air, 2);
+                        // Through the journal so the rewind clock can put this
+                        // back — though a sphere this size overruns its record,
+                        // so an undo here is partial. It writes with flag 2,
+                        // skipping neighbour updates: at this scale the cascade
+                        // would cost more than the removal itself.
+                        Journal.clear(world, pos, state, air);
                     }
                 }
                 budget -= (2 * half + 1);
