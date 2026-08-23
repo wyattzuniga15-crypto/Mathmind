@@ -144,6 +144,7 @@ function buildRingFormation(count, radius, ringCount) {
 // emptying it, and explosions are kept for what they're actually good at —
 // the fireball, the mushroom cloud and the shockwave.
 
+const BUILD = "b8";
 const NUKE_ID = "orbital:tactical_nuke";
 const NUKE_RADIUS = 100; // 200 blocks across
 const NUKE_DEPTH = 30; // how deep the bowl goes at ground zero
@@ -238,14 +239,25 @@ function findAirPermutation(dimension, near) {
   return null;
 }
 
-/** A solid block to test against — air proves nothing when clearing to air. */
+/**
+ * A solid block to test against — clearing air to air proves nothing. Looked
+ * for well outside the opening fireball's radius, so ground zero being gone
+ * doesn't rob the probe of anything to test.
+ */
+const PROBE_OFFSETS = [
+  { x: 40, z: 0 }, { x: -40, z: 0 }, { x: 0, z: 40 }, { x: 0, z: -40 },
+  { x: 25, z: 25 }, { x: -25, z: -25 }
+];
+
 function findSolidProbe(dimension, target) {
-  const x = Math.floor(target.x);
-  const z = Math.floor(target.z);
-  for (let down = 0; down <= 12; down++) {
-    const at = { x, y: Math.floor(target.y) - down, z };
-    const type = typeAt(dimension, at);
-    if (type && type !== "minecraft:air") return at;
+  for (const offset of PROBE_OFFSETS) {
+    const x = Math.floor(target.x) + offset.x;
+    const z = Math.floor(target.z) + offset.z;
+    for (let down = 0; down <= 20; down++) {
+      const at = { x, y: Math.floor(target.y) - down, z };
+      const type = typeAt(dimension, at);
+      if (type && type !== "minecraft:air" && type !== "minecraft:water") return at;
+    }
   }
   return null;
 }
@@ -259,22 +271,42 @@ function findSolidProbe(dimension, target) {
  * before the opening fireball, which would otherwise clear the probe block
  * itself and leave nothing to verify against.
  */
+/**
+ * Try every way of clearing blocks and record what each one did. Returns the
+ * first that provably works, plus a short outcome per candidate — after three
+ * releases guessing at what this runtime supports, the guessing stops here and
+ * the game reports the answer.
+ *
+ * The probe deliberately runs well away from ground zero. The opening fireball
+ * fires first (it is the one thing guaranteed to work, so nothing may come
+ * before it), and probing where it just landed would leave nothing solid to
+ * test against — which is exactly how a broken method got trusted last time.
+ */
 function resolveClearRow(dimension, target) {
   const airPermutation = findAirPermutation(dimension, target);
+  const outcomes = [];
+  let winner = null;
   for (const [name, candidate] of clearCandidates(airPermutation)) {
     const probe = findSolidProbe(dimension, target);
-    if (!probe) return { name: "unprovable (no solid ground found)", fn: candidate, verified: false };
+    if (!probe) {
+      outcomes.push(`${name}=noground`);
+      continue;
+    }
     try {
       candidate(dimension, probe, probe);
     } catch {
-      continue; // unavailable, or refused these arguments
+      outcomes.push(`${name}=err`);
+      continue;
     }
     if (typeAt(dimension, probe) === "minecraft:air") {
-      return { name, fn: candidate, verified: true };
+      outcomes.push(`${name}=OK`);
+      if (!winner) winner = { name, fn: candidate, verified: true };
+    } else {
+      // Raised nothing but changed nothing — the failure that reads as success.
+      outcomes.push(`${name}=nochange`);
     }
-    // Raised nothing but changed nothing — keep looking.
   }
-  return null;
+  return { winner, outcomes };
 }
 
 /** How wide the crater is at `dy` blocks above (positive) or below the aim. */
@@ -336,16 +368,37 @@ function carveCrater(dimension, target, clear) {
   }, 1);
 }
 
-/** Coarse lattice of real explosions, for runtimes with no working fill. */
+// Sizing for the explosion-only crater. This is the path that runs when the
+// runtime offers no way to clear blocks in bulk, so it has to work from the one
+// call this device has proven: createExplosion with breaksBlocks. Explosion
+// cost climbs with the cube of the radius, so the rate is set to hold per-tick
+// cost at the cannon's proven 12 blasts of power 8, and the crater is sized to
+// what that rate can finish in about nine seconds — 120 blocks across rather
+// than 200, but real ground actually gone.
+const FALLBACK_RADIUS = 60;
+const FALLBACK_DEPTH = 25;
+const FALLBACK_ABOVE = 20;
+const FALLBACK_POWER = 12;
+const FALLBACK_STEP = 9;
+const FALLBACK_PER_TICK = 3;
+
+/** Lattice of real explosions, for runtimes with no working block clear. */
 function carveByExplosion(dimension, target) {
-  const STEP = 8;
   const points = [];
-  for (let dy = NUKE_CLEAR_ABOVE; dy >= -NUKE_DEPTH; dy -= STEP) {
-    const r = craterRadiusAt(dy);
+  for (let dy = FALLBACK_ABOVE; dy >= -FALLBACK_DEPTH; dy -= FALLBACK_STEP) {
+    let r;
+    if (dy >= 0) {
+      r = FALLBACK_RADIUS;
+    } else {
+      const below = -dy;
+      r = below > FALLBACK_DEPTH
+        ? 0
+        : FALLBACK_RADIUS * Math.sqrt(1 - below / FALLBACK_DEPTH);
+    }
     if (r <= 0) continue;
-    for (let ring = 0; ring * STEP <= r; ring++) {
-      const rr = ring * STEP;
-      const count = Math.max(1, Math.round((2 * Math.PI * rr) / STEP));
+    for (let ring = 0; ring * FALLBACK_STEP <= r; ring++) {
+      const rr = ring * FALLBACK_STEP;
+      const count = Math.max(1, Math.round((2 * Math.PI * rr) / FALLBACK_STEP));
       for (let i = 0; i < count; i++) {
         const a = (i / count) * Math.PI * 2 + ring;
         points.push({
@@ -356,16 +409,16 @@ function carveByExplosion(dimension, target) {
       }
     }
   }
+  // Centre outward, so the crater opens as a wave rather than at random.
+  points.sort((p, q) => {
+    const dp = (p.x - target.x) ** 2 + (p.z - target.z) ** 2;
+    const dq = (q.x - target.x) ** 2 + (q.z - target.z) ** 2;
+    return dp - dq;
+  });
   let at = 0;
   const runId = system.runInterval(() => {
-    for (let i = 0; i < 12 && at < points.length; i++, at++) {
-      try {
-        dimension.createExplosion(points[at], 8, {
-          breaksBlocks: true,
-          causesFire: false,
-          allowUnderwater: true
-        });
-      } catch {}
+    for (let i = 0; i < FALLBACK_PER_TICK && at < points.length; i++, at++) {
+      blast(dimension, points[at], FALLBACK_POWER);
     }
     if (at >= points.length) system.clearRun(runId);
   }, 1);
@@ -436,6 +489,12 @@ function mushroomCloud(dimension, target) {
 }
 
 function detonateNuke(dimension, target, player) {
+  // The fireball goes FIRST and nothing may be placed before it. It is the one
+  // call this device has demonstrably run, so putting anything ahead of it
+  // risks a throw that swallows the entire detonation — which is precisely
+  // what happened when the block probe was moved in front of it.
+  const fired = blast(dimension, { x: target.x, y: target.y + 3, z: target.z }, 14);
+
   try {
     player.onScreenDisplay.setTitle("§4§l☢ DETONATION ☢", {
       fadeInDuration: 0,
@@ -444,38 +503,39 @@ function detonateNuke(dimension, target, player) {
     });
   } catch {}
 
-  // Probe FIRST, while the ground is still intact. The opening fireball below
-  // clears everything around the aim point, including the block the probe
-  // needs to test against — run it first and there is nothing left to prove a
-  // candidate works, so the first one that merely doesn't throw gets trusted.
-  // Only a verified strategy is cached; an unproven one is retried next time.
-  if (clearRow === null || clearRow.verified !== true) {
-    clearRow = resolveClearRow(dimension, target);
-  }
-
-  // Now the fireball. If everything below fails the nuke still visibly goes off.
-  const fired = blast(dimension, { x: target.x, y: target.y + 3, z: target.z }, 14);
-
-  if (clearRow) {
-    carveCrater(dimension, target, clearRow.fn);
-  } else {
-    // Nothing on this runtime can clear blocks in bulk — dig it the slow,
-    // expensive way rather than leave the ground untouched.
-    carveByExplosion(dimension, target);
-  }
-  shockwave(dimension, target);
-  mushroomCloud(dimension, target);
-
-  // Say what actually happened. Everything in the nuke's path is wrapped so a
-  // failure can't take the pack down, which also means a failure is invisible —
-  // this line is the only thing standing between a silent dud and knowing why.
+  // Everything from here can fail without costing the blast above.
+  let outcomes = [];
   try {
-    const how = clearRow
-      ? `${clearRow.name}${clearRow.verified ? "" : " §c(UNPROVEN)§7"}`
-      : "explosions (nothing can clear blocks)";
+    if (clearRow === null || clearRow.verified !== true) {
+      const probed = resolveClearRow(dimension, target);
+      outcomes = probed.outcomes;
+      clearRow = probed.winner;
+    }
+  } catch {
+    clearRow = null;
+    outcomes = ["probe threw"];
+  }
+
+  try {
+    if (clearRow) {
+      carveCrater(dimension, target, clearRow.fn);
+    } else {
+      carveByExplosion(dimension, target);
+    }
+  } catch {}
+  try {
+    shockwave(dimension, target);
+  } catch {}
+  try {
+    mushroomCloud(dimension, target);
+  } catch {}
+
+  try {
     world.sendMessage(
-      `§4☢ §cNuke detonated §7— blast:${fired ? "ok" : "§cFAILED§7"} crater:${how}`
+      `§4☢ §cNuke §7[${BUILD}] blast:${fired ? "ok" : "§cFAILED§7"} ` +
+      `crater:${clearRow ? clearRow.name : "explosions"}`
     );
+    if (outcomes.length) world.sendMessage(`§8probe: ${outcomes.join("  ")}`);
   } catch {}
 }
 
@@ -525,7 +585,7 @@ function armNuke(player, dimension) {
 system.runTimeout(() => {
   try {
     world.sendMessage(
-      `§aOrbital arsenal loaded §7— cannon (${TNT_COUNT} shells) and tactical nuke`
+      `§aOrbital arsenal loaded §7[${BUILD}] — cannon (${TNT_COUNT} shells) and tactical nuke`
     );
   } catch {}
 }, 100);
