@@ -1,8 +1,9 @@
 # Orbital Strike Cannon (Minecraft Bedrock Add-On)
 
 A Bedrock Edition add-on that adds one very dangerous item: the **Orbital Strike
-Cannon**. Use it and **500 TNT** fall from the sky as a flat circle onto whatever
-block you're aiming at, each one detonating the moment it hits the ground.
+Cannon**. Use it and **500 heavy shells** fall from the sky as a flat circle
+**96 blocks across** onto whatever block you're aiming at, each detonating the
+moment it hits the ground with twice the blast radius of vanilla TNT.
 
 ## What's in the box
 
@@ -61,17 +62,18 @@ overwrites in place, so future updates won't stack up again.
 It aims at the block in your crosshair, up to 150 blocks away, falling back to
 your own position if you're aiming at open sky. Then:
 
-1. **Formation** — 500 shells are laid out on 10 concentric rings inside a
-   16-block radius. Each ring carries shells in proportion to its circumference,
-   so spacing stays even (~1.1 blocks) from the bullseye to the rim, and each
+1. **Formation** — 500 shells are laid out on 12 concentric rings inside a
+   48-block radius. Each ring carries shells in proportion to its circumference,
+   so spacing stays even (~3.9 blocks) from the bullseye to the rim, and each
    ring is twisted by a golden-ratio turn so neighbouring rings don't line up
    into spokes.
 2. **Drop** — the whole volley spawns across two ticks, which separates the
    first shell from the last by 0.04 blocks. The sheet is flat on the way down
    without any need to hold the shells in the air first.
-3. **Impact** (~3.4s later) — each shell detonates on touchdown, capped at 100
-   explosions per tick so the craters roll outward instead of landing in one
-   frame.
+3. **Impact** (~3.7s later) — each shell detonates on touchdown at **power 8**,
+   twice vanilla TNT's blast radius. Detonations run in formation order, so the
+   blast rolls outward from the bullseye as a shockwave over about two seconds
+   rather than popping at random.
 
 The shells have **no fuse** and are immune to damage, so nothing airbursts on
 the way down and no neighbour's blast can destroy one before it lands. The
@@ -86,15 +88,23 @@ There's a 15-second cooldown on the item, so one use is one strike.
 ## Changing it
 
 The dials are at the top of `BP/scripts/main.js`: `TNT_COUNT`, `STRIKE_RADIUS`,
-`RING_COUNT`, `DROP_HEIGHT`, and `DETONATIONS_PER_TICK` (lower it to stretch the
-explosions over more ticks and buy frame rate without shrinking the crater).
+`RING_COUNT`, `DROP_HEIGHT`, `EXPLOSION_RADIUS`, and `DETONATIONS_PER_TICK`.
 
-Widening the radius without raising `TNT_COUNT` thins the rings out — at radius
-30 the same 500 shells sit 3.2 blocks apart and the circle reads as dotted
-rather than solid.
+Size and power were bought with blast radius rather than more shells, because
+entity count is what costs frame rate — 500 stayed put while the strike grew to
+nine times the area. Explosion cost climbs with the *cube* of `EXPLOSION_RADIUS`,
+so power 8 is about eight vanilla TNT worth of work per shell; the detonation cap
+came down from 100 to 12 to match, keeping per-tick cost where it was and
+spending the difference on a longer, rolling blast.
+
+If it runs badly, lower `DETONATIONS_PER_TICK` first — it stretches the wave
+over more ticks without shrinking the crater at all. Raising `EXPLOSION_RADIUS`
+is the most expensive change you can make; raising `STRIKE_RADIUS` alone is the
+cheapest, though past about 56 blocks the 500 shells spread far enough apart
+that the crater turns lumpy instead of solid.
 
 Run `python3 build.py` after any edit. It runs `verify.py` first and refuses to
 package a pack that wouldn't activate.
 
-**Fair warning:** 500 TNT still craters the landscape. Don't fire it near
-anything you love.
+**Fair warning:** this now flattens a 96-block-wide circle and digs deep. Don't
+fire it anywhere near anything you want to keep.

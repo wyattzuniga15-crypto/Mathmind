@@ -2,7 +2,7 @@
   "format_version": 2,
   "header": {
     "name": "Orbital Strike Cannon v2 [BP]",
-    "description": "Adds the Orbital Strike Cannon — use it to call down 500 TNT as a flat circle.",
+    "description": "Adds the Orbital Strike Cannon — use it to call down 500 heavy shells as a flat 96-block-wide circle.",
     "uuid": "6ddfe4c1-a9e6-409c-9be9-bca8d5468731",
     "version": [2, 0, 0],
     "min_engine_version": [1, 21, 30]

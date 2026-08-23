@@ -10,19 +10,22 @@ import { world, system } from "@minecraft/server";
 const CANNON_ID = "orbital:strike_cannon";
 const SHELL_ID = "orbital:sky_tnt";
 const TNT_COUNT = 500; // total TNT per strike
-const DROP_HEIGHT = 60; // how far above the target the volley spawns
-const STRIKE_RADIUS = 16; // radius of the target circle
-const RING_COUNT = 10; // concentric rings the volley is laid out on
+const DROP_HEIGHT = 70; // how far above the target the volley spawns
+const STRIKE_RADIUS = 48; // radius of the target circle
+const RING_COUNT = 12; // concentric rings the volley is laid out on
 
 // Rates. Each caps how much work a single tick can be asked to do, which is
 // what keeps a strike from locking up a phone. The whole volley spawns in two
 // ticks, which separates the first shell from the last by 0.04 blocks — the
 // sheet is flat without needing to hold the shells in the air first.
 const SPAWN_PER_TICK = 250;
-const DETONATIONS_PER_TICK = 100; // explosions, the most expensive part by far
-const SCAN_PER_TICK = 800; // shells checked for touchdown
+// Explosions are the expensive part, and their cost climbs with the cube of the
+// radius, so a power-8 blast is roughly eight vanilla TNT worth of work. The cap
+// is set to keep the per-tick cost at parity with the old power-4 volley, which
+// stretches the barrage into a ~2s wave rather than making it heavier.
+const DETONATIONS_PER_TICK = 12;
 
-const EXPLOSION_RADIUS = 4; // same blast as vanilla TNT
+const EXPLOSION_RADIUS = 8; // twice vanilla TNT's blast radius
 // A shell needs ~67 ticks to fall 60 blocks, so nothing can genuinely have
 // landed inside this window. Holding the check off protects against a runtime
 // reporting a freshly spawned shell as already resting on the ground, which
@@ -30,9 +33,8 @@ const EXPLOSION_RADIUS = 4; // same blast as vanilla TNT
 const MIN_FLIGHT_TICKS = 20;
 const MAX_FLIGHT_TICKS = 400; // failsafe: one stuck in water blows anyway
 
-/** Shells falling, as { entity, spawnTick }. */
+/** Shells falling, in formation order: centre first, rim last. */
 const inFlight = [];
-let cursor = 0;
 
 function hasLanded(shell, now) {
   if (now - shell.spawnTick < MIN_FLIGHT_TICKS) return false;
@@ -70,39 +72,30 @@ function detonate(entity) {
 }
 
 system.runInterval(() => {
-  if (inFlight.length === 0) {
-    cursor = 0;
-    return;
-  }
+  if (inFlight.length === 0) return;
   const now = system.currentTick;
-  let checked = 0;
   let detonated = 0;
-  while (
-    checked < SCAN_PER_TICK &&
-    detonated < DETONATIONS_PER_TICK &&
-    inFlight.length > 0
-  ) {
-    if (cursor >= inFlight.length) cursor = 0;
-    const shell = inFlight[cursor];
+  let write = 0;
+  // Walk in formation order and blow up the first shells that have landed, so
+  // the blast travels outward as a shockwave instead of popping at random.
+  // Survivors are compacted back down the array, preserving that order.
+  for (let read = 0; read < inFlight.length; read++) {
+    const shell = inFlight[read];
     let finished = false;
-    try {
-      if (hasLanded(shell, now) || now - shell.spawnTick > MAX_FLIGHT_TICKS) {
-        detonate(shell.entity);
-        detonated++;
-        finished = true;
+    if (detonated < DETONATIONS_PER_TICK) {
+      try {
+        if (hasLanded(shell, now) || now - shell.spawnTick > MAX_FLIGHT_TICKS) {
+          detonate(shell.entity);
+          detonated++;
+          finished = true;
+        }
+      } catch {
+        finished = true; // shell already gone, or its chunk unloaded
       }
-    } catch {
-      finished = true; // shell already gone, or its chunk unloaded
     }
-    if (finished) {
-      // Swap-and-pop; the shell moved into this slot is checked next pass.
-      inFlight[cursor] = inFlight[inFlight.length - 1];
-      inFlight.pop();
-    } else {
-      cursor++;
-    }
-    checked++;
+    if (!finished) inFlight[write++] = shell;
   }
+  inFlight.length = write;
 }, 1);
 
 /**
