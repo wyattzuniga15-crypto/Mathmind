@@ -1,6 +1,6 @@
 {
-  "name": "MathMind \u2014 AI Assistant",
-  "short_name": "MathMind",
+  "name": "Mercury \u2014 AI Assistant",
+  "short_name": "Mercury",
   "description": "A general-purpose AI assistant with a dedicated Code mode and an exact math engine.",
   "start_url": "/",
   "scope": "/",

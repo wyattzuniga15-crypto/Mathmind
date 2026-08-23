@@ -228,7 +228,7 @@ export function Sidebar(props: Props) {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-white">
               <Sigma size={16} />
             </div>
-            <span className="text-[15px] font-semibold tracking-tight">MathMind</span>
+            <span className="text-[15px] font-semibold tracking-tight">Mercury</span>
           </div>
           <button
             type="button"

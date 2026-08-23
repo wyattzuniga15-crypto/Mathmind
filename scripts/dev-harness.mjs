@@ -238,7 +238,7 @@ export async function startHarness({ port = PORT, quiet = false } = {}) {
       }
 
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(page('MathMind — AI Math Tutor'));
+      res.end(page('Mercury — AI Assistant'));
     } catch (err) {
       if (!quiet) console.error('harness error:', err);
       if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json' });

@@ -1,4 +1,4 @@
-name: Unpack MathMind ZIP
+name: Unpack Mercury ZIP
 
 # Manual only, on purpose.
 #
@@ -25,7 +25,7 @@ jobs:
         run: |
           rm -rf unpacked
           mkdir unpacked
-          unzip -q mathmind.zip -d unpacked
+          unzip -q mercury.zip -d unpacked
 
           if [ -f "unpacked/package.json" ]; then
             cp -a unpacked/. .
@@ -47,12 +47,12 @@ jobs:
             fi
           fi
 
-          rm -rf unpacked mathmind.zip
+          rm -rf unpacked mercury.zip
 
       - name: Commit unpacked project
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet || git commit -m "Unpack MathMind project"
+          git diff --cached --quiet || git commit -m "Unpack Mercury project"
           git push

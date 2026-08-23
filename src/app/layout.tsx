@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'MathMind — AI Assistant',
+  title: 'Mercury — AI Assistant',
   description:
     'A general-purpose AI assistant with a dedicated Code mode. Math and calculations are checked by an exact symbolic engine rather than produced from memory.',
   manifest: '/manifest.json',
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     // browser tab with address bar chrome.
     capable: true,
     statusBarStyle: 'default',
-    title: 'MathMind',
+    title: 'Mercury',
   },
 };
 

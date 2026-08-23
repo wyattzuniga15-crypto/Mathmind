@@ -1,4 +1,4 @@
-# MathMind
+# Mercury
 
 A general-purpose AI assistant with a dedicated **Code** subject, built on top of a **deterministic math engine**. Ask it anything, the way you would ChatGPT or Claude; when a question touches arithmetic, an equation, a derivative, or a statistic, the language model decides *which* computation to run and calls an exact symbolic tool for it rather than doing the arithmetic itself. Every such answer is verified before it reaches you.
 
