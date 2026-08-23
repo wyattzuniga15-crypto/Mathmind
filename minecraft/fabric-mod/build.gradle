@@ -36,8 +36,13 @@ tasks.withType(JavaCompile).configureEach {
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    // Ask Gradle to find an installed JDK 21 and compile with it, whichever
+    // JDK Gradle itself happens to be running on. Gradle still has to *run* on
+    // a version it supports — very new JDKs (26 and up) are refused outright,
+    // which is why JAVA_HOME needs to point at 21 as well.
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 jar {
