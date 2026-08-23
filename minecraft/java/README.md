@@ -21,7 +21,32 @@ reliably provided; several Bedrock releases went by trying to get it working
 there before that whole approach was abandoned. Here the crater is carved
 rather than blown up, so it reaches the full 200 blocks instead of 120.
 
-## Install
+## Install — as a mod (mods/ folder)
+
+Drop **`OrbitalArsenal-1.0.0.jar`** into your `mods` folder. That's it — load a
+world and the weapons are there, no datapack to enable per world.
+
+It carries metadata for **Fabric, Quilt, Forge and NeoForge**, so whichever
+loader you have will pick it up; each reads its own file and ignores the rest.
+
+### What kind of mod this is
+
+It's a **data-driven mod**: the jar holds no compiled Java, only the datapack,
+and every loader listed above loads `data/` straight out of a mod jar as a
+built-in pack. That's a real, supported mod format — Forge even has a loader
+mode named for it, `lowcodefml` — and it means the jar works without being
+compiled against any particular Minecraft version, which is a large part of why
+it should keep working as versions move.
+
+The honest limit: the weapons still fire from vanilla trigger items rather than
+custom items with their own textures, because that needs actual Java code. I
+couldn't build a compiled mod here even to try — this machine can reach neither
+Mojang's nor Fabric's maven repositories, so there was nothing to compile
+against.
+
+## Install — as a datapack (per world)
+
+Same contents, if you'd rather not use the mods folder.
 
 1. Download `OrbitalArsenal-Java.zip` — **don't unzip it**.
 2. Put it in your world's `datapacks` folder:
@@ -114,6 +139,7 @@ declares a wide `supported_formats` range so newer versions accept it too.
 ```
 python3 build_datapack.py     # regenerates build/ and the zip
 python3 verify_datapack.py    # 5,449 checks
+python3 build_mod_jar.py      # wraps build/ as the mods-folder jar
 ```
 
 `verify_datapack.py` catches what Minecraft reports badly: JSON that doesn't
