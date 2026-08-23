@@ -1,23 +1,23 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Orbital Strike Cannon v1.4 [BP]",
-    "description": "Adds the Orbital Strike Cannon — use it to call down 500 TNT as a flat circle. Delete any copy not labelled v1.4.",
-    "uuid": "2b31abb3-ea63-4fe0-a77f-580ee846168f",
-    "version": [1, 4, 0],
+    "name": "Orbital Strike Cannon v2 [BP]",
+    "description": "Adds the Orbital Strike Cannon — use it to call down 500 TNT as a flat circle.",
+    "uuid": "6ddfe4c1-a9e6-409c-9be9-bca8d5468731",
+    "version": [2, 0, 0],
     "min_engine_version": [1, 21, 30]
   },
   "modules": [
     {
       "type": "data",
-      "uuid": "abe3968b-23f0-469b-a81f-11dc97951927",
-      "version": [1, 0, 0]
+      "uuid": "4dcdc914-8131-4fba-be52-266836941e6b",
+      "version": [2, 0, 0]
     },
     {
       "type": "script",
       "language": "javascript",
-      "uuid": "5fcff970-ebae-42a3-9ddc-7cec97fbd804",
-      "version": [1, 0, 0],
+      "uuid": "eeedc3b5-a848-4f43-af45-f356a987d30c",
+      "version": [2, 0, 0],
       "entry": "scripts/main.js"
     }
   ],
@@ -27,8 +27,8 @@
       "version": "1.16.0"
     },
     {
-      "uuid": "8c93c755-2e56-4876-a11a-05280153e18c",
-      "version": [1, 4, 0]
+      "uuid": "89d94936-9d57-4114-8747-3d63c0c7ffe7",
+      "version": [2, 0, 0]
     }
   ]
 }

@@ -10,23 +10,17 @@
     "component_groups": {
       "orbital:detonating": {
         "minecraft:explode": {
-          "fuse_length": 0.05,
+          "fuse_length": 0,
           "fuse_lit": true,
           "power": 4,
           "causes_fire": false,
           "destroy_affected_by_griefing": false
         }
-      },
-      "orbital:falling": {
-        "minecraft:physics": {
-          "has_gravity": true,
-          "has_collision": true
-        }
       }
     },
     "components": {
       "minecraft:physics": {
-        "has_gravity": false,
+        "has_gravity": true,
         "has_collision": true
       },
       "minecraft:collision_box": {
@@ -39,10 +33,7 @@
       },
       "minecraft:fire_immune": true,
       "minecraft:type_family": {
-        "family": [
-          "orbital_shell",
-          "inanimate"
-        ]
+        "family": ["orbital_shell", "inanimate"]
       },
       "minecraft:damage_sensor": {
         "triggers": [
@@ -52,24 +43,12 @@
           }
         ]
       },
-      "minecraft:conditional_bandwidth_optimization": {},
-      "minecraft:timer": {
-        "looping": false,
-        "time": 15,
-        "time_down_event": {
-          "event": "orbital:drop"
-        }
-      }
+      "minecraft:conditional_bandwidth_optimization": {}
     },
     "events": {
       "orbital:detonate": {
         "add": {
           "component_group": "orbital:detonating"
-        }
-      },
-      "orbital:drop": {
-        "add": {
-          "component_group": "orbital:falling"
         }
       }
     }

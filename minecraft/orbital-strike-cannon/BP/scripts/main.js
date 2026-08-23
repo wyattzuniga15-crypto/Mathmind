@@ -3,43 +3,39 @@ import { world, system } from "@minecraft/server";
 // Orbital Strike Cannon
 // Using the item calls down a barrage of TNT from the sky, centered on the
 // block the player is looking at (or on the player if they're aiming at air).
-//
-// A strike runs in three stages:
-//   assemble - shells spawn into a ring formation and hover there, weightless
-//   release  - gravity is switched on so the whole circle drops as one sheet
-//   impact   - each shell detonates when it touches down, never on a fuse
-// Spawning takes a couple of seconds, so shells cannot be given gravity as they
-// appear: the first ones would be a hundred blocks down before the last ones
-// existed, and the volley would fall as a corkscrew instead of a circle.
+// The shells carry no fuse: each detonates on impact, so the volley reaches the
+// ground instead of airbursting. They spawn fast enough that the formation
+// falls as one flat sheet without any hovering or gravity tricks.
 
 const CANNON_ID = "orbital:strike_cannon";
 const SHELL_ID = "orbital:sky_tnt";
 const TNT_COUNT = 500; // total TNT per strike
-const DROP_HEIGHT = 60; // how far above the target the circle assembles
+const DROP_HEIGHT = 60; // how far above the target the volley spawns
 const STRIKE_RADIUS = 16; // radius of the target circle
 const RING_COUNT = 10; // concentric rings the volley is laid out on
 
-// Rates. Each of these caps how much work a single tick can be asked to do,
-// which is what keeps a strike from locking up a phone.
-const SPAWN_PER_TICK = 50; // assembling the formation
-const RELEASE_PER_TICK = 250; // switching gravity on, so ~2 ticks for 500
+// Rates. Each caps how much work a single tick can be asked to do, which is
+// what keeps a strike from locking up a phone. The whole volley spawns in two
+// ticks, which separates the first shell from the last by 0.04 blocks — the
+// sheet is flat without needing to hold the shells in the air first.
+const SPAWN_PER_TICK = 250;
 const DETONATIONS_PER_TICK = 100; // explosions, the most expensive part by far
 const SCAN_PER_TICK = 800; // shells checked for touchdown
 
 const EXPLOSION_RADIUS = 4; // same blast as vanilla TNT
 // A shell needs ~67 ticks to fall 60 blocks, so nothing can genuinely have
 // landed inside this window. Holding the check off protects against a runtime
-// reporting a weightless, motionless shell as already resting on the ground —
-// which would airburst the entire volley the instant it was released.
+// reporting a freshly spawned shell as already resting on the ground, which
+// would airburst the whole volley.
 const MIN_FLIGHT_TICKS = 20;
 const MAX_FLIGHT_TICKS = 400; // failsafe: one stuck in water blows anyway
 
-/** Shells falling, as { entity, dropTick }. */
+/** Shells falling, as { entity, spawnTick }. */
 const inFlight = [];
 let cursor = 0;
 
 function hasLanded(shell, now) {
-  if (now - shell.dropTick < MIN_FLIGHT_TICKS) return false;
+  if (now - shell.spawnTick < MIN_FLIGHT_TICKS) return false;
   const onGround = shell.entity.isOnGround;
   if (typeof onGround === "boolean") return onGround;
   // Runtimes without isOnGround: a shell that has stopped falling has landed.
@@ -90,7 +86,7 @@ system.runInterval(() => {
     const shell = inFlight[cursor];
     let finished = false;
     try {
-      if (hasLanded(shell, now) || now - shell.dropTick > MAX_FLIGHT_TICKS) {
+      if (hasLanded(shell, now) || now - shell.spawnTick > MAX_FLIGHT_TICKS) {
         detonate(shell.entity);
         detonated++;
         finished = true;
@@ -146,29 +142,17 @@ function buildRingFormation(count, radius, ringCount) {
   return offsets;
 }
 
-/**
- * Switch gravity on across the assembled circle. Spread over a few ticks to
- * keep the spike down: four ticks of falling separates the first shell from
- * the last by under a quarter of a block, so the sheet still reads as flat.
- */
-function releaseVolley(shells) {
-  let released = 0;
-  const runId = system.runInterval(() => {
-    const now = system.currentTick;
-    for (let i = 0; i < RELEASE_PER_TICK && released < shells.length; i++, released++) {
-      const shell = shells[released];
-      try {
-        shell.triggerEvent("orbital:drop");
-        inFlight.push({ entity: shell, dropTick: now });
-      } catch {
-        // Shell already gone.
-      }
-    }
-    if (released >= shells.length) {
-      system.clearRun(runId);
-    }
-  }, 1);
-}
+// Tells you at a glance that the pack is active and its script is running —
+// if this line never appears, the add-on isn't loaded and nothing else will
+// work either.
+world.afterEvents.playerSpawn.subscribe((event) => {
+  if (!event.initialSpawn) return;
+  try {
+    event.player.sendMessage(
+      `§aOrbital Strike Cannon loaded §7— ${TNT_COUNT} TNT per strike`
+    );
+  } catch {}
+});
 
 world.afterEvents.itemUse.subscribe((event) => {
   if (event.itemStack?.typeId !== CANNON_ID) return;
@@ -195,28 +179,25 @@ world.afterEvents.itemUse.subscribe((event) => {
 
   const formation = buildRingFormation(TNT_COUNT, STRIKE_RADIUS, RING_COUNT);
   const dropY = target.y + DROP_HEIGHT;
-  const assembled = [];
   let spawned = 0;
 
   const runId = system.runInterval(() => {
+    const now = system.currentTick;
     for (let i = 0; i < SPAWN_PER_TICK && spawned < formation.length; i++, spawned++) {
       const offset = formation[spawned];
       try {
-        // Every shell at one height, weightless until the release below.
-        assembled.push(
-          dimension.spawnEntity(SHELL_ID, {
-            x: target.x + offset.x,
-            y: dropY,
-            z: target.z + offset.z
-          })
-        );
+        const shell = dimension.spawnEntity(SHELL_ID, {
+          x: target.x + offset.x,
+          y: dropY,
+          z: target.z + offset.z
+        });
+        inFlight.push({ entity: shell, spawnTick: now });
       } catch {
         // Chunk not loaded or entity cap reached — skip this one.
       }
     }
     if (spawned >= formation.length) {
       system.clearRun(runId);
-      releaseVolley(assembled);
     }
   }, 1);
 });

@@ -1,17 +1,17 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Orbital Strike Cannon v1.4 [RP]",
-    "description": "Textures and names for the Orbital Strike Cannon. Delete any copy not labelled v1.4.",
-    "uuid": "8c93c755-2e56-4876-a11a-05280153e18c",
-    "version": [1, 4, 0],
+    "name": "Orbital Strike Cannon v2 [RP]",
+    "description": "Textures and names for the Orbital Strike Cannon.",
+    "uuid": "89d94936-9d57-4114-8747-3d63c0c7ffe7",
+    "version": [2, 0, 0],
     "min_engine_version": [1, 21, 30]
   },
   "modules": [
     {
       "type": "resources",
-      "uuid": "b204beba-c393-49d1-9867-ce5607aeca25",
-      "version": [1, 0, 0]
+      "uuid": "ab9b0524-3a6d-42cb-95ed-67f00a2cd7b8",
+      "version": [2, 0, 0]
     }
   ]
 }
