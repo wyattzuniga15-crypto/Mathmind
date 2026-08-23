@@ -1,6 +1,7 @@
 # Orbital Arsenal — Java Edition
 
-The same three weapons as the Bedrock add-on, as a **datapack**.
+The same three weapons as the Bedrock add-on, as a **mod jar** or a
+**datapack** — same contents either way.
 
 - **Orbital Strike Cannon** — 300 TNT fall from the sky in a ring formation
   80 blocks across, landing before they detonate.
@@ -38,9 +39,29 @@ mode named for it, `lowcodefml` — and it means the jar works without being
 compiled against any particular Minecraft version, which is a large part of why
 it should keep working as versions move.
 
-The honest limit: the weapons still fire from vanilla trigger items rather than
-custom items with their own textures, because that needs actual Java code. I
-couldn't build a compiled mod here even to try — this machine can reach neither
+### Art and names
+
+Loaders read `assets/` out of a mod jar as a built-in resource pack the same way
+they read `data/`, so the jar also carries the weapons' art. In your inventory
+they show the same icons as the Bedrock pack and are named properly:
+
+| vanilla item | shows as |
+|--------------|----------|
+| carrot on a stick | **Orbital Strike Cannon** |
+| warped fungus on a stick | **Tactical Nuke** |
+| goat horn | **Kamehameha** |
+
+Each weapon *is* its trigger item here, so overriding that vanilla item is the
+honest way to make it look right rather than inventing a custom one — and it
+needs no Java. Only the PNG and the translation string are replaced, never the
+model: texture paths and translation keys have been stable for many versions,
+while item model formats have been reworked more than once. The texture is the
+version-proof half and it carries the whole visible result in the inventory.
+
+The one thing this doesn't give you is *new* items sitting alongside the vanilla
+ones — a carrot on a stick now looks and reads as the cannon everywhere,
+because it is one. Registering separate items needs real Java code, and I
+couldn't build a compiled mod here even to try: this machine can reach neither
 Mojang's nor Fabric's maven repositories, so there was nothing to compile
 against.
 
@@ -59,6 +80,10 @@ Same contents, if you'd rather not use the mods folder.
    `/datapack list` — it should appear under enabled packs.
 
 Then get the weapons with `/function orbital:give`.
+
+Datapacks can't carry textures, so if you install this way and want the art too,
+add `OrbitalArsenal-Resources.zip` under **Options → Resource Packs**. The jar
+has both built in and needs neither step.
 
 ## Firing them
 
@@ -137,9 +162,10 @@ declares a wide `supported_formats` range so newer versions accept it too.
 ## Building it
 
 ```
-python3 build_datapack.py     # regenerates build/ and the zip
+python3 build_datapack.py     # regenerates build/ and the datapack zip
 python3 verify_datapack.py    # 5,449 checks
-python3 build_mod_jar.py      # wraps build/ as the mods-folder jar
+python3 build_resources.py    # item art and names -> build_assets/ and a zip
+python3 build_mod_jar.py      # wraps both as the mods-folder jar
 ```
 
 `verify_datapack.py` catches what Minecraft reports badly: JSON that doesn't
