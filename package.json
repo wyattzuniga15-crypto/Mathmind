@@ -1,8 +1,8 @@
 {
-  "name": "mathmind",
+  "name": "mercury",
   "version": "1.0.0",
   "private": true,
-  "description": "A modular AI tutoring platform. Math is the first subject module.",
+  "description": "A general-purpose AI assistant with a dedicated Code subject and a tool-verified math engine.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

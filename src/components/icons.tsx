@@ -70,10 +70,31 @@ export const TriangleAlert = (p: IconProps) => (
   </Icon>
 );
 
-export const Sigma = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M18 7V4H6l6 8-6 8h12v-3" />
-  </Icon>
+/**
+ * The Mercury brand mark: six tapered rays radiating from a common centre.
+ *
+ * Filled rather than stroked, so it is the one icon here that does not go
+ * through `Icon` — a stroked outline of six slivers turns to mush at the
+ * 16px the sidebar and favicon render it at.
+ */
+export const MercuryMark = ({ size = 16, ...props }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+  >
+    {[0, 60, 120, 180, 240, 300].map((angle) => (
+      <path
+        key={angle}
+        d="M12 12C11.06 9.19 11.06 5.81 12 3C12.94 5.81 12.94 9.19 12 12Z"
+        transform={`rotate(${angle} 12 12)`}
+      />
+    ))}
+  </svg>
 );
 
 export const ArrowUp = (p: IconProps) => (
