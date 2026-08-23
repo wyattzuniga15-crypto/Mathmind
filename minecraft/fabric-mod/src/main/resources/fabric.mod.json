@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "orbital",
-  "version": "1.0.0",
+  "version": "${version}",
   "name": "Orbital Arsenal",
   "description": "Orbital strike cannon, tactical nuke and kamehameha.",
   "authors": [
