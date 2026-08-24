@@ -26,7 +26,9 @@ const Game = {
     UI.init(this);
     Input.init(this.canvas, this);
     Input.onLock = locked => {
-      if (!locked && this.state === 'playing' && !Input.uiOpen) this.pause();
+      // ignore unlock events fired during UI open/close transitions
+      if (!locked && this.state === 'playing' && !Input.uiOpen &&
+          performance.now() - (this._uiT || 0) > 600) this.pause();
     };
     this.drawTitleBg();
     const hasSave = !!localStorage.getItem(SAVE_KEY);
@@ -130,7 +132,15 @@ const Game = {
     UI.refreshHotbar();
     UI.refreshStats(this.player);
     this.msg(data ? 'Welcome back!' : 'Punch trees to gather wood');
-    this.canvas.requestPointerLock();
+    this.lockPointer();
+  },
+
+  lockPointer() {
+    this._uiT = performance.now();
+    try {
+      const r = this.canvas.requestPointerLock();
+      if (r && r.catch) r.catch(() => {});
+    } catch (e) {}
   },
 
   findSpawnY(x, z) {
@@ -151,7 +161,7 @@ const Game = {
   resume() {
     document.getElementById('pause').classList.add('hidden');
     this.state = 'playing';
-    this.canvas.requestPointerLock();
+    this.lockPointer();
   },
   quitToTitle() {
     this.save();
@@ -176,7 +186,7 @@ const Game = {
     document.getElementById('death').classList.add('hidden');
     this.player.respawn(this);
     this.state = 'playing';
-    this.canvas.requestPointerLock();
+    this.lockPointer();
   },
 
   save() {
@@ -320,6 +330,20 @@ const Game = {
   },
 
   // ---------------- interactables ----------------
+  sleep(x, y, z) {
+    this.player.spawn = { x: x + 0.5, y: y + 1, z: z + 0.5 };
+    if (this.day > 0.2) { this.msg('Respawn point set — you can only sleep at night'); return; }
+    if (this.mobs.some(m => m.def.hostile && dist2(m.x, m.y, m.z, x, y, z) < 14 * 14)) {
+      this.msg('You may not rest now, there are monsters nearby');
+      return;
+    }
+    this.dayTime = 0.27;
+    // undead don't survive the sunrise skip
+    for (const m of this.mobs) if (m.def.burns) m.dead = true;
+    this.msg('You wake up refreshed');
+    Sfx.levelup();
+  },
+
   openCrafting() { UI.open('table'); },
   openFurnace(x, y, z) {
     const key = x + ',' + y + ',' + z;
@@ -540,6 +564,36 @@ const Game = {
     // camera with bob + sneak
     const bobA = (this.state === 'playing' && p.onGround) ? Math.sin(p.bob * 6) * 0.05 : 0;
     const eyeH = p.sneaking ? p.eye - 0.3 : p.eye;
+
+    // first-person held item / arm
+    const handV = [];
+    if (this.state === 'playing' && !p.dead && !Input.uiOpen) {
+      const look = p.lookDir();
+      const rt = [Math.cos(p.yaw), 0, -Math.sin(p.yaw)];
+      const heldS = this.inv.held();
+      // swing: mining loops, single swing decays
+      let dip = 0;
+      if (p.mining) dip = Math.abs(Math.sin(this.timeSec * 9)) * 0.16;
+      else if (p.swing > 0) dip = Math.sin((0.25 - p.swing) / 0.25 * Math.PI) * 0.16;
+      if (p.eatT > 0) dip = Math.abs(Math.sin(this.timeSec * 12)) * 0.1;
+      const pull = p.bowCharge ? p.bowCharge * 0.18 : 0;
+      const hbx = Math.sin(p.bob * 6) * 0.012;
+      const hl = Math.max(0.35, this.world.skyAt(p.x, p.y + 1.5, p.z));
+      const hx = p.x + look[0] * (0.5 - dip * 0.6 - pull) + rt[0] * (0.34 - pull) + rt[0] * hbx;
+      const hy = p.y + eyeH + bobA - 0.34 - dip * 0.5 + look[1] * (0.5 - pull);
+      const hz = p.z + look[2] * (0.5 - dip * 0.6 - pull) + rt[2] * (0.34 - pull) + rt[2] * hbx;
+      if (heldS && heldS.id < 256) {
+        const b = Blocks[heldS.id];
+        if (b.tiles) addBox(handV, hx, hy - 0.12, hz, 0.13, 0.13, 0.13, p.yaw + 0.5, b.tiles, hl);
+      } else if (heldS) {
+        const icon = Items[heldS.id].icon ?? TileIdx.white;
+        addSprite(handV, hx, hy - 0.2, hz, 0.21, p.yaw + Math.PI / 2 + 0.35, icon, hl);
+      } else {
+        // bare arm
+        emitEntityBox(handV, hx + look[0] * 0.1, hy - 0.05, hz + look[2] * 0.1,
+          0.07, 0.2, 0.07, p.yaw + 0.4, { all: TileIdx.skin }, hl);
+      }
+    }
     Renderer.frame({
       world: this.world,
       cam: { x: p.x, y: p.y + eyeH + bobA, z: p.z, pitch: p.pitch, yaw: p.yaw },
@@ -547,6 +601,7 @@ const Game = {
       time: this.timeSec,
       entVerts: entV.length ? new Float32Array(entV) : null,
       partVerts: partV.length ? new Float32Array(partV) : null,
+      handVerts: handV.length ? new Float32Array(handV) : null,
       crackVerts: crackV && crackV.length ? new Float32Array(crackV) : null,
       outline: this.target ? [this.target.x, this.target.y, this.target.z] : null,
       underwater,

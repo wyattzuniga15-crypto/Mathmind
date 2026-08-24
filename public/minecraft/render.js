@@ -54,7 +54,7 @@ const Renderer = {
         if (i >= uNumLights) break;
         vec3 L = uLights[i].xyz - vWorld;
         float d = length(L);
-        pt = max(pt, uLights[i].w * clamp(1.0 - d / 9.0, 0.0, 1.0));
+        pt = max(pt, uLights[i].w * clamp(1.0 - d / 12.0, 0.0, 1.0));
       }
       float light = clamp(max(sky, pt * 0.95), 0.02, 1.25);
       vec3 col = tex.rgb * light;
@@ -368,6 +368,19 @@ const Renderer = {
     gl.enable(gl.CULL_FACE);
     gl.depthMask(true);
     gl.disable(gl.BLEND);
+
+    // ---------- first-person hand (drawn over everything) ----------
+    if (S.handVerts && S.handVerts.length) {
+      gl.clear(gl.DEPTH_BUFFER_BIT);
+      gl.useProgram(cp.p);
+      gl.uniform3f(cp.u.uOffset, 0, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.entBuf2 || (this.entBuf2 = gl.createBuffer()));
+      gl.bufferData(gl.ARRAY_BUFFER, S.handVerts, gl.DYNAMIC_DRAW);
+      this.bindChunkAttribs();
+      gl.disable(gl.CULL_FACE);
+      gl.drawArrays(gl.TRIANGLES, 0, S.handVerts.length / 6);
+      gl.enable(gl.CULL_FACE);
+    }
 
     // ---------- block outline ----------
     if (S.outline) {

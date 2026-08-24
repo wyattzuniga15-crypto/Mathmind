@@ -130,9 +130,32 @@ class Player extends Entity {
       if (this.starveT > 4) { this.starveT = 0; if (this.hp > 1) this.hurt(game, 1); }
     }
 
-    // ---- eating ----
+    // ---- bow charging ----
     const held = game.inv.held();
     const heldDef = held ? itemDef(held.id) : null;
+    if (heldDef && held.id === I.bow) {
+      if (input.mouseRight && game.inv.count(I.arrow) > 0) {
+        this.bowCharge = Math.min(1, (this.bowCharge || 0) + dt);
+      } else if (this.bowCharge > 0.15) {
+        // release
+        const look = this.lookDir();
+        const sp = 10 + this.bowCharge * 22;
+        game.arrows.push(new Arrow(
+          this.x + look[0] * 0.4, this.y + this.eye - 0.1, this.z + look[2] * 0.4,
+          look[0] * sp, look[1] * sp + 0.5, look[2] * sp, true));
+        Sfx.bow();
+        this.bowCharge = 0;
+        // consume one arrow
+        for (let i = 0; i < 36; i++) {
+          const s = game.inv.slots[i];
+          if (s && s.id === I.arrow) { s.count--; if (s.count <= 0) game.inv.slots[i] = null; break; }
+        }
+        game.inv.damageHeld(game);
+        UI.refreshHotbar();
+      } else this.bowCharge = 0;
+    } else this.bowCharge = 0;
+
+    // ---- eating ----
     if (input.mouseRight && heldDef && heldDef.food && this.hunger < 20) {
       this.eatT += dt;
       if (Math.floor(this.eatT * 6) !== Math.floor((this.eatT - dt) * 6)) Sfx.eat();
@@ -187,6 +210,7 @@ class Player extends Entity {
         if (tid === B.crafting_table) { game.openCrafting(); continue; }
         if (tid === B.furnace || tid === B.furnace_lit) { game.openFurnace(hit.x, hit.y, hit.z); continue; }
         if (tid === B.chest) { game.openChest(hit.x, hit.y, hit.z); continue; }
+        if (tid === B.bed) { game.sleep(hit.x, hit.y, hit.z); continue; }
         // plant seeds on top of grass/dirt
         if (held && held.id === I.wheat_seeds && hit.face[1] === 1 &&
             (tid === B.grass_block || tid === B.dirt || tid === B.farmland) &&

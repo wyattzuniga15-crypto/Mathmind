@@ -153,7 +153,7 @@ const MOB_DEFS = {
   pig: { hp: 10, speed: 1.2, hostile: false,
     drops: () => [[I.porkchop, randInt(1, 3)]] },
   sheep: { hp: 8, speed: 1.15, hostile: false,
-    drops: () => [[I.string, randInt(1, 2)]] },
+    drops: () => [[B.wool, randInt(1, 2)]] },
   chicken: { hp: 4, speed: 1.1, hostile: false,
     drops: () => [[I.chicken, 1], [I.feather, randInt(0, 2)]] },
 };

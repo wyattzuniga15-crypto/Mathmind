@@ -323,7 +323,10 @@ class World {
     const z0 = Math.floor(minz), z1 = Math.floor(maxz);
     for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) for (let z = z0; z <= z1; z++) {
       const id = this.getBlock(x, y, z);
-      if (id && Blocks[id].solid) return true;
+      if (id && Blocks[id].solid) {
+        const bh = Blocks[id].height || 1;
+        if (miny < y + bh && maxy > y) return true;
+      }
     }
     return false;
   }
@@ -445,6 +448,27 @@ function meshChunk(world, c) {
       continue;
     }
 
+    if (b.rt === RT_HALF) {
+      // half-height block (bed): scale the cube vertically
+      const hh = b.height || 0.5;
+      const l = skyOf(lx, y, lz);
+      for (let fi = 0; fi < 6; fi++) {
+        const f = FACES[fi];
+        const nid = get(lx + f.d[0], y + f.d[1], lz + f.d[2]);
+        if (fi !== 0 && nid && Blocks[nid].opaque) continue;
+        let ti = fi === 0 ? b.tiles.top : fi === 1 ? b.tiles.bottom : b.tiles.side;
+        const vtx = [];
+        for (let i = 0; i < 4; i++) {
+          const p = f.c[i];
+          const py = p[1] === 1 ? hh : 0;
+          const [u, v] = tileUVc(ti, UVQ[i][0], fi >= 2 ? (p[1] === 1 ? 1 - hh : 1) : UVQ[i][1]);
+          vtx.push([lx + p[0], y + py, lz + p[2], u, v, Math.max(0.05, l * f.shade)]);
+        }
+        pushQuad(solid, vtx);
+      }
+      continue;
+    }
+
     // solid / leaves / glass / cactus
     const inset = b.rt === RT_CACTUS ? 1 / 16 : 0;
     for (let fi = 0; fi < 6; fi++) {
@@ -453,8 +477,7 @@ function meshChunk(world, c) {
       const nid = get(nx, ny, nz);
       let show;
       if (b.opaque) show = !nid || !Blocks[nid].opaque;
-      else show = nid !== id && (!nid || !Blocks[nid].opaque); // glass/leaves: hide only against same or opaque
-      if (b.rt === RT_LEAVES) show = !nid || !Blocks[nid].opaque; // leaves always show against leaves? no: against air/transparent
+      else show = nid !== id && (!nid || !Blocks[nid].opaque); // glass/leaves: hide against same id or opaque
       if (!show) continue;
       let ti = fi === 0 ? b.tiles.top : fi === 1 ? b.tiles.bottom : b.tiles.side;
       if (b.tiles.front !== b.tiles.side && fi === 4) ti = b.tiles.front;

@@ -315,6 +315,7 @@ const UI = {
       this.furnFuelEl = this.buildGrid(this.$('furnfuel'), 1, (i, e) => this.slotClick(0, 'furnfuel', e))[0];
       this.furnOutEl = this.buildGrid(this.$('furnout'), 1, (i, e) => this.slotClick(0, 'furnout', e))[0];
     }
+    this.game._uiT = performance.now();
     if (mode === 'chest') {
       this.chestRef = ref;
       const cg = document.createElement('div');
@@ -346,7 +347,7 @@ const UI = {
     }
     this.mode = null; this.furnRef = null; this.chestRef = null;
     this.$('ghost').style.display = 'none';
-    if (this.game.state === 'playing') this.game.canvas.requestPointerLock();
+    if (this.game.state === 'playing') this.game.lockPointer();
   },
 
   // slot interaction: area = inv | craft | furnin | furnfuel | furnout | chest

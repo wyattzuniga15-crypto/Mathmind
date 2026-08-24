@@ -118,7 +118,8 @@ T('cobblestone', d => {
   d.fill([110, 110, 110], 16);
   for (let k = 0; k < 7; k++) {
     const x = (d.rng() * 13) | 0, y = (d.rng() * 13) | 0, r = 2 + (d.rng() * 3 | 0);
-    d.rect(x, y, r, r, [100 + d.rng() * 45, 100 + d.rng() * 45, 100 + d.rng() * 45], 8);
+    const g = 100 + d.rng() * 45;
+    d.rect(x, y, r, r, [g, g, g], 8);
   }
   d.speckle([70, 70, 70], 30, 8);
 });
@@ -224,7 +225,7 @@ T('sapling', d => {
 T('obsidian', d => { d.fill([24, 18, 38], 8); d.speckle([60, 44, 90], 20, 10); d.speckle([10, 8, 18], 24, 4); });
 T('mossy_cobblestone', d => {
   d.fill([110, 110, 110], 16);
-  for (let k = 0; k < 6; k++) d.rect((d.rng()*13)|0, (d.rng()*13)|0, 3, 3, [100 + d.rng()*40, 100 + d.rng()*40, 100 + d.rng()*40], 8);
+  for (let k = 0; k < 6; k++) { const g = 100 + d.rng() * 40; d.rect((d.rng()*13)|0, (d.rng()*13)|0, 3, 3, [g, g, g], 8); }
   d.speckle([88, 128, 60], 40, 12);
 });
 T('farmland', d => { d.fill([96, 62, 38], 10); for (const x of [2, 6, 10, 14]) d.rect(x, 0, 1, 16, [70, 44, 26], 5); });
@@ -277,6 +278,18 @@ T('chest_front', d => {
   d.rect(7, 7, 2, 4, [140, 140, 140], 8);
 });
 T('chest_top', d => { d.fill([158, 116, 56], 8); d.border([90, 64, 30], 5); });
+T('bed_top', d => {
+  d.fill([170, 30, 30], 10);
+  d.rect(0, 0, 16, 5, [235, 235, 235], 6);       // pillow
+  d.rect(0, 5, 16, 1, [120, 16, 16], 4);
+  d.border([120, 60, 30], 6);
+});
+T('bed_side', d => {
+  // half-height blocks sample only the bottom half of the tile
+  d.fill([170, 30, 30], 10);
+  d.rect(0, 8, 16, 1, [235, 235, 235], 6);
+  d.rect(0, 13, 16, 3, [130, 96, 56], 8);
+});
 
 // ---------------- assign block tiles ----------------
 function tiles(name, top, bottom, side, front) {
@@ -327,6 +340,8 @@ tiles('pumpkin', 'pumpkin_top', 'pumpkin_top', 'pumpkin_side');
 tiles('red_mushroom', 'red_mushroom', 'red_mushroom', 'red_mushroom');
 tiles('brown_mushroom', 'brown_mushroom', 'brown_mushroom', 'brown_mushroom');
 tiles('chest', 'chest_top', 'chest_top', 'chest_side', 'chest_front');
+tiles('wool', 'sheep_wool', 'sheep_wool', 'sheep_wool');
+tiles('bed', 'bed_top', 'oak_planks', 'bed_side');
 
 // ---------------- item icons ----------------
 function toolIcon(name, kind, headC, handleC = [104, 82, 50]) {
@@ -415,6 +430,15 @@ icon('leather', d => { d.fill([0,0,0],0,0); d.rect(4, 4, 9, 9, [170, 100, 50], 1
 icon('feather', d => { d.fill([0,0,0],0,0); for (let i = 0; i < 9; i++) { d.px(4 + i, 12 - i, [240, 240, 240]); d.px(5 + i, 12 - i, [210, 210, 215]); } });
 icon('flint', d => { d.fill([0,0,0],0,0); d.rect(5, 5, 7, 7, [60, 60, 65], 8); d.px(5,5,[0,0,0],0); d.px(11,11,[0,0,0],0); });
 icon('egg', d => { d.fill([0,0,0],0,0); d.rect(6, 5, 4, 7, [240, 230, 200], 6); d.px(6,5,[0,0,0],0); d.px(9,5,[0,0,0],0); d.px(6,11,[0,0,0],0); d.px(9,11,[0,0,0],0); });
+icon('bow', d => {
+  d.fill([0,0,0],0,0);
+  // curved stave
+  const w = [104, 82, 50], s = [230, 230, 230];
+  for (let i = 0; i < 5; i++) { d.px(4 + i, 2 + (i > 2 ? 1 : 0), w); d.px(2 + (i > 2 ? 1 : 0), 4 + i, w); }
+  d.px(9, 4, w); d.px(10, 5, w); d.px(11, 6, w); d.px(4, 9, w); d.px(5, 10, w); d.px(6, 11, w);
+  d.px(12, 7, w); d.px(12, 8, w); d.px(7, 12, w); d.px(8, 12, w);
+  for (let i = 0; i < 9; i++) d.px(11 - i + 2, 3 + i, s);   // string
+});
 
 // ---------------- mob skin tiles ----------------
 T('zombie_face', d => {
@@ -469,6 +493,7 @@ T('spider_face', d => {
   d.rect(6, 4, 1, 1, [200, 30, 30]); d.rect(9, 4, 1, 1, [200, 30, 30]);
 });
 T('white', d => d.fill([255, 255, 255], 0));
+T('skin', d => { d.fill([232, 190, 152], 8); d.speckle([210, 168, 130], 16, 6); });
 
 // breaking crack overlays (4 stages)
 for (let stage = 0; stage < 4; stage++) {

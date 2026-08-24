@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------- block & item registry
 
 // render types
-const RT_SOLID = 0, RT_CROSS = 1, RT_WATER = 2, RT_LEAVES = 3, RT_TORCH = 4, RT_CACTUS = 5, RT_SNOWLAYER = 6;
+const RT_SOLID = 0, RT_CROSS = 1, RT_WATER = 2, RT_LEAVES = 3, RT_TORCH = 4, RT_CACTUS = 5, RT_HALF = 6;
 
 // tool types
 const T_NONE = 0, T_PICK = 1, T_AXE = 2, T_SHOVEL = 3, T_SWORD = 4, T_HOE = 5;
@@ -30,7 +30,8 @@ defBlock(3,  'stone', { hardness:7.5, tool:T_PICK, needsTool:1, drops:['cobblest
 defBlock(4,  'cobblestone', { hardness:10, tool:T_PICK, needsTool:1 });
 defBlock(5,  'bedrock', { hardness:-1 });
 defBlock(6,  'sand', { hardness:0.75, tool:T_SHOVEL, gravity:true });
-defBlock(7,  'gravel', { hardness:0.9, tool:T_SHOVEL, gravity:true });
+defBlock(7,  'gravel', { hardness:0.9, tool:T_SHOVEL, gravity:true,
+  drops:() => Math.random() < 0.25 ? ['flint',1] : ['gravel',1] });
 defBlock(8,  'oak_log', { hardness:3, tool:T_AXE, flammable:true });
 defBlock(9,  'oak_leaves', { hardness:0.3, rt:RT_LEAVES, opaque:false, flammable:true,
   drops:() => Math.random() < 0.08 ? ['oak_sapling',1] : (Math.random() < 0.05 ? ['apple',1] : null) });
@@ -72,6 +73,8 @@ defBlock(42, 'pumpkin', { hardness:1.5, tool:T_AXE });
 defBlock(43, 'red_mushroom', { solid:false, opaque:false, rt:RT_CROSS, hardness:0.02 });
 defBlock(44, 'brown_mushroom', { solid:false, opaque:false, rt:RT_CROSS, hardness:0.02 });
 defBlock(45, 'chest', { hardness:3.75, tool:T_AXE, flammable:true });
+defBlock(46, 'wool', { hardness:1.2, flammable:true });
+defBlock(47, 'bed', { hardness:0.3, rt:RT_HALF, opaque:false, height:0.5 });
 
 // ---------------------------------------------------------------- items (ids >= 256)
 const I = {}; // name -> id
@@ -112,6 +115,7 @@ defItem('leather', {});
 defItem('feather', {});
 defItem('flint', {});
 defItem('egg', { stack: 16 });
+defItem('bow', { stack: 1, durability: 96, dmg: 1 });
 
 const TOOL_TIERS = [
   ['wooden', 1, 2, 60, 1],   // prefix, tier, speed, durability, bonus dmg
@@ -152,6 +156,10 @@ Recipes.pop();
 recipe('bookshelf', 1, [['oak_planks','oak_planks','oak_planks'],['wheat','wheat','wheat'],['oak_planks','oak_planks','oak_planks']]);
 recipe('stone_bricks', 4, [['stone','stone'],['stone','stone']]);
 recipe('sandstone', 1, [['sand','sand'],['sand','sand']]);
+recipe('wool', 1, [['string','string'],['string','string']]);
+recipe('bed', 1, [['wool','wool','wool'],['oak_planks','oak_planks','oak_planks']]);
+recipe('bow', 1, [[P,'stick','string'],['stick',P,'string'],[P,'stick','string']]);
+recipe('arrow', 4, [['flint'],['stick'],['feather']]);
 recipe('snow_block', 1, [['snow_block']]); // no-op safeguard
 Recipes.pop();
 for (const [pre] of TOOL_TIERS) {
