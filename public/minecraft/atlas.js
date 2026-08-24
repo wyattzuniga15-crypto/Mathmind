@@ -519,19 +519,64 @@ T('xp', d => {
   d.px(7, 7, [255, 255, 200]); d.px(8, 8, [255, 255, 200]);
 });
 
-// breaking crack overlays (4 stages)
-for (let stage = 0; stage < 4; stage++) {
+// ---------------------------------------------------------------- breaking overlay
+// Ten cumulative destroy stages, like the real game: a hairline crack opens at
+// the centre of the face and spreads outward into a web, and every crack drawn
+// in an earlier stage is still there in the later ones.
+const CRACK_T = new Float32Array(256).fill(Infinity);
+(function buildCrackPattern() {
+  const rng = mulberry32(0x5EED9);
+  const set = (x, y, t) => {
+    x = Math.round(x); y = Math.round(y);
+    if (x < 0 || y < 0 || x > 15 || y > 15) return;
+    const i = y * 16 + x;
+    if (t < CRACK_T[i]) CRACK_T[i] = t;
+  };
+  const BRANCHES = 8;
+  for (let b = 0; b < BRANCHES; b++) {
+    // each fissure opens at a different point in the dig, so the face goes
+    // hairline -> a few cracks -> a full web instead of blotching all at once
+    const start = 0.015 + (b / BRANCHES) * 0.55;
+    const base = (b / BRANCHES) * Math.PI * 2 + (rng() - 0.5) * 0.5;
+    let ang = base;
+    let x = 7.5 + Math.cos(base) * 1.8, y = 7.5 + Math.sin(base) * 1.8;
+    const len = 13 + rng() * 5;
+    for (let s2 = 0; s2 < len; s2++) {
+      const f = s2 / len;
+      const t = start + f * (1 - start) * 0.99 + rng() * 0.02;
+      set(x, y, t);
+      // cracks only widen once they have run a way out, keeping them hairline early
+      if (f > 0.45 && rng() < 0.24) {
+        const perp = ang + Math.PI / 2;
+        set(x + Math.cos(perp), y + Math.sin(perp), t + 0.04);
+      }
+      // side fissures spidering off the main crack
+      if (s2 > 3 && rng() < 0.28) {
+        let fa = ang + (rng() < 0.5 ? 1 : -1) * (0.7 + rng() * 0.7);
+        let fx = x, fy = y;
+        const fl = 2 + rng() * 4;
+        for (let k = 0; k < fl; k++) {
+          set(fx, fy, t + 0.05 + k * 0.02);
+          fa += (rng() - 0.5) * 0.7;
+          fx += Math.cos(fa); fy += Math.sin(fa);
+        }
+      }
+      ang += (rng() - 0.5) * 0.95;      // jagged...
+      ang = ang * 0.7 + base * 0.3;     // ...but still travelling outward
+      x += Math.cos(ang); y += Math.sin(ang);
+    }
+  }
+})();
+for (let stage = 0; stage < 10; stage++) {
   T('crack' + stage, d => {
     d.fill([0, 0, 0], 0, 0);
-    const n = 3 + stage * 3;
-    for (let k = 0; k < n; k++) {
-      let x = (d.rng() * 16) | 0, y = (d.rng() * 16) | 0;
-      const len = 3 + stage * 2 + (d.rng() * 3 | 0);
-      for (let i = 0; i < len; i++) {
-        d.px(x, y, [20, 20, 20], 190);
-        x += d.rng() < 0.5 ? 1 : (d.rng() < 0.5 ? -1 : 0);
-        y += d.rng() < 0.6 ? 1 : 0;
-      }
+    const lim = (stage + 1) / 10;
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      if (CRACK_T[y * 16 + x] > lim) continue;
+      d.px(x, y, [14, 12, 12], 240);
+      // a chipped highlight below each crack pixel reads as depth
+      if (CRACK_T[(y + 1) * 16 + x] > lim && d.rng() < 0.45)
+        d.px(x, y + 1, [150, 150, 150], 70);
     }
   });
 }

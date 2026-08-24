@@ -214,7 +214,15 @@ class Player extends Entity {
             }
             this.mining.progress += dt * (this.onGround ? 1 : 0.3) * (this.headInWater(world) ? 0.2 : 1);
             this.digSndT = (this.digSndT || 0) - dt;
-            if (this.digSndT <= 0) { this.digSndT = 0.25; Sfx.dig(hit.id); }
+            if (this.digSndT <= 0) {
+              this.digSndT = 0.22;
+              Sfx.dig(hit.id);
+              // chips fly off the face being struck
+              const bt = Blocks[hit.id].tiles;
+              if (bt) game.particles.burst(
+                hit.x + 0.5 + hit.face[0] * 0.56, hit.y + 0.5 + hit.face[1] * 0.56,
+                hit.z + 0.5 + hit.face[2] * 0.56, bt.side, 3, 1.1, 0.3);
+            }
             if (this.mining.progress >= this.mining.total) {
               game.breakBlock(hit.x, hit.y, hit.z, heldId);
               this.mining = null;

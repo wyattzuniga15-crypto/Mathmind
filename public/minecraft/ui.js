@@ -242,8 +242,13 @@ const UI = {
       tip.style.left = (e.clientX + 14) + 'px';
       tip.style.top = (e.clientY - 26) + 'px';
     });
-    this.$('wininv').addEventListener('mousedown', e => {
-      if (e.target === this.$('wininv')) { } // click outside panel: ignore
+    // three ways out of the inventory: the ✕, tapping the backdrop, or Esc/E
+    this.$('invclose').addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      Sfx.click(); this.close();
+    });
+    this.$('wininv').addEventListener('pointerdown', e => {
+      if (e.target === this.$('wininv')) { Sfx.click(); this.close(); }
     });
   },
   buildGrid(container, n, onClick, cls) {
@@ -257,7 +262,7 @@ const UI = {
       const cnt = document.createElement('span'); cnt.className = 'cnt';
       const dur = document.createElement('div'); dur.className = 'dur';
       el.append(cv, cnt, dur);
-      el.addEventListener('mousedown', e => { e.preventDefault(); onClick(i, e); });
+      el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); onClick(i, e); });
       el.addEventListener('mouseenter', () => this.hover(container, i));
       el.addEventListener('mouseleave', () => this.$('tooltip').style.display = 'none');
       container.appendChild(el);
@@ -333,6 +338,9 @@ const UI = {
     this.$('furnzone').classList.toggle('hidden', mode !== 'furnace');
     const titles = { inv: 'Crafting', table: 'Crafting Table', furnace: 'Furnace', chest: 'Chest' };
     this.$('invtitle').textContent = titles[mode];
+    this.$('invhint').textContent = this.game.touchMode
+      ? 'Tap ✕ or outside this panel to close'
+      : 'Press E or Esc to close · click ✕ or outside this panel';
     let chestGrid = this.$('chestgrid');
     if (chestGrid) chestGrid.remove();
     this.chestEls = null;

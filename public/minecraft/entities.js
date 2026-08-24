@@ -472,10 +472,12 @@ function addSprite(verts, cx, cy, cz, half, yaw, tile, light) {
 // ---------------------------------------------------------------- particles
 class Particles {
   constructor() { this.list = []; }
-  burst(x, y, z, tile, n, speed = 3) {
+  burst(x, y, z, tile, n, speed = 3, spread = 0) {
     for (let i = 0; i < n; i++) {
       this.list.push({
-        x, y, z,
+        x: x + (spread ? rand(-spread, spread) : 0),
+        y: y + (spread ? rand(-spread, spread) : 0),
+        z: z + (spread ? rand(-spread, spread) : 0),
         vx: rand(-speed, speed), vy: rand(0.5, speed + 1.5), vz: rand(-speed, speed),
         life: rand(0.3, 0.8), tile,
         u: Math.random() * 0.7, v: Math.random() * 0.7,

@@ -653,7 +653,7 @@ const Game = {
     // crack overlay
     let crackV = null;
     if (p.mining && p.mining.total > 0.1) {
-      const stage = clamp(Math.floor(p.mining.progress / p.mining.total * 4), 0, 3);
+      const stage = clamp(Math.floor(p.mining.progress / p.mining.total * 10), 0, 9);
       crackV = [];
       const ti = TileIdx['crack' + stage];
       const { x, y, z } = p.mining;
@@ -663,7 +663,7 @@ const Game = {
         for (let i = 0; i < 4; i++) {
           const c = f.c[i];
           const [u, v] = tileUVc(ti, UVQ[i][0], UVQ[i][1]);
-          vtx.push([x + c[0], y + c[1], z + c[2], u, v, 1, 0]);
+          vtx.push([x + c[0], y + c[1], z + c[2], u, v, 1, 1]);
         }
         pushQuad(crackV, vtx);
       }
