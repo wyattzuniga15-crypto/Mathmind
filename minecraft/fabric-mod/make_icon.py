@@ -206,6 +206,76 @@ BEACON = [
     [v, v, GK, GK, GK, GK, GK, GK, GK, GK, GK, GK, GK, GK, v, v],
 ]
 
+# Fast Forward: hot orange, the dial running away with itself.
+FAST_CLOCK = recolour(CLOCK, {
+    P: (255, 214, 150, 255),   # face, hot
+    g: (196, 92, 24, 255),     # rim, fired copper
+    C: (255, 176, 80, 255),
+    c: (255, 236, 196, 255),
+    d: (110, 34, 4, 255),      # hands
+})
+
+# Ore Sense: a dowsing lens over a seam of ore, colours matching the particles
+# the pulse actually draws so the icon reads as a legend for it.
+o_ = (0, 0, 0, 0)
+oK = (32, 30, 40, 255)     # outline
+oS = (86, 88, 100, 255)    # stone
+oS2 = (116, 118, 132, 255) # stone, lit
+oD = (110, 240, 230, 255)  # diamond
+oE = (86, 220, 110, 255)   # emerald
+oG = (250, 200, 70, 255)   # gold
+oR = (232, 78, 78, 255)    # redstone
+oL = (200, 240, 255, 140)  # lens glass
+oB = (176, 182, 196, 255)  # lens rim
+
+ORE = [
+    [o_, o_, o_, oK, oK, oK, oK, oK, oK, o_, o_, o_, o_, o_, o_, o_],
+    [o_, o_, oK, oS, oS2, oS, oS, oS2, oS, oK, o_, o_, o_, o_, o_, o_],
+    [o_, oK, oS, oS2, oD, oD, oS, oS, oS2, oS, oK, o_, o_, o_, o_, o_],
+    [o_, oK, oS, oS, oD, oD, oS, oE, oE, oS, oS, oK, o_, o_, o_, o_],
+    [oK, oS, oS2, oS, oS, oS, oS, oE, oE, oS, oS2, oS, oK, o_, o_, o_],
+    [oK, oS, oS, oB, oB, oB, oB, oS, oS, oS, oS, oS, oK, o_, o_, o_],
+    [oK, oS2, oB, oL, oL, oL, oL, oB, oS, oG, oG, oS, oK, o_, o_, o_],
+    [oK, oS, oB, oL, oD, oD, oL, oB, oS, oG, oG, oS2, oK, o_, o_, o_],
+    [oK, oS, oB, oL, oD, oD, oL, oB, oS, oS, oS, oS, oK, o_, o_, o_],
+    [oK, oS, oB, oL, oL, oL, oL, oB, oS2, oS, oS, oS, oK, o_, o_, o_],
+    [oK, oS2, oS, oB, oB, oB, oB, oB, oS, oS, oR, oS, oK, o_, o_, o_],
+    [o_, oK, oS, oS, oS, oS, oS, oB, oB, oS, oR, oS, oK, o_, o_, o_],
+    [o_, oK, oS, oR, oS, oS, oS, oS, oB, oB, oS, oS, oK, o_, o_, o_],
+    [o_, o_, oK, oR, oS, oS, oS, oS, oS, oB, oB, oK, o_, o_, o_, o_],
+    [o_, o_, o_, oK, oK, oS, oS, oS, oK, oK, oB, oB, o_, o_, o_, o_],
+    [o_, o_, o_, o_, o_, oK, oK, oK, o_, o_, o_, oB, o_, o_, o_, o_],
+]
+
+# Bottled Chunk: a glass flask with a cube of world floating inside it.
+b_ = (0, 0, 0, 0)
+bK = (36, 44, 56, 255)      # outline
+bG = (150, 196, 214, 190)   # glass
+bH = (216, 240, 248, 220)   # glass highlight
+bC = (128, 88, 52, 255)     # cork
+bD = (96, 72, 46, 255)      # dirt in the cube
+bV = (96, 168, 74, 255)     # grass top
+bT = (120, 122, 126, 255)   # stone in the cube
+
+BOTTLE = [
+    [b_, b_, b_, b_, b_, b_, bK, bK, bK, b_, b_, b_, b_, b_, b_, b_],
+    [b_, b_, b_, b_, b_, bK, bC, bC, bC, bK, b_, b_, b_, b_, b_, b_],
+    [b_, b_, b_, b_, b_, bK, bC, bC, bC, bK, b_, b_, b_, b_, b_, b_],
+    [b_, b_, b_, b_, b_, bK, bG, bH, bG, bK, b_, b_, b_, b_, b_, b_],
+    [b_, b_, b_, b_, bK, bG, bG, bH, bG, bG, bK, b_, b_, b_, b_, b_],
+    [b_, b_, b_, bK, bG, bG, bH, bG, bG, bG, bG, bK, b_, b_, b_, b_],
+    [b_, b_, bK, bG, bH, bG, bG, bG, bG, bG, bG, bG, bK, b_, b_, b_],
+    [b_, bK, bG, bH, bG, bV, bV, bV, bV, bG, bG, bG, bG, bK, b_, b_],
+    [b_, bK, bG, bH, bG, bD, bD, bD, bD, bG, bG, bG, bG, bK, b_, b_],
+    [b_, bK, bG, bG, bG, bD, bD, bD, bD, bG, bG, bG, bG, bK, b_, b_],
+    [b_, bK, bG, bG, bG, bT, bT, bT, bT, bG, bG, bG, bG, bK, b_, b_],
+    [b_, bK, bG, bG, bG, bG, bG, bG, bG, bG, bG, bG, bG, bK, b_, b_],
+    [b_, bK, bG, bG, bG, bG, bG, bG, bG, bG, bG, bG, bG, bK, b_, b_],
+    [b_, b_, bK, bG, bG, bG, bG, bG, bG, bG, bG, bG, bK, b_, b_, b_],
+    [b_, b_, b_, bK, bK, bG, bG, bG, bG, bG, bK, bK, b_, b_, b_, b_],
+    [b_, b_, b_, b_, b_, bK, bK, bK, bK, bK, b_, b_, b_, b_, b_, b_],
+]
+
 
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
@@ -213,7 +283,10 @@ if __name__ == "__main__":
                           ("time_stop_clock", STOP_CLOCK),
                           ("slow_time_clock", SLOW_CLOCK),
                           ("echo_ghost", GHOST),
-                          ("echo_beacon", BEACON)):
+                          ("echo_beacon", BEACON),
+                          ("fast_forward_clock", FAST_CLOCK),
+                          ("ore_sense", ORE),
+                          ("bottled_chunk", BOTTLE)):
         out = art / f"{name}.png"
         assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
         assert len(pixels) == 16, f"{name} is not 16 tall"

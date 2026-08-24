@@ -54,8 +54,23 @@ public final class TimeControl {
         return true;
     }
 
+    /** Run the world faster than normal. Returns false if time is already altered. */
+    public static boolean fast(MinecraftServer server, int seconds, float rate) {
+        return retime(server, seconds, rate);
+    }
+
     /** Run the world at a fraction of normal speed. Returns false if time is already altered. */
     public static boolean slow(MinecraftServer server, int seconds, float rate) {
+        return retime(server, seconds, rate);
+    }
+
+    /**
+     * Speeding up and slowing down are the same operation with the rate either
+     * side of twenty, and the countdown maths is the part that has to be right
+     * in both directions — so there is one implementation rather than two that
+     * could drift.
+     */
+    private static boolean retime(MinecraftServer server, int seconds, float rate) {
         if (active) {
             return false;
         }
@@ -63,9 +78,9 @@ public final class TimeControl {
         int mine = ++generation;
         server.getTickManager().setTickRate(rate);
         // The Scheduler counts server ticks, and those now arrive `rate` times
-        // a second rather than twenty. Waiting the usual number of ticks would
-        // stretch a ten-second slowdown into fifty, so the wait is measured on
-        // the slowed clock instead.
+        // a second rather than twenty. Waiting the usual number would stretch a
+        // ten-second slowdown into fifty — and cut a ten-second speed-up to
+        // two. Measuring the wait on the altered clock gets both right.
         int ticks = Math.max(1, Math.round(seconds * rate));
         Scheduler.after(ticks, () -> {
             if (mine == generation) {

@@ -1,11 +1,12 @@
 # Orbital Arsenal — Fabric mod source
 
-Eleven genuinely registered items — `orbital:strike_cannon`,
+Fourteen genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
 `orbital:orbital_laser`, `orbital:rewind_clock`,
 `orbital:potato_bomb`,
 `orbital:time_stop_clock`, `orbital:slow_time_clock`,
-`orbital:echo_ghost`, `orbital:echo_beacon` — with their own textures,
+`orbital:echo_ghost`, `orbital:echo_beacon`,
+`orbital:fast_forward_clock`, `orbital:ore_sense`, `orbital:bottled_chunk` — with their own textures,
 names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
@@ -265,6 +266,37 @@ oldest keeps the crowd the size it is rather than simply refusing to grow.
 
 The ghosts are quiet: they walk your path and glow, and that is all. They do
 not fight.
+
+**Fast Forward Clock** — the third clock, and the one that builds rather than
+waits: **five times speed for fifteen seconds**. Crops mature while you watch, a
+furnace burns through a stack, mobs breed, night passes. Fifteen rather than the
+slow clock's twenty because this is the expensive direction — the server really
+does five times the work per second while it runs.
+
+**Ore Sense** — a pulse that lights every ore within **32 blocks through solid
+stone** for ten seconds. The only item here that takes nothing away.
+
+Colour comes from picking a different vanilla particle per ore rather than
+tinting one: green villager motes for emerald, blue soul flame for lapis, white
+end rod for diamond. Tinted dust is the obvious way and needs a particle that
+carries a colour parameter — and parameterised particles have changed shape more
+than once between versions. These take no parameters at all, so they cannot
+break that way.
+
+**Bottled Chunk** — copy and paste the world. Right-click to draw a **16×16×16
+region** into the bottle, crouch and right-click elsewhere to set it back down.
+Steal a village house, carry it a thousand blocks, and rebuild it with the
+torches still lit.
+
+Copying leaves the original alone, which is the useful default by a wide
+margin — a bottle that ate what it copied would make every mistake permanent.
+Pasting goes through the same record the Rewind Clock reads, so a paste in the
+wrong place is one right-click away from gone.
+
+The bottle holds one region per player rather than storing it in the item.
+Putting four thousand block states inside an item stack means custom item
+components, and those have been reworked more than once recently; this needs
+none of it, at the cost of the copy being forgotten when the server stops.
 
 ## How it's put together
 

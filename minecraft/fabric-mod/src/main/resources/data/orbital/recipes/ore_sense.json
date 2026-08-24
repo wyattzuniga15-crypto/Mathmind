@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["GAG", "ASA", "GAG"],
+  "key": {
+    "G": { "item": "minecraft:glass" },
+    "A": { "item": "minecraft:amethyst_shard" },
+    "S": { "item": "minecraft:spyglass" }
+  },
+  "result": { "id": "orbital:ore_sense", "count": 1 }
+}

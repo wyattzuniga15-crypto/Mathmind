@@ -3,8 +3,11 @@ package com.orbital.arsenal;
 import com.orbital.arsenal.items.BlackHoleItem;
 import com.orbital.arsenal.items.KamehamehaItem;
 import com.orbital.arsenal.items.OrbitalLaserItem;
+import com.orbital.arsenal.items.BottledChunkItem;
 import com.orbital.arsenal.items.EchoBeaconItem;
 import com.orbital.arsenal.items.EchoGhostItem;
+import com.orbital.arsenal.items.FastForwardClockItem;
+import com.orbital.arsenal.items.OreSenseItem;
 import com.orbital.arsenal.items.PotatoBombItem;
 import com.orbital.arsenal.items.SlowTimeClockItem;
 import com.orbital.arsenal.items.TimeStopClockItem;
@@ -32,6 +35,9 @@ public final class ModItems {
     public static Item SLOW_TIME_CLOCK;
     public static Item ECHO_GHOST;
     public static Item ECHO_BEACON;
+    public static Item FAST_FORWARD_CLOCK;
+    public static Item ORE_SENSE;
+    public static Item BOTTLED_CHUNK;
     public static Item REWIND_CLOCK;
 
     /**
@@ -67,6 +73,9 @@ public final class ModItems {
         SLOW_TIME_CLOCK = register("slow_time_clock", SlowTimeClockItem::new);
         ECHO_GHOST = register("echo_ghost", EchoGhostItem::new);
         ECHO_BEACON = register("echo_beacon", EchoBeaconItem::new);
+        FAST_FORWARD_CLOCK = register("fast_forward_clock", FastForwardClockItem::new);
+        ORE_SENSE = register("ore_sense", OreSenseItem::new);
+        BOTTLED_CHUNK = register("bottled_chunk", BottledChunkItem::new);
         REWIND_CLOCK = register("rewind_clock", RewindClockItem::new);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
@@ -80,6 +89,9 @@ public final class ModItems {
             entries.add(SLOW_TIME_CLOCK);
             entries.add(ECHO_GHOST);
             entries.add(ECHO_BEACON);
+            entries.add(FAST_FORWARD_CLOCK);
+            entries.add(ORE_SENSE);
+            entries.add(BOTTLED_CHUNK);
             entries.add(REWIND_CLOCK);
         });
         return registered;
