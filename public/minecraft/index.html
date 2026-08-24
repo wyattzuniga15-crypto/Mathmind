@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>BlockCraft — Survival</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Segoe UI',system-ui,sans-serif; }
+  #glcanvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .pixel { image-rendering:pixelated; image-rendering:crisp-edges; }
+
+  /* ---------- shared ---------- */
+  .screen { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:20; }
+  .hidden { display:none !important; }
+  .mcbtn {
+    font-family:inherit; font-weight:700; font-size:20px; letter-spacing:.5px;
+    color:#fff; text-shadow:2px 2px #383838;
+    background:#6f6f6f; border:2px solid #000; outline:2px solid #fff8; outline-offset:-4px;
+    padding:12px 0; width:340px; margin:6px; cursor:pointer;
+  }
+  .mcbtn:hover { background:#7f8cff; }
+  .mcbtn:active { transform:translateY(1px); }
+  .mcbtn:disabled { color:#aaa; background:#4a4a4a; cursor:default; }
+
+  /* ---------- title ---------- */
+  #title { background:#000; z-index:40; }
+  #title-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(2px) brightness(.6); }
+  #logo { position:relative; font-size:72px; font-weight:900; color:#fff; letter-spacing:4px;
+          text-shadow:4px 4px 0 #3a3a3a, 0 0 30px #0008; margin-bottom:6px; }
+  #logo span { color:#7ec74f; }
+  #tagline { position:relative; color:#ffff55; font-size:15px; font-weight:700; text-shadow:2px 2px #3a3a3a;
+             transform:rotate(-6deg); margin-bottom:44px; animation:pulse 1.6s infinite; }
+  @keyframes pulse { 50% { transform:rotate(-6deg) scale(1.09); } }
+  #title .mcbtn { position:relative; font-size:24px; padding:16px 0; width:400px; }
+  #title-foot { position:absolute; bottom:10px; width:100%; display:flex; justify-content:space-between;
+                padding:0 14px; color:#ddd; font-size:12px; text-shadow:1px 1px #000; }
+
+  /* ---------- HUD ---------- */
+  #hud { position:absolute; inset:0; pointer-events:none; z-index:10; }
+  #crosshair { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+               font-size:22px; color:#fff; mix-blend-mode:difference; font-weight:400; }
+  #hotbar { position:absolute; bottom:6px; left:50%; transform:translateX(-50%); display:flex; }
+  .slot { width:48px; height:48px; background:#0006; border:2px solid #555;
+          outline:1px solid #000; position:relative; }
+  .slot.sel { border-color:#fff; z-index:1; }
+  .slot canvas { position:absolute; left:4px; top:4px; width:36px; height:36px; }
+  .slot .cnt { position:absolute; right:3px; bottom:1px; color:#fff; font-size:15px; font-weight:700;
+               text-shadow:1px 1px #000; pointer-events:none; }
+  .slot .dur { position:absolute; left:4px; bottom:4px; height:3px; background:#3f3; pointer-events:none; }
+  #stats { position:absolute; bottom:58px; left:50%; transform:translateX(-50%); width:440px;
+           display:flex; justify-content:space-between; font-size:19px; text-shadow:1px 1px #000; }
+  #hearts { letter-spacing:-2px; }
+  #hunger { letter-spacing:-2px; }
+  #air { position:absolute; bottom:82px; left:50%; transform:translateX(-50%); width:440px;
+         text-align:right; font-size:17px; text-shadow:1px 1px #000; letter-spacing:-1px; }
+  #itemname { position:absolute; bottom:110px; width:100%; text-align:center; color:#fff;
+              font-size:18px; font-weight:600; text-shadow:2px 2px #000; opacity:0; transition:opacity .4s; }
+  #debug { position:absolute; top:8px; left:8px; color:#fff; font:13px/1.5 monospace;
+           text-shadow:1px 1px #000; white-space:pre; display:none; }
+  #vignette { position:absolute; inset:0; box-shadow:inset 0 0 140px #000a; opacity:0; transition:opacity .3s; }
+  #hurtflash { position:absolute; inset:0; background:#f004; opacity:0; }
+  #msg { position:absolute; top:20%; width:100%; text-align:center; color:#ff5; font-size:22px;
+         font-weight:700; text-shadow:2px 2px #000; opacity:0; transition:opacity .5s; }
+
+  /* ---------- inventory / crafting / furnace ---------- */
+  #wininv { background:#0007; z-index:30; cursor:default; }
+  #invpanel { background:#c6c6c6; border:3px solid; border-color:#fff #555 #555 #fff;
+              border-radius:3px; padding:14px; box-shadow:0 10px 40px #000a; }
+  #invpanel h3 { color:#3f3f3f; font-size:15px; margin:2px 0 8px 2px; font-weight:600; }
+  .grid { display:grid; grid-template-columns:repeat(9,46px); grid-auto-rows:46px; gap:2px; }
+  .igrid { display:grid; gap:2px; }
+  .islot { width:46px; height:46px; background:#8b8b8b; border:2px solid; border-color:#373737 #fff #fff #373737;
+           position:relative; cursor:pointer; }
+  .islot:hover::after { content:''; position:absolute; inset:0; background:#fff5; }
+  .islot canvas { position:absolute; left:3px; top:3px; width:36px; height:36px; pointer-events:none; }
+  .islot .cnt { position:absolute; right:2px; bottom:0; color:#fff; font-size:14px; font-weight:700;
+                text-shadow:1px 1px #000; pointer-events:none; }
+  .islot .dur { position:absolute; left:3px; bottom:3px; height:3px; background:#3f3; pointer-events:none; }
+  #craftzone { display:flex; align-items:center; margin-bottom:10px; gap:10px; }
+  .arrow { font-size:30px; color:#4a4a4a; }
+  #furnzone { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  #furncol { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  #fireicon { font-size:22px; filter:grayscale(1); }
+  #fireicon.lit { filter:none; }
+  #furnprog { width:60px; height:8px; background:#8b8b8b; border:1px solid #373737; }
+  #furnprog div { height:100%; background:#fff; width:0%; }
+  #ghost { position:fixed; width:36px; height:36px; pointer-events:none; z-index:50; display:none; }
+  #ghost .cnt { position:absolute; right:-2px; bottom:-4px; color:#fff; font-size:14px; font-weight:700; text-shadow:1px 1px #000; }
+  #tooltip { position:fixed; background:#1a0a2ae8; color:#fff; border:2px solid #25015b; border-radius:3px;
+             padding:4px 8px; font-size:14px; pointer-events:none; z-index:51; display:none; }
+
+  /* ---------- pause / death ---------- */
+  #pause { background:#0008; z-index:35; }
+  #pause h2, #death h2 { color:#fff; font-size:34px; text-shadow:2px 2px #000; margin-bottom:24px; }
+  #death { background:#6d020288; z-index:35; }
+  #death h2 { font-size:44px; }
+  #deathscore { color:#fff; font-size:18px; text-shadow:1px 1px #000; margin-bottom:20px; }
+  #loading { background:#222; z-index:45; color:#fff; }
+  #loading h2 { font-size:26px; text-shadow:2px 2px #000; margin-bottom:18px; }
+  #loadbar { width:400px; height:10px; background:#000; border:2px solid #888; }
+  #loadbar div { height:100%; width:0%; background:#7ec74f; }
+  #loadtip { margin-top:14px; color:#aaa; font-size:14px; }
+</style>
+</head>
+<body>
+<canvas id="glcanvas"></canvas>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="vignette"></div>
+  <div id="hurtflash"></div>
+  <div id="crosshair">+</div>
+  <div id="stats"><span id="hearts"></span><span id="hunger"></span></div>
+  <div id="air"></div>
+  <div id="hotbar"></div>
+  <div id="itemname"></div>
+  <div id="msg"></div>
+  <div id="debug"></div>
+</div>
+
+<!-- Inventory / crafting / furnace window -->
+<div id="wininv" class="screen hidden">
+  <div id="invpanel">
+    <h3 id="invtitle">Crafting</h3>
+    <div id="craftzone" class="hidden">
+      <div id="craftgrid" class="igrid"></div>
+      <div class="arrow">➜</div>
+      <div id="craftout"></div>
+    </div>
+    <div id="furnzone" class="hidden">
+      <div id="furncol">
+        <div id="furnin"></div>
+        <div id="fireicon">🔥</div>
+        <div id="furnfuel"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="arrow">➜</div><div id="furnprog"><div></div></div>
+      </div>
+      <div id="furnout"></div>
+    </div>
+    <h3>Inventory</h3>
+    <div id="maingrid" class="grid" style="margin-bottom:10px"></div>
+    <div id="bargrid" class="grid"></div>
+  </div>
+</div>
+<div id="ghost"><canvas class="pixel" width="16" height="16"></canvas><span class="cnt"></span></div>
+<div id="tooltip"></div>
+
+<!-- Pause -->
+<div id="pause" class="screen hidden">
+  <h2>Game Paused</h2>
+  <button class="mcbtn" id="btnresume">Back to Game</button>
+  <button class="mcbtn" id="btnquit">Save &amp; Quit to Title</button>
+</div>
+
+<!-- Death -->
+<div id="death" class="screen hidden">
+  <h2>You Died!</h2>
+  <div id="deathscore"></div>
+  <button class="mcbtn" id="btnrespawn">Respawn</button>
+</div>
+
+<!-- Loading -->
+<div id="loading" class="screen hidden">
+  <h2>Building terrain…</h2>
+  <div id="loadbar"><div></div></div>
+  <div id="loadtip">Generating the world around you</div>
+</div>
+
+<!-- Title -->
+<div id="title" class="screen">
+  <canvas id="title-bg"></canvas>
+  <div id="logo">BLOCK<span>CRAFT</span></div>
+  <div id="tagline">Survive the night!</div>
+  <button class="mcbtn" id="btnplay">Play Survival</button>
+  <div id="title-foot"><span>BlockCraft — private build</span><span id="worldinfo"></span></div>
+</div>
+
+<script src="util.js"></script>
+<script src="blocks.js"></script>
+<script src="atlas.js"></script>
+<script src="world.js"></script>
+<script src="render.js"></script>
+<script src="entities.js"></script>
+<script src="player.js"></script>
+<script src="ui.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
