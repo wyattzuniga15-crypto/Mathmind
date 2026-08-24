@@ -8,5 +8,6 @@ import net.minecraft.world.World;
 public class EntityType<T extends Entity> {
     public static final EntityType<MobEntity> ALLAY = new EntityType<>();
     public static final EntityType<MobEntity> VEX = new EntityType<>();
+    public static final EntityType<MobEntity> RAVAGER = new EntityType<>();
     public T create(World world, SpawnReason reason) { return null; }
 }

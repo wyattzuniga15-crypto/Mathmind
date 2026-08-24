@@ -1,13 +1,14 @@
 # Orbital Arsenal — Fabric mod source
 
-Fifteen genuinely registered items — `orbital:strike_cannon`,
+Seventeen genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
 `orbital:orbital_laser`, `orbital:rewind_clock`,
 `orbital:potato_bomb`,
 `orbital:time_stop_clock`, `orbital:slow_time_clock`,
 `orbital:echo_ghost`, `orbital:echo_beacon`,
 `orbital:fast_forward_clock`, `orbital:ore_sense`, `orbital:bottled_chunk`,
-`orbital:portal_gun` — with their own textures,
+`orbital:portal_gun`,
+`orbital:chronarch_seal`, `orbital:chronarch_heart` — with their own textures,
 names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
@@ -319,6 +320,46 @@ server-side reposition: the client believes it is still where it was and simply
 walks back otherwise. The pairs are per player, so two people with portal guns
 never fire into each other's.
 
+## The Chronarch
+
+A boss that fights you with time. Right-click a **Chronarch Seal** to wake it —
+the seal is spent doing so, because a boss you can re-summon for free is an
+inconvenience rather than an event.
+
+Three phases, each turning one of this mod's own clocks against its owner:
+
+| health | what it does |
+|--------|--------------|
+| 100–66% | a straight fight |
+| 66–33%  | **slows you** while moving at full speed itself |
+| below 33% | **rewinds its own wounds**, clawing back damage every five seconds |
+
+**The last phase has an answer, and it is an item you already own.** A frozen
+world cannot rewind anything, and the Chronarch is part of the world even if it
+does not act like it — so holding it under the Time Stop Clock while you burst
+it down is how the fight is won rather than merely survived.
+
+Its health is not an attribute. Each tick the body's own health is compared
+with what it was, the shortfall is taken off a thousand-point pool kept here,
+and the body is healed straight back. That gives a boss-sized health bar out of
+nothing but `getHealth` and `setHealth` — stable for many versions — instead of
+an attribute registry that has been renamed twice recently. Nothing that hits
+it needs to know any of this.
+
+It wears a ravager. A genuinely custom monster needs a client-side entity
+renderer, which is a far larger piece of work than anything else here; the
+mechanics are real, the silhouette is borrowed.
+
+**Chronarch's Heart** — what it was doing to you, now yours. Right-click and
+you snap back to where you stood **ten seconds ago, with the health you had
+then**. Step off a cliff and undo it; walk into a fight that turns out to be a
+mistake and leave before you made it.
+
+It rewinds *you* and nothing else, which is what makes it something other than
+a smaller Rewind Clock — the world keeps whatever happened. Health comes back
+with position, because a rewind that returns you to the clifftop still dying of
+the fall is no rescue at all.
+
 ## How it's put together
 
 ```
@@ -330,6 +371,7 @@ weapons/Shells.java     TNT that detonates on impact rather than on a timer
 time/TimeControl.java   freezing and slowing, through the vanilla tick manager
 echo/Echoes.java        rolling movement memory, and the ghosts that replay it
 portal/Portals.java     the linked pair, and the momentum that survives them
+boss/Chronarch.java     the fight: phases, the health pool, and the rewind
 weapons/Strikes.java    aiming, explosions, particles
 items/*.java            one class per weapon
 time/Journal.java       the rolling record the rewind clock replays

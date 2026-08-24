@@ -1,6 +1,7 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.companion.CompanionSetup;
+import com.orbital.arsenal.boss.Chronarch;
 import com.orbital.arsenal.echo.Echoes;
 import com.orbital.arsenal.portal.Portals;
 import com.orbital.arsenal.time.Journal;
@@ -31,6 +32,7 @@ public class OrbitalArsenal implements ModInitializer {
             Souls.tick(server);
             Echoes.tick(server);
             Portals.tick(server);
+            Chronarch.tick(server);
             CompanionSetup.tick();
         });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damage) -> Souls.died(entity));

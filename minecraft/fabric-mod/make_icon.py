@@ -308,6 +308,65 @@ GUN = [
     [p_, p_, p_, p_, pK, p_, p_, p_, p_, p_, p_, pK, p_, p_, p_, p_],
 ]
 
+# Chronarch Seal: a cracked purple sigil disc — a thing you break to wake
+# something. Deliberately not clock-shaped: it summons the boss, it does not
+# manipulate time, and four clocks in one inventory is three too many.
+z_ = (0, 0, 0, 0)
+zK = (28, 18, 42, 255)      # outline
+zS = (74, 44, 108, 255)     # stone, shadow
+zM = (108, 70, 150, 255)    # stone
+zL = (146, 108, 196, 255)   # stone, lit
+zG = (216, 150, 255, 255)   # glyph glow
+zC = (255, 232, 255, 255)   # glyph core
+
+SEAL = [
+    [z_, z_, z_, z_, z_, zK, zK, zK, zK, zK, zK, z_, z_, z_, z_, z_],
+    [z_, z_, z_, zK, zK, zM, zL, zL, zL, zL, zM, zK, zK, z_, z_, z_],
+    [z_, z_, zK, zM, zL, zL, zM, zG, zG, zM, zL, zL, zM, zK, z_, z_],
+    [z_, zK, zM, zL, zM, zG, zG, zC, zC, zG, zG, zM, zL, zM, zK, z_],
+    [z_, zK, zL, zM, zG, zC, zM, zG, zG, zM, zC, zG, zM, zL, zK, z_],
+    [zK, zM, zL, zG, zC, zM, zM, zK, zK, zM, zM, zC, zG, zL, zM, zK],
+    [zK, zM, zM, zG, zM, zM, zK, zS, zS, zK, zM, zM, zG, zM, zM, zK],
+    [zK, zL, zG, zC, zG, zK, zS, zS, zS, zS, zK, zG, zC, zG, zL, zK],
+    [zK, zL, zG, zC, zG, zK, zS, zS, zS, zS, zK, zG, zC, zG, zL, zK],
+    [zK, zM, zM, zG, zM, zM, zK, zS, zS, zK, zM, zM, zG, zM, zM, zK],
+    [zK, zM, zL, zG, zC, zM, zM, zK, zK, zM, zM, zC, zG, zL, zM, zK],
+    [z_, zK, zL, zM, zG, zC, zM, zG, zG, zM, zC, zG, zM, zL, zK, z_],
+    [z_, zK, zM, zL, zM, zG, zG, zC, zC, zG, zG, zM, zL, zM, zK, z_],
+    [z_, z_, zK, zM, zL, zL, zM, zG, zG, zM, zL, zL, zM, zK, z_, z_],
+    [z_, z_, z_, zK, zK, zM, zL, zL, zL, zL, zM, zK, zK, z_, z_, z_],
+    [z_, z_, z_, z_, z_, zK, zK, zK, zK, zK, zK, z_, z_, z_, z_, z_],
+]
+
+# Chronarch's Heart: a beating violet core caged in dark metal, still ticking.
+h_ = (0, 0, 0, 0)
+hK = (30, 20, 40, 255)      # outline
+hC = (58, 46, 74, 255)      # cage
+hc = (96, 82, 118, 255)     # cage, lit
+hD = (128, 40, 150, 255)    # heart, deep
+hM = (188, 76, 210, 255)    # heart
+hL = (232, 140, 250, 255)   # heart, lit
+hW = (255, 226, 255, 255)   # core
+
+HEART = [
+    [h_, h_, h_, hK, hK, h_, h_, h_, h_, hK, hK, h_, h_, h_, h_, h_],
+    [h_, h_, hK, hc, hC, hK, h_, h_, hK, hC, hc, hK, h_, h_, h_, h_],
+    [h_, hK, hC, hD, hM, hD, hK, hK, hD, hM, hD, hC, hK, h_, h_, h_],
+    [hK, hC, hD, hM, hL, hM, hD, hD, hM, hL, hM, hD, hC, hK, h_, h_],
+    [hK, hc, hM, hL, hW, hL, hM, hM, hL, hW, hL, hM, hc, hK, h_, h_],
+    [hK, hC, hM, hL, hL, hM, hM, hM, hM, hL, hL, hM, hC, hK, h_, h_],
+    [hK, hC, hD, hM, hM, hM, hW, hW, hM, hM, hM, hD, hC, hK, h_, h_],
+    [h_, hK, hD, hM, hM, hM, hW, hW, hM, hM, hM, hD, hK, h_, h_, h_],
+    [h_, hK, hC, hD, hM, hM, hM, hM, hM, hM, hD, hC, hK, h_, h_, h_],
+    [h_, h_, hK, hC, hD, hM, hM, hM, hM, hD, hC, hK, h_, h_, h_, h_],
+    [h_, h_, hK, hc, hC, hD, hM, hM, hD, hC, hc, hK, h_, h_, h_, h_],
+    [h_, h_, h_, hK, hC, hC, hD, hD, hC, hC, hK, h_, h_, h_, h_, h_],
+    [h_, h_, h_, h_, hK, hC, hC, hC, hC, hK, h_, h_, h_, h_, h_, h_],
+    [h_, h_, h_, h_, h_, hK, hC, hC, hK, h_, h_, h_, h_, h_, h_, h_],
+    [h_, h_, h_, h_, h_, h_, hK, hK, h_, h_, h_, h_, h_, h_, h_, h_],
+    [h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_],
+]
+
 
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
@@ -319,7 +378,9 @@ if __name__ == "__main__":
                           ("fast_forward_clock", FAST_CLOCK),
                           ("ore_sense", ORE),
                           ("bottled_chunk", BOTTLE),
-                          ("portal_gun", GUN)):
+                          ("portal_gun", GUN),
+                          ("chronarch_seal", SEAL),
+                          ("chronarch_heart", HEART)):
         out = art / f"{name}.png"
         assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
         assert len(pixels) == 16, f"{name} is not 16 tall"

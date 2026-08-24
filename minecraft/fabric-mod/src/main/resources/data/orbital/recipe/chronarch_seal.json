@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["OAO", "ANA", "OAO"],
+  "key": {
+    "O": { "item": "minecraft:obsidian" },
+    "A": { "item": "minecraft:amethyst_shard" },
+    "N": { "item": "minecraft:nether_star" }
+  },
+  "result": { "id": "orbital:chronarch_seal", "count": 1 }
+}

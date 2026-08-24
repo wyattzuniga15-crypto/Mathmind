@@ -13,5 +13,7 @@
   "item.orbital.fast_forward_clock": "Fast Forward Clock",
   "item.orbital.ore_sense": "Ore Sense",
   "item.orbital.bottled_chunk": "Bottled Chunk",
-  "item.orbital.portal_gun": "Portal Gun"
+  "item.orbital.portal_gun": "Portal Gun",
+  "item.orbital.chronarch_seal": "Chronarch Seal",
+  "item.orbital.chronarch_heart": "Chronarch's Heart"
 }

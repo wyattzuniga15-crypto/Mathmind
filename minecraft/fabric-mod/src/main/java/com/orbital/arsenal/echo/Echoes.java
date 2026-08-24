@@ -39,8 +39,8 @@ public final class Echoes {
      */
     private static final int MAX_GHOSTS = 24;
 
-    /** One recorded moment: where you were and which way you faced. */
-    private record Frame(double x, double y, double z, float yaw, float pitch) {}
+    /** One recorded moment: where you were, which way you faced, and how you were doing. */
+    private record Frame(double x, double y, double z, float yaw, float pitch, float health) {}
 
     private static final class Ghost {
         final MobEntity body;
@@ -122,7 +122,7 @@ public final class Echoes {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             Deque<Frame> memory = MEMORIES.computeIfAbsent(player, key -> new ArrayDeque<>());
             memory.addLast(new Frame(player.getX(), player.getY(), player.getZ(),
-                    player.getYaw(), player.getPitch()));
+                    player.getYaw(), player.getPitch(), player.getHealth()));
             while (memory.size() > MEMORY) {
                 memory.removeFirst();
             }
@@ -155,6 +155,21 @@ public final class Echoes {
             }
             return false;
         });
+    }
+
+    /**
+     * The oldest moment still remembered for this player, as
+     * {x, y, z, yaw, pitch, health} — or null if there is not enough recorded
+     * yet. This is what the Chronarch's Heart rewinds you to.
+     */
+    public static double[] furthestBack(ServerPlayerEntity player) {
+        Deque<Frame> memory = MEMORIES.get(player);
+        if (memory == null || memory.size() < 20) {
+            return null;
+        }
+        Frame frame = memory.peekFirst();
+        return new double[] {frame.x(), frame.y(), frame.z(),
+                frame.yaw(), frame.pitch(), frame.health()};
     }
 
     /** Used by the beacon to keep its own countdown in step with the tick loop. */

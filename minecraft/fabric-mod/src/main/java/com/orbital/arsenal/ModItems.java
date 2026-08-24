@@ -4,6 +4,8 @@ import com.orbital.arsenal.items.BlackHoleItem;
 import com.orbital.arsenal.items.KamehamehaItem;
 import com.orbital.arsenal.items.OrbitalLaserItem;
 import com.orbital.arsenal.items.BottledChunkItem;
+import com.orbital.arsenal.items.ChronarchHeartItem;
+import com.orbital.arsenal.items.ChronarchSealItem;
 import com.orbital.arsenal.items.EchoBeaconItem;
 import com.orbital.arsenal.items.EchoGhostItem;
 import com.orbital.arsenal.items.FastForwardClockItem;
@@ -40,6 +42,8 @@ public final class ModItems {
     public static Item ORE_SENSE;
     public static Item BOTTLED_CHUNK;
     public static Item PORTAL_GUN;
+    public static Item CHRONARCH_SEAL;
+    public static Item CHRONARCH_HEART;
     public static Item REWIND_CLOCK;
 
     /**
@@ -79,6 +83,8 @@ public final class ModItems {
         ORE_SENSE = register("ore_sense", OreSenseItem::new);
         BOTTLED_CHUNK = register("bottled_chunk", BottledChunkItem::new);
         PORTAL_GUN = register("portal_gun", PortalGunItem::new);
+        CHRONARCH_SEAL = register("chronarch_seal", ChronarchSealItem::new);
+        CHRONARCH_HEART = register("chronarch_heart", ChronarchHeartItem::new);
         REWIND_CLOCK = register("rewind_clock", RewindClockItem::new);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
@@ -96,6 +102,8 @@ public final class ModItems {
             entries.add(ORE_SENSE);
             entries.add(BOTTLED_CHUNK);
             entries.add(PORTAL_GUN);
+            entries.add(CHRONARCH_SEAL);
+            entries.add(CHRONARCH_HEART);
             entries.add(REWIND_CLOCK);
         });
         return registered;
