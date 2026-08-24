@@ -12,6 +12,9 @@
   "entrypoints": {
     "main": [
       "com.orbital.arsenal.OrbitalArsenal"
+    ],
+    "client": [
+      "com.orbital.arsenal.client.OrbitalArsenalClient"
     ]
   },
   "mixins": [

@@ -3,6 +3,7 @@ package com.orbital.arsenal;
 import com.orbital.arsenal.companion.CompanionSetup;
 import com.orbital.arsenal.boss.Chronarch;
 import com.orbital.arsenal.echo.Echoes;
+import com.orbital.arsenal.entity.ModEntities;
 import com.orbital.arsenal.portal.Portals;
 import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.time.Souls;
@@ -21,6 +22,7 @@ public class OrbitalArsenal implements ModInitializer {
         // Items first, and nothing that can throw before them. If this method
         // fails partway, Fabric refuses to load the mod at all — so anything
         // optional that runs earlier can take every weapon down with it.
+        ModEntities.register();
         int registered = ModItems.register();
         LOGGER.info("Orbital Arsenal loaded — {} items registered", registered);
 

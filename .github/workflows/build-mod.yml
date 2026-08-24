@@ -180,6 +180,11 @@ jobs:
             net.minecraft.client.model.ModelTransform \
             net.minecraft.client.model.TexturedModelData \
             net.minecraft.client.render.entity.model.EntityModelLayer \
+            net.minecraft.client.model.Model \
+            net.minecraft.client.model.ModelPartData \
+            net.minecraft.entity.EntityType$Builder \
+            net.minecraft.entity.attribute.EntityAttributes \
+            net.minecraft.entity.attribute.DefaultAttributeContainer$Builder \
             net.minecraft.entity.mob.HostileEntity \
             net.minecraft.entity.attribute.DefaultAttributeContainer \
             net.minecraft.entity.EntityDimensions ; do
