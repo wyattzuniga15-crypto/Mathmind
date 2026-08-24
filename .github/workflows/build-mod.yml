@@ -143,6 +143,52 @@ jobs:
           chmod +x gradlew
           ./gradlew build --no-daemon --stacktrace
 
+      # Entity rendering was rebuilt around render states in 1.21.2, and the
+      # exact shapes are not something I can check from where this mod is
+      # written. Loom has just produced a remapped Minecraft jar with real
+      # signatures in it, so ask that rather than guess and burn build after
+      # build on it. Prints only; never fails the build.
+      - name: Dump the entity and rendering API
+        if: always()
+        working-directory: minecraft/fabric-mod
+        run: |
+          set +e
+          jar=$(find ~/.gradle/caches/fabric-loom .gradle -name '*.jar' 2>/dev/null \
+                | grep -iE 'minecraft.*(named|mapped)' | head -1)
+          if [ -z "$jar" ]; then
+            echo "could not find a remapped Minecraft jar; searching wider"
+            jar=$(find ~/.gradle/caches -name '*.jar' 2>/dev/null | while read -r f; do
+                    if unzip -l "$f" 2>/dev/null | grep -q 'net/minecraft/client/render/entity/EntityRenderer.class'; then
+                      echo "$f"; break
+                    fi
+                  done | head -1)
+          fi
+          echo "using: $jar"
+          [ -z "$jar" ] && exit 0
+
+          for cls in \
+            net.minecraft.client.render.entity.EntityRenderer \
+            net.minecraft.client.render.entity.MobEntityRenderer \
+            net.minecraft.client.render.entity.LivingEntityRenderer \
+            net.minecraft.client.render.entity.EntityRendererFactory \
+            net.minecraft.client.render.entity.model.EntityModel \
+            net.minecraft.client.render.entity.state.LivingEntityRenderState \
+            net.minecraft.client.render.entity.state.EntityRenderState \
+            net.minecraft.client.model.ModelPart \
+            net.minecraft.client.model.ModelData \
+            net.minecraft.client.model.ModelPartBuilder \
+            net.minecraft.client.model.ModelTransform \
+            net.minecraft.client.model.TexturedModelData \
+            net.minecraft.client.render.entity.model.EntityModelLayer \
+            net.minecraft.entity.mob.HostileEntity \
+            net.minecraft.entity.attribute.DefaultAttributeContainer \
+            net.minecraft.entity.EntityDimensions ; do
+            echo "=============================================================="
+            echo "### $cls"
+            javap -cp "$jar" "$cls" 2>&1 | head -45
+          done
+          exit 0
+
       - name: Show what was produced
         if: always()
         working-directory: minecraft/fabric-mod
