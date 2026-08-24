@@ -34,6 +34,13 @@ public final class ModItems {
     public static Item ECHO_BEACON;
     public static Item REWIND_CLOCK;
 
+    /**
+     * Counted as they go in rather than written down. A hardcoded total drifts
+     * the first time an item is added and then lies in the startup log, which
+     * is the one place it needs to be trustworthy.
+     */
+    private static int registered = 0;
+
     private ModItems() {}
 
     /**
@@ -45,10 +52,11 @@ public final class ModItems {
         Identifier id = Identifier.of(OrbitalArsenal.MOD_ID, name);
         RegistryKey<Item> key = RegistryKey.of(RegistryKeys.ITEM, id);
         Item item = factory.apply(new Item.Settings().registryKey(key).maxCount(1));
+        registered++;
         return Registry.register(Registries.ITEM, key, item);
     }
 
-    public static void register() {
+    public static int register() {
         STRIKE_CANNON = register("strike_cannon", StrikeCannonItem::new);
         TACTICAL_NUKE = register("tactical_nuke", TacticalNukeItem::new);
         KAMEHAMEHA = register("kamehameha", KamehamehaItem::new);
@@ -74,5 +82,6 @@ public final class ModItems {
             entries.add(ECHO_BEACON);
             entries.add(REWIND_CLOCK);
         });
+        return registered;
     }
 }

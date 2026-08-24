@@ -1,13 +1,12 @@
 package com.orbital.arsenal.companion;
 
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-import com.anthropic.models.beta.messages.MessageCreateParams;
 import com.orbital.arsenal.OrbitalArsenal;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -22,6 +21,10 @@ import net.minecraft.text.Text;
  * Runs entirely off the server thread. A request takes one to three seconds,
  * and the server thread is the game — blocking it would freeze the world for
  * every player until the reply came back. Tools hop back across in Task.
+ *
+ * Deliberately mentions no SDK type anywhere. Every one of those lives behind
+ * ClaudeLink, so a bundled library that fails to resolve at runtime can only
+ * break the conversation — never the mod that carries it.
  */
 public final class Brain {
     /**
@@ -41,13 +44,11 @@ public final class Brain {
     private static final Set<ServerPlayerEntity> BUSY = new HashSet<>();
 
     private static CompanionConfig config;
-    private static AnthropicClient client;
 
     private Brain() {}
 
     public static void configure(CompanionConfig loaded) {
         config = loaded;
-        client = null;
     }
 
     public static boolean ready() {
@@ -78,9 +79,12 @@ public final class Brain {
             String reply;
             try {
                 reply = converse(player, server, message);
-            } catch (RuntimeException error) {
+            } catch (Throwable error) {
+                // Throwable, not Exception: a bundled library that fails to
+                // resolve raises NoClassDefFoundError, which is an Error. That
+                // is precisely the failure this catch is here for.
                 OrbitalArsenal.LOGGER.error("companion request failed", error);
-                reply = "§c(couldn't reach Claude — check the log and your API key)";
+                reply = "§c(the companion is unavailable — see the log)";
             } finally {
                 Conversation.end();
             }
@@ -94,50 +98,15 @@ public final class Brain {
 
     private static String converse(ServerPlayerEntity player, MinecraftServer server, String message) {
         Conversation.begin(player, server);
-        if (client == null) {
-            client = AnthropicOkHttpClient.builder().apiKey(config.apiKey()).build();
-        }
-
-        MessageCreateParams.Builder params = MessageCreateParams.builder()
-                .model(config.model())
-                .maxTokens((long) config.maxTokens())
-                .putAdditionalHeader("anthropic-beta", "structured-outputs-2025-11-13")
-                .system(situation(player, server))
-                .addTool(Tools.FollowMe.class)
-                .addTool(Tools.Stay.class)
-                .addTool(Tools.ComeHere.class)
-                .addTool(Tools.GoTo.class)
-                .addTool(Tools.Mine.class)
-                .addTool(Tools.AttackNearby.class)
-                .addTool(Tools.GiveItem.class)
-                .addTool(Tools.FireWeapon.class);
-
         Deque<String[]> history = HISTORY.computeIfAbsent(player, key -> new ArrayDeque<>());
-        for (String[] turn : history) {
-            params.addUserMessage(turn[0]);
-            params.addAssistantMessage(turn[1]);
-        }
-        params.addUserMessage(message);
 
-        StringBuilder spoken = new StringBuilder();
-        // The runner drives the whole tool loop: it calls the API, runs any
-        // tool the model picks, feeds the result back, and repeats until the
-        // model has nothing left to do. Each message it yields is one turn.
-        for (var turn : client.beta().messages().toolRunner(params.build())) {
-            for (var block : turn.content()) {
-                block.text().ifPresent(text -> {
-                    if (!spoken.isEmpty()) {
-                        spoken.append(' ');
-                    }
-                    spoken.append(text.text());
-                });
-            }
-        }
-
-        String reply = spoken.toString().trim();
+        // The only call into SDK-touching code, and the caller wraps it.
+        String reply = ClaudeLink.ask(config, situation(player, server),
+                new ArrayList<>(history), message);
         if (reply.isEmpty()) {
             reply = "(done)";
         }
+
         history.addLast(new String[] {message, reply});
         while (history.size() > REMEMBERED_TURNS) {
             history.removeFirst();
