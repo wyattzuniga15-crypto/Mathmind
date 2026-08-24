@@ -276,6 +276,38 @@ BOTTLE = [
     [b_, b_, b_, b_, b_, bK, bK, bK, bK, bK, b_, b_, b_, b_, b_, b_],
 ]
 
+# Portal Gun: a white shell with a blue aperture and an orange one, the two
+# colours the portals themselves are drawn in.
+p_ = (0, 0, 0, 0)
+pK = (40, 42, 50, 255)      # outline
+pW = (232, 234, 240, 255)   # shell
+pS = (176, 180, 192, 255)   # shell shadow
+pH = (255, 255, 255, 255)   # shell highlight
+pD = (86, 90, 104, 255)     # dark housing
+pB = (72, 160, 255, 255)    # blue aperture
+pb = (188, 226, 255, 255)   # blue core
+pO = (255, 148, 40, 255)    # orange aperture
+po = (255, 214, 150, 255)   # orange core
+
+GUN = [
+    [p_, p_, p_, p_, p_, p_, pK, pK, pK, pK, p_, p_, p_, p_, p_, p_],
+    [p_, p_, p_, p_, p_, pK, pW, pH, pH, pW, pK, p_, p_, p_, p_, p_],
+    [p_, p_, p_, p_, pK, pW, pB, pb, pb, pB, pW, pK, p_, p_, p_, p_],
+    [p_, p_, p_, pK, pW, pB, pb, pB, pB, pb, pB, pW, pK, p_, p_, p_],
+    [p_, p_, p_, pK, pW, pB, pB, pD, pD, pB, pB, pW, pK, p_, p_, p_],
+    [p_, p_, p_, pK, pW, pW, pD, pD, pD, pD, pW, pW, pK, p_, p_, p_],
+    [p_, p_, p_, pK, pW, pO, pO, pD, pD, pO, pO, pW, pK, p_, p_, p_],
+    [p_, p_, p_, pK, pW, pO, po, pO, pO, po, pO, pW, pK, p_, p_, p_],
+    [p_, p_, p_, p_, pK, pW, pO, po, po, pO, pW, pK, p_, p_, p_, p_],
+    [p_, p_, p_, p_, pK, pS, pW, pW, pW, pW, pS, pK, p_, p_, p_, p_],
+    [p_, p_, p_, p_, p_, pK, pS, pW, pW, pS, pK, p_, p_, p_, p_, p_],
+    [p_, p_, p_, p_, p_, pK, pD, pS, pS, pD, pK, p_, p_, p_, p_, p_],
+    [p_, p_, p_, p_, pK, pD, pD, pS, pS, pD, pD, pK, p_, p_, p_, p_],
+    [p_, p_, p_, pK, pD, pD, pK, pS, pS, pK, pD, pD, pK, p_, p_, p_],
+    [p_, p_, p_, pK, pD, pK, p_, pK, pK, p_, pK, pD, pK, p_, p_, p_],
+    [p_, p_, p_, p_, pK, p_, p_, p_, p_, p_, p_, pK, p_, p_, p_, p_],
+]
+
 
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
@@ -286,7 +318,8 @@ if __name__ == "__main__":
                           ("echo_beacon", BEACON),
                           ("fast_forward_clock", FAST_CLOCK),
                           ("ore_sense", ORE),
-                          ("bottled_chunk", BOTTLE)):
+                          ("bottled_chunk", BOTTLE),
+                          ("portal_gun", GUN)):
         out = art / f"{name}.png"
         assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
         assert len(pixels) == 16, f"{name} is not 16 tall"

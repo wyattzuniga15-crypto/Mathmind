@@ -6,6 +6,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 
 public class ServerPlayerEntity extends PlayerEntity {
+    public net.minecraft.server.network.ServerPlayNetworkHandler networkHandler;
     public ServerWorld getEntityWorld() { return null; }
     public Text getName() { return null; }
     public void giveItemStack(ItemStack stack) {}

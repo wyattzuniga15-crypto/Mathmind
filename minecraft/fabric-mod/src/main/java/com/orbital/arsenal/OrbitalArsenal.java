@@ -2,6 +2,7 @@ package com.orbital.arsenal;
 
 import com.orbital.arsenal.companion.CompanionSetup;
 import com.orbital.arsenal.echo.Echoes;
+import com.orbital.arsenal.portal.Portals;
 import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.time.Souls;
 import net.fabricmc.api.ModInitializer;
@@ -29,6 +30,7 @@ public class OrbitalArsenal implements ModInitializer {
             Journal.tick();
             Souls.tick(server);
             Echoes.tick(server);
+            Portals.tick(server);
             CompanionSetup.tick();
         });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damage) -> Souls.died(entity));

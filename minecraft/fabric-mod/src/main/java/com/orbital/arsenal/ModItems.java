@@ -8,6 +8,7 @@ import com.orbital.arsenal.items.EchoBeaconItem;
 import com.orbital.arsenal.items.EchoGhostItem;
 import com.orbital.arsenal.items.FastForwardClockItem;
 import com.orbital.arsenal.items.OreSenseItem;
+import com.orbital.arsenal.items.PortalGunItem;
 import com.orbital.arsenal.items.PotatoBombItem;
 import com.orbital.arsenal.items.SlowTimeClockItem;
 import com.orbital.arsenal.items.TimeStopClockItem;
@@ -38,6 +39,7 @@ public final class ModItems {
     public static Item FAST_FORWARD_CLOCK;
     public static Item ORE_SENSE;
     public static Item BOTTLED_CHUNK;
+    public static Item PORTAL_GUN;
     public static Item REWIND_CLOCK;
 
     /**
@@ -76,6 +78,7 @@ public final class ModItems {
         FAST_FORWARD_CLOCK = register("fast_forward_clock", FastForwardClockItem::new);
         ORE_SENSE = register("ore_sense", OreSenseItem::new);
         BOTTLED_CHUNK = register("bottled_chunk", BottledChunkItem::new);
+        PORTAL_GUN = register("portal_gun", PortalGunItem::new);
         REWIND_CLOCK = register("rewind_clock", RewindClockItem::new);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
@@ -92,6 +95,7 @@ public final class ModItems {
             entries.add(FAST_FORWARD_CLOCK);
             entries.add(ORE_SENSE);
             entries.add(BOTTLED_CHUNK);
+            entries.add(PORTAL_GUN);
             entries.add(REWIND_CLOCK);
         });
         return registered;

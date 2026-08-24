@@ -1,12 +1,13 @@
 # Orbital Arsenal — Fabric mod source
 
-Fourteen genuinely registered items — `orbital:strike_cannon`,
+Fifteen genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
 `orbital:orbital_laser`, `orbital:rewind_clock`,
 `orbital:potato_bomb`,
 `orbital:time_stop_clock`, `orbital:slow_time_clock`,
 `orbital:echo_ghost`, `orbital:echo_beacon`,
-`orbital:fast_forward_clock`, `orbital:ore_sense`, `orbital:bottled_chunk` — with their own textures,
+`orbital:fast_forward_clock`, `orbital:ore_sense`, `orbital:bottled_chunk`,
+`orbital:portal_gun` — with their own textures,
 names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
@@ -298,6 +299,26 @@ Putting four thousand block states inside an item stack means custom item
 components, and those have been reworked more than once recently; this needs
 none of it, at the cost of the copy being forgotten when the server stops.
 
+**Portal Gun** — the Aperture Science device, near enough. Right-click a
+surface for the blue portal, crouch and right-click for the orange. Once both
+are up, walking into either puts you out of the other.
+
+**Momentum is the whole thing.** *Speedy thing goes in, speedy thing comes
+out*: the speed you arrive with is the speed you leave with, redirected along
+whichever way the far portal faces. Fall thirty blocks into a portal in the
+floor and come out of one in a wall, and you are fired sideways across the
+canyon at the speed the fall gave you. A teleporter that dropped your velocity
+would look nearly identical and feel like nothing at all.
+
+Anything can go through, not just you — mobs, items, arrows. Both ends get a
+short settling time after something passes, since arriving *in* the far portal
+would otherwise count as entering it and bounce you straight back.
+
+Players are moved with a teleport the client is told about rather than a plain
+server-side reposition: the client believes it is still where it was and simply
+walks back otherwise. The pairs are per player, so two people with portal guns
+never fire into each other's.
+
 ## How it's put together
 
 ```
@@ -308,6 +329,7 @@ weapons/Formation.java  concentric ring layout
 weapons/Shells.java     TNT that detonates on impact rather than on a timer
 time/TimeControl.java   freezing and slowing, through the vanilla tick manager
 echo/Echoes.java        rolling movement memory, and the ghosts that replay it
+portal/Portals.java     the linked pair, and the momentum that survives them
 weapons/Strikes.java    aiming, explosions, particles
 items/*.java            one class per weapon
 time/Journal.java       the rolling record the rewind clock replays

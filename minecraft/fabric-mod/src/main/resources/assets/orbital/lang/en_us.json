@@ -12,5 +12,6 @@
   "item.orbital.echo_beacon": "Echo Beacon",
   "item.orbital.fast_forward_clock": "Fast Forward Clock",
   "item.orbital.ore_sense": "Ore Sense",
-  "item.orbital.bottled_chunk": "Bottled Chunk"
+  "item.orbital.bottled_chunk": "Bottled Chunk",
+  "item.orbital.portal_gun": "Portal Gun"
 }
