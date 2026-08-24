@@ -121,7 +121,10 @@ public final class Portals {
             // Players need the move sent to them: a server-side setPosition
             // leaves the client believing it is still where it was, and it
             // simply walks back.
-            player.networkHandler.requestTeleport(exit.x, exit.y, exit.z);
+            // Carrying the player's own yaw and pitch through: a portal moves
+            // you, it does not spin you round to face somewhere new.
+            player.networkHandler.requestTeleport(
+                    exit.x, exit.y, exit.z, player.getYaw(), player.getPitch());
         } else {
             entity.setPosition(exit.x, exit.y, exit.z);
         }
