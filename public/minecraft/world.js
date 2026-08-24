@@ -305,6 +305,21 @@ class World {
     if (id === B.water && this.getBlock(x, y - 1, z) === 0) {
       this.setBlock(x, y - 1, z, B.water);
     }
+    // water + lava -> obsidian / stone
+    if (id === B.water || id === B.lava) {
+      for (const [dx, dy, dz] of [[0,-1,0],[1,0,0],[-1,0,0],[0,0,1],[0,0,-1],[0,1,0]]) {
+        const nx = x + dx, ny = y + dy, nz = z + dz;
+        const nid = this.getBlock(nx, ny, nz);
+        if ((id === B.water && nid === B.lava)) {
+          this.setBlock(nx, ny, nz, dy < 0 ? B.obsidian : B.stone);
+          if (game) game.particles.burst(nx + 0.5, ny + 1, nz + 0.5, TileIdx.stone, 6, 2);
+        } else if (id === B.lava && nid === B.water) {
+          this.setBlock(x, y, z, B.obsidian);
+          if (game) game.particles.burst(x + 0.5, y + 1, z + 0.5, TileIdx.stone, 6, 2);
+          return;
+        }
+      }
+    }
   }
   breakBlockNatural(x, y, z, game) {
     const id = this.getBlock(x, y, z);

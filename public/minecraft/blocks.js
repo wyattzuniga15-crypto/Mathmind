@@ -77,6 +77,7 @@ defBlock(46, 'wool', { hardness:1.2, flammable:true });
 defBlock(47, 'bed', { hardness:0.3, rt:RT_HALF, opaque:false, height:0.5 });
 defBlock(48, 'stone_slab', { hardness:10, tool:T_PICK, needsTool:1, rt:RT_HALF, opaque:false, height:0.5 });
 defBlock(49, 'oak_slab', { hardness:3, tool:T_AXE, flammable:true, rt:RT_HALF, opaque:false, height:0.5 });
+defBlock(50, 'tnt', { hardness:0.1 });
 
 // ---------------------------------------------------------------- items (ids >= 256)
 const I = {}; // name -> id
@@ -164,6 +165,7 @@ recipe('oak_slab', 6, [['oak_planks','oak_planks','oak_planks']]);
 recipe('bed', 1, [['wool','wool','wool'],['oak_planks','oak_planks','oak_planks']]);
 recipe('bow', 1, [[P,'stick','string'],['stick',P,'string'],[P,'stick','string']]);
 recipe('arrow', 4, [['flint'],['stick'],['feather']]);
+recipe('tnt', 1, [['gunpowder','sand','gunpowder'],['sand','gunpowder','sand'],['gunpowder','sand','gunpowder']]);
 recipe('snow_block', 1, [['snow_block']]); // no-op safeguard
 Recipes.pop();
 for (const [pre] of TOOL_TIERS) {

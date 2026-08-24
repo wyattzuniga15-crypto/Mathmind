@@ -94,6 +94,30 @@ class Drop extends Entity {
   }
 }
 
+// ---------------------------------------------------------------- primed tnt
+class Tnt extends Entity {
+  constructor(x, y, z, fuse = 3) {
+    super(x, y, z);
+    this.w = 0.45; this.h = 0.9;
+    this.fuse = fuse;
+    this.vy = 3;
+  }
+  update(game, dt) {
+    this.age += dt;
+    this.fuse -= dt;
+    this.vx *= 0.95; this.vz *= 0.95;
+    this.physics(game.world, dt, 20);
+    if (this.fuse <= 0) {
+      this.dead = true;
+      game.explode(this.x, this.y + 0.5, this.z, 3.4, 30);
+    }
+  }
+  emit(verts, game) {
+    const flash = Math.floor(this.fuse * 5) % 2 === 0 ? 1.9 : Math.max(0.4, game.world.skyAt(this.x, this.y + 1, this.z));
+    addBox(verts, this.x, this.y, this.z, 0.48, 0.45, 0.48, 0, Blocks[B.tnt].tiles, flash);
+  }
+}
+
 // ---------------------------------------------------------------- xp orb
 class XpOrb extends Entity {
   constructor(x, y, z, value) {
@@ -228,7 +252,7 @@ class Mob extends Entity {
     for (const [id, n] of drops) if (n > 0) game.spawnDrop(this.x, this.y + 0.5, this.z, id, n);
     game.particles.burst(this.x, this.y + this.h / 2, this.z, TileIdx.white, 10);
     game.spawnXp(this.x, this.y + 0.5, this.z, this.def.hostile ? 5 : 2);
-    if (this.def.hostile) game.stats.kills++;
+    if (this.def.hostile) { game.stats.kills++; game.ach('hunter', 'Monster Hunter'); }
   }
   update(game, dt) {
     this.age += dt; this.hurtT -= dt; this.attackCd -= dt; this.shootCd -= dt;
@@ -276,6 +300,11 @@ class Mob extends Entity {
           p.hurt(game, this.def.dmg, dx / dl * 0.5, dz / dl * 0.5);
         }
       }
+    }
+    // chickens lay eggs now and then
+    if (this.kind === 'chicken') {
+      this.eggT = (this.eggT ?? rand(90, 240)) - dt;
+      if (this.eggT <= 0) { this.eggT = rand(120, 300); game.spawnDrop(this.x, this.y + 0.2, this.z, I.egg, 1); Sfx.pop(); }
     }
     if (!targeting) {
       this.fuseT = -1;

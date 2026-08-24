@@ -7,14 +7,22 @@ const DAY_LENGTH = 600; // seconds per full day
 const Game = {
   state: 'title',   // title | loading | playing | paused | dead
   world: null, player: null, inv: null,
-  mobs: [], drops: [], arrows: [], xporbs: [],
+  mobs: [], drops: [], arrows: [], xporbs: [], tnts: [],
   particles: new Particles(),
   target: null,
   dayTime: 0.3, day: 1,
   timeSec: 0, lastFrame: 0, fps: 0,
   attackCd: 0, lightScanT: 0, saveT: 0, spawnT: 0, passiveT: 0,
   growths: [],
-  stats: { kills: 0, mined: 0, placed: 0, crafted: 0, playTime: 0 },
+  stats: { kills: 0, mined: 0, placed: 0, crafted: 0, playTime: 0, ach: {} },
+
+  ach(id, text) {
+    if (!this.stats.ach) this.stats.ach = {};
+    if (this.stats.ach[id]) return;
+    this.stats.ach[id] = true;
+    this.msg('🏆 Achievement: ' + text);
+    Sfx.levelup();
+  },
   canvas: null,
   debugOn: false,
 
@@ -33,6 +41,12 @@ const Game = {
     this.drawTitleBg();
     const hasSave = !!localStorage.getItem(SAVE_KEY);
     document.getElementById('worldinfo').textContent = hasSave ? 'Saved world found — Play resumes it' : '';
+    if (!window.matchMedia('(pointer:fine)').matches) {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'position:relative;color:#ffb3b3;font-size:14px;margin-top:14px;text-shadow:1px 1px #000;text-align:center';
+      warn.textContent = 'Heads up: BlockCraft needs a mouse and keyboard to play.';
+      document.getElementById('btnplay').after(warn);
+    }
     document.getElementById('btnplay').addEventListener('click', () => { Sfx.click(); this.startSurvival(); });
     document.getElementById('btnresume').addEventListener('click', () => { Sfx.click(); this.resume(); });
     document.getElementById('btnquit').addEventListener('click', () => { Sfx.click(); this.quitToTitle(); });
@@ -119,12 +133,13 @@ const Game = {
       this.player.spawn = p.spawn || { x: sx, y: this.player.y, z: sz };
       this.inv.load(p.inv);
       this.stats = p.stats || this.stats;
+      this.stats.ach = this.stats.ach || {};
       if (this.world.getBlock(this.player.x, this.player.y, this.player.z) !== 0)
         this.player.y = this.findSpawnY(this.player.x, this.player.z);
     } else {
       this.player.spawn = { x: sx, y: this.player.y, z: sz };
     }
-    this.mobs = []; this.drops = []; this.arrows = []; this.xporbs = [];
+    this.mobs = []; this.drops = []; this.arrows = []; this.xporbs = []; this.tnts = [];
     UI.refreshXp(this.player);
     // seed some passive mobs nearby
     for (let i = 0; i < 14; i++) this.trySpawnPassive(true);
@@ -273,7 +288,12 @@ const Game = {
       }
     }
   },
-  giveItem(id, count) { return this.inv.give(id, count); },
+  giveItem(id, count) {
+    if (id === B.oak_log) this.ach('wood', 'Getting Wood');
+    else if (id === I.diamond) this.ach('diamond', 'DIAMONDS!');
+    else if (id === I.iron_ingot) this.ach('iron', 'Acquire Hardware');
+    return this.inv.give(id, count);
+  },
   spawnDrop(x, y, z, id, count) { this.drops.push(new Drop(x, y, z, id, count)); },
   spawnXp(x, y, z, n) {
     while (n > 0) { const v = Math.min(n, randInt(1, 3)); n -= v; this.xporbs.push(new XpOrb(x, y, z, v)); }
@@ -323,6 +343,7 @@ const Game = {
       const id = this.world.getBlock(bx, by, bz);
       if (!id || id === B.water) continue;
       if (Blocks[id].hardness < 0 || Blocks[id].hardness > 50) continue;
+      if (id === B.tnt) { this.igniteTnt(bx, by, bz, rand(0.4, 1.2)); continue; }
       this.world.setBlock(bx, by, bz, 0);
       if (Math.random() < 0.25) {
         const drop = blockDrops(id, 999);
@@ -343,6 +364,13 @@ const Game = {
   },
 
   // ---------------- interactables ----------------
+  igniteTnt(x, y, z, fuse = 3) {
+    this.world.setBlock(x, y, z, 0);
+    this.tnts.push(new Tnt(x + 0.5, y, z + 0.5, fuse));
+    Sfx.fuse();
+    this.ach('tnt', 'Demolition Expert');
+  },
+
   sleep(x, y, z) {
     this.player.spawn = { x: x + 0.5, y: y + 1, z: z + 0.5 };
     if (this.day > 0.2) { this.msg('Respawn point set — you can only sleep at night'); return; }
@@ -354,6 +382,7 @@ const Game = {
     // undead don't survive the sunrise skip
     for (const m of this.mobs) if (m.def.burns) m.dead = true;
     this.msg('You wake up refreshed');
+    this.ach('sleep', 'Sweet Dreams');
     Sfx.levelup();
   },
 
@@ -484,6 +513,8 @@ const Game = {
       this.arrows = this.arrows.filter(a => !a.dead);
       for (const o of this.xporbs) o.update(this, dt);
       this.xporbs = this.xporbs.filter(o => !o.dead);
+      for (const t2 of this.tnts) t2.update(this, dt);
+      this.tnts = this.tnts.filter(t2 => !t2.dead);
       this.particles.update(this.world, dt);
 
       // despawn far mobs
@@ -546,6 +577,8 @@ const Game = {
     horizon = mixc(horizon, [0.95, 0.55, 0.28], dusk * 0.65);
     const underwater = p.headInWater(this.world);
     let fogColor = underwater ? [0.1, 0.25, 0.5] : horizon;
+    // smooth sprint FOV kick
+    this._fov = lerp(this._fov || 72, underwater ? 66 : p.sprinting ? 80 : 72, 0.15);
 
     // dynamic lights (torches etc)
     Renderer.setLights(this._lights || []);
@@ -556,6 +589,7 @@ const Game = {
     for (const d of this.drops) d.emit(entV, this);
     for (const a of this.arrows) a.emit(entV, this);
     for (const o of this.xporbs) o.emit(entV, this);
+    for (const t2 of this.tnts) t2.emit(entV, this);
     const partV = [];
     this.particles.emit(partV, p, this.world);
 
@@ -625,6 +659,7 @@ const Game = {
       crackVerts: crackV && crackV.length ? new Float32Array(crackV) : null,
       outline: this.target ? [this.target.x, this.target.y, this.target.z] : null,
       underwater,
+      fov: this._fov,
     });
 
     if (this.debugOn) {

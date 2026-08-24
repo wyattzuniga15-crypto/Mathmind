@@ -278,6 +278,21 @@ T('chest_front', d => {
   d.rect(7, 7, 2, 4, [140, 140, 140], 8);
 });
 T('chest_top', d => { d.fill([158, 116, 56], 8); d.border([90, 64, 30], 5); });
+T('tnt_side', d => {
+  d.fill([190, 60, 40], 12);
+  d.rect(0, 5, 16, 6, [225, 220, 205], 6);
+  // "TNT"
+  const c = [30, 30, 30];
+  d.rect(2, 6, 3, 1, c); d.rect(3, 6, 1, 4, c);           // T
+  d.rect(6, 6, 1, 4, c); d.rect(9, 6, 1, 4, c); d.px(7, 7, c); d.px(8, 8, c); // N
+  d.rect(11, 6, 3, 1, c); d.rect(12, 6, 1, 4, c);         // T
+  d.rect(0, 0, 16, 1, [120, 30, 20], 6); d.rect(0, 15, 16, 1, [120, 30, 20], 6);
+});
+T('tnt_top', d => {
+  d.fill([190, 60, 40], 12);
+  d.rect(6, 6, 4, 4, [225, 220, 205], 4);
+  d.rect(7, 7, 2, 2, [40, 40, 40]);
+});
 T('bed_top', d => {
   d.fill([170, 30, 30], 10);
   d.rect(0, 0, 16, 5, [235, 235, 235], 6);       // pillow
@@ -344,6 +359,7 @@ tiles('wool', 'sheep_wool', 'sheep_wool', 'sheep_wool');
 tiles('bed', 'bed_top', 'oak_planks', 'bed_side');
 tiles('stone_slab', 'stone', 'stone', 'stone');
 tiles('oak_slab', 'oak_planks', 'oak_planks', 'oak_planks');
+tiles('tnt', 'tnt_top', 'tnt_top', 'tnt_side');
 
 // ---------------- item icons ----------------
 function toolIcon(name, kind, headC, handleC = [104, 82, 50]) {

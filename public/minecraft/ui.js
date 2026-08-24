@@ -477,6 +477,14 @@ const UI = {
     }
     Sfx.pop();
     this.game.stats.crafted++;
+    const achMap = {
+      [B.crafting_table]: ['table', 'Benchmarking'],
+      [nameToId('wooden_pickaxe')]: ['pick', 'Time to Mine!'],
+      [B.furnace]: ['furnace', 'Hot Topic'],
+      [B.bed]: ['bed', 'Bedtime Story'],
+      [nameToId('bow')]: ['bow', 'Take Aim'],
+    };
+    if (achMap[r.outId]) this.game.ach(achMap[r.outId][0], achMap[r.outId][1]);
     this.refreshAll(); this.refreshHotbar();
   },
 

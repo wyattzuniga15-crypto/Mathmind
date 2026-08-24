@@ -127,7 +127,7 @@ class Player extends Entity {
     } else { this.air = this.maxAir; this.airT = 0; }
 
     // ---- hunger / regen ----
-    this.exhaustion += (this.sprinting ? 0.5 : 0.03) * dt * hspeed * 0.25;
+    this.exhaustion += (this.sprinting ? 0.28 : 0.02) * dt * hspeed * 0.25;
     if (this.exhaustion > 4) {
       this.exhaustion -= 4;
       if (this.saturation > 0) this.saturation--;
@@ -223,6 +223,7 @@ class Player extends Entity {
         if (tid === B.furnace || tid === B.furnace_lit) { game.openFurnace(hit.x, hit.y, hit.z); continue; }
         if (tid === B.chest) { game.openChest(hit.x, hit.y, hit.z); continue; }
         if (tid === B.bed) { game.sleep(hit.x, hit.y, hit.z); continue; }
+        if (tid === B.tnt) { game.igniteTnt(hit.x, hit.y, hit.z); continue; }
         // plant seeds on top of grass/dirt
         if (held && held.id === I.wheat_seeds && hit.face[1] === 1 &&
             (tid === B.grass_block || tid === B.dirt || tid === B.farmland) &&

@@ -240,7 +240,7 @@ const Renderer = {
     const gl = this.gl;
     this.resize();
     const aspect = this.canvas.width / this.canvas.height;
-    Mat4.perspective(this.proj, (S.underwater ? 65 : 72) * Math.PI / 180, aspect, 0.08, 460);
+    Mat4.perspective(this.proj, (S.fov || 72) * Math.PI / 180, aspect, 0.08, 460);
     Mat4.fpsView(this.view, S.cam.x, S.cam.y, S.cam.z, S.cam.pitch, S.cam.yaw);
     Mat4.multiply(this.pv, this.proj, this.view);
     const planes = frustumPlanes(this.pv);
