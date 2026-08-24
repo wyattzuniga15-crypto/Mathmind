@@ -47,7 +47,7 @@ const Renderer = {
     out vec4 fragColor;
     void main() {
       vec4 tex = texture(uTex, vUV);
-      if (tex.a < 0.4) discard;
+      if (tex.a < 0.26) discard;
       float sky = vLight * mix(0.14, 1.0, uAmbient);
       float pt = 0.0;
       for (int i = 0; i < 32; i++) {

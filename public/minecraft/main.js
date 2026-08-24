@@ -220,6 +220,7 @@ const Game = {
 
   // ---------------- keys ----------------
   onKey(code, e) {
+    if (this.state === 'dead' && (code === 'Enter' || code === 'Space')) { this.respawn(); return; }
     if (this.state === 'playing' || this.state === 'paused') {
       if (code === 'KeyE') {
         if (Input.uiOpen) UI.close();

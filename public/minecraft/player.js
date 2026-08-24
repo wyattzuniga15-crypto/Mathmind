@@ -106,9 +106,17 @@ class Player extends Entity {
       }
     }
 
-    // view bobbing
+    // view bobbing + footsteps
     const hspeed = Math.hypot(this.vx, this.vz);
-    if (this.onGround && hspeed > 0.5) this.bob += dt * hspeed * 1.6;
+    if (this.onGround && hspeed > 0.5) {
+      this.bob += dt * hspeed * 1.6;
+      this.stepDist = (this.stepDist || 0) + hspeed * dt;
+      if (this.stepDist > 2.3) {
+        this.stepDist = 0;
+        const ground = world.getBlock(this.x, this.y - 0.5, this.z);
+        if (ground) Sfx.step(ground);
+      }
+    }
 
     // ---- hazards ----
     const feet = world.getBlock(this.x, this.y + 0.1, this.z);
