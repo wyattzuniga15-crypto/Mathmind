@@ -166,6 +166,36 @@ class World {
         setg(wx, h + 1, wz, rng() < 0.5 ? B.red_mushroom : B.brown_mushroom, true);
       }
     }
+    // rare buried dungeon with a loot chest
+    const drng = mulberry32(this.seed ^ 0xD00D ^ Math.imul(cx, 668265263) ^ Math.imul(cz, 374761393));
+    if (drng() < 0.03) {
+      const dx0 = cx * CHUNK + 4, dz0 = cz * CHUNK + 4;
+      const dy = 14 + (drng() * 16 | 0);
+      const W = 7, H = 4, D = 7;
+      for (let x = -1; x <= W; x++) for (let y = -1; y <= H; y++) for (let z = -1; z <= D; z++) {
+        const wx = dx0 + x, wy = dy + y, wz = dz0 + z;
+        const edge = x === -1 || y === -1 || z === -1 || x === W || y === H || z === D;
+        if (edge) {
+          if (this.getBlock(wx, wy, wz) !== 0)
+            this.setBlockRaw(wx, wy, wz, drng() < 0.35 ? B.mossy_cobblestone : B.cobblestone);
+        } else this.setBlockRaw(wx, wy, wz, 0);
+      }
+      const chestX = dx0 + 3, chestZ = dz0 + 3;
+      this.setBlockRaw(chestX, dy, chestZ, B.chest);
+      const key = chestX + ',' + dy + ',' + chestZ;
+      if (!this.chests[key]) {
+        const slots = new Array(27).fill(null);
+        const loot = [
+          [I.bread, 1, 3, 0.7], [I.iron_ingot, 1, 4, 0.6], [I.gold_ingot, 1, 3, 0.35],
+          [I.diamond, 1, 2, 0.15], [I.string, 1, 4, 0.5], [I.apple, 1, 2, 0.5],
+          [B.torch, 2, 6, 0.6], [I.arrow, 2, 8, 0.45], [I.bone, 1, 3, 0.4],
+        ];
+        for (const [id, a, b2, ch] of loot)
+          if (drng() < ch) slots[(drng() * 27) | 0] = { id, count: a + (drng() * (b2 - a + 1) | 0) };
+        this.chests[key] = slots;
+      }
+      this.setBlockRaw(dx0 + 1, dy, dz0 + 1, B.torch);
+    }
     c.dirty = true;
   }
 

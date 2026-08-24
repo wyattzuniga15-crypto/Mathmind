@@ -75,6 +75,8 @@ defBlock(44, 'brown_mushroom', { solid:false, opaque:false, rt:RT_CROSS, hardnes
 defBlock(45, 'chest', { hardness:3.75, tool:T_AXE, flammable:true });
 defBlock(46, 'wool', { hardness:1.2, flammable:true });
 defBlock(47, 'bed', { hardness:0.3, rt:RT_HALF, opaque:false, height:0.5 });
+defBlock(48, 'stone_slab', { hardness:10, tool:T_PICK, needsTool:1, rt:RT_HALF, opaque:false, height:0.5 });
+defBlock(49, 'oak_slab', { hardness:3, tool:T_AXE, flammable:true, rt:RT_HALF, opaque:false, height:0.5 });
 
 // ---------------------------------------------------------------- items (ids >= 256)
 const I = {}; // name -> id
@@ -118,11 +120,11 @@ defItem('egg', { stack: 16 });
 defItem('bow', { stack: 1, durability: 96, dmg: 1 });
 
 const TOOL_TIERS = [
-  ['wooden', 1, 2, 60, 1],   // prefix, tier, speed, durability, bonus dmg
-  ['stone', 2, 4, 132, 2],
-  ['iron', 3, 6, 251, 3],
-  ['golden', 1, 12, 33, 1],
-  ['diamond', 4, 8, 1562, 4],
+  ['wooden', 1, 4, 60, 1],   // prefix, tier, speed, durability, bonus dmg
+  ['stone', 2, 8, 132, 2],
+  ['iron', 3, 12, 251, 3],
+  ['golden', 1, 24, 33, 1],
+  ['diamond', 4, 16, 1562, 4],
 ];
 for (const [pre, tier, speed, dur, dmg] of TOOL_TIERS) {
   defItem(pre + '_pickaxe', { tool: T_PICK, tier, speed, durability: dur, stack: 1, dmg: 2 + dmg });
@@ -157,6 +159,8 @@ recipe('bookshelf', 1, [['oak_planks','oak_planks','oak_planks'],['wheat','wheat
 recipe('stone_bricks', 4, [['stone','stone'],['stone','stone']]);
 recipe('sandstone', 1, [['sand','sand'],['sand','sand']]);
 recipe('wool', 1, [['string','string'],['string','string']]);
+recipe('stone_slab', 6, [['stone','stone','stone']]);
+recipe('oak_slab', 6, [['oak_planks','oak_planks','oak_planks']]);
 recipe('bed', 1, [['wool','wool','wool'],['oak_planks','oak_planks','oak_planks']]);
 recipe('bow', 1, [[P,'stick','string'],['stick',P,'string'],[P,'stick','string']]);
 recipe('arrow', 4, [['flint'],['stick'],['feather']]);

@@ -7,7 +7,7 @@ const DAY_LENGTH = 600; // seconds per full day
 const Game = {
   state: 'title',   // title | loading | playing | paused | dead
   world: null, player: null, inv: null,
-  mobs: [], drops: [], arrows: [],
+  mobs: [], drops: [], arrows: [], xporbs: [],
   particles: new Particles(),
   target: null,
   dayTime: 0.3, day: 1,
@@ -115,6 +115,7 @@ const Game = {
       this.player.x = p.x; this.player.y = p.y; this.player.z = p.z;
       this.player.yaw = p.yaw || 0; this.player.pitch = p.pitch || 0;
       this.player.hp = p.hp ?? 20; this.player.hunger = p.hunger ?? 20;
+      this.player.xp = p.xp || 0;
       this.player.spawn = p.spawn || { x: sx, y: this.player.y, z: sz };
       this.inv.load(p.inv);
       this.stats = p.stats || this.stats;
@@ -123,7 +124,8 @@ const Game = {
     } else {
       this.player.spawn = { x: sx, y: this.player.y, z: sz };
     }
-    this.mobs = []; this.drops = []; this.arrows = [];
+    this.mobs = []; this.drops = []; this.arrows = []; this.xporbs = [];
+    UI.refreshXp(this.player);
     // seed some passive mobs nearby
     for (let i = 0; i < 14; i++) this.trySpawnPassive(true);
     document.getElementById('loading').classList.add('hidden');
@@ -195,7 +197,7 @@ const Game = {
       const p = this.player;
       localStorage.setItem(SAVE_KEY, this.world.serialize({
         x: p.x, y: p.y, z: p.z, yaw: p.yaw, pitch: p.pitch,
-        hp: p.hp, hunger: p.hunger, spawn: p.spawn,
+        hp: p.hp, hunger: p.hunger, xp: p.xp, spawn: p.spawn,
         inv: this.inv.serialize(), stats: this.stats,
       }, this.dayTime));
     } catch (e) { console.warn('save failed', e); }
@@ -213,6 +215,9 @@ const Game = {
       } else if (code === 'KeyQ' && !Input.uiOpen && this.state === 'playing') {
         const s = this.inv.held();
         if (s) { this.dropFromPlayer(s.id, 1); this.inv.consumeHeld(); }
+      } else if (code === 'KeyM') {
+        Sfx.musicOn = !Sfx.musicOn;
+        this.msg(Sfx.musicOn ? 'Music on' : 'Music off');
       } else if (code === 'F3') {
         this.debugOn = !this.debugOn;
         document.getElementById('debug').style.display = this.debugOn ? 'block' : 'none';
@@ -234,6 +239,11 @@ const Game = {
     this.world.setBlock(x, y, z, 0);
     const d = blockDrops(id, heldId);
     if (d) this.spawnDrop(x + 0.5, y + 0.3, z + 0.5, d[0], d[1]);
+    // mining xp for ores (only when they actually drop)
+    if (d) {
+      const xp = { [B.coal_ore]: 1, [B.iron_ore]: 1, [B.gold_ore]: 2, [B.diamond_ore]: 4 }[id];
+      if (xp) this.spawnXp(x + 0.5, y + 0.5, z + 0.5, xp);
+    }
     if (id === B.chest) {
       const key = x + ',' + y + ',' + z;
       const c = this.world.chests[key];
@@ -265,6 +275,9 @@ const Game = {
   },
   giveItem(id, count) { return this.inv.give(id, count); },
   spawnDrop(x, y, z, id, count) { this.drops.push(new Drop(x, y, z, id, count)); },
+  spawnXp(x, y, z, n) {
+    while (n > 0) { const v = Math.min(n, randInt(1, 3)); n -= v; this.xporbs.push(new XpOrb(x, y, z, v)); }
+  },
   dropFromPlayer(id, count) {
     const p = this.player, look = p.lookDir();
     const d = new Drop(p.x + look[0] * 0.6, p.y + 1.3, p.z + look[2] * 0.6, id, count);
@@ -469,6 +482,8 @@ const Game = {
       this.drops = this.drops.filter(d2 => !d2.dead);
       for (const a of this.arrows) a.update(this, dt);
       this.arrows = this.arrows.filter(a => !a.dead);
+      for (const o of this.xporbs) o.update(this, dt);
+      this.xporbs = this.xporbs.filter(o => !o.dead);
       this.particles.update(this.world, dt);
 
       // despawn far mobs
@@ -506,6 +521,10 @@ const Game = {
       this.lightScanT -= dt;
       if (this.lightScanT <= 0) { this.lightScanT = 0.4; this.scanLights(); }
 
+      // ambient music
+      this.musicT = (this.musicT ?? 8) - dt;
+      if (this.musicT <= 0) { this.musicT = rand(20, 45); Sfx.ambient(this.day < 0.4); }
+
       // autosave
       this.saveT += dt;
       if (this.saveT > 20) { this.saveT = 0; this.save(); }
@@ -536,6 +555,7 @@ const Game = {
     for (const m of this.mobs) m.emit(entV, this);
     for (const d of this.drops) d.emit(entV, this);
     for (const a of this.arrows) a.emit(entV, this);
+    for (const o of this.xporbs) o.emit(entV, this);
     const partV = [];
     this.particles.emit(partV, p, this.world);
 
@@ -590,8 +610,8 @@ const Game = {
         addSprite(handV, hx, hy - 0.2, hz, 0.21, p.yaw + Math.PI / 2 + 0.35, icon, hl);
       } else {
         // bare arm
-        emitEntityBox(handV, hx + look[0] * 0.1, hy - 0.05, hz + look[2] * 0.1,
-          0.07, 0.2, 0.07, p.yaw + 0.4, { all: TileIdx.skin }, hl);
+        emitEntityBox(handV, hx + look[0] * 0.08 + rt[0] * 0.05, hy - 0.16, hz + look[2] * 0.08 + rt[2] * 0.05,
+          0.045, 0.15, 0.045, p.yaw + 0.5, { all: TileIdx.skin }, hl);
       }
     }
     Renderer.frame({

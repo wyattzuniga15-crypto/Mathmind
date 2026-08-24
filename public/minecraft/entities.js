@@ -94,6 +94,42 @@ class Drop extends Entity {
   }
 }
 
+// ---------------------------------------------------------------- xp orb
+class XpOrb extends Entity {
+  constructor(x, y, z, value) {
+    super(x, y, z);
+    this.value = value;
+    this.w = 0.1; this.h = 0.2;
+    this.vx = rand(-1.5, 1.5); this.vy = rand(1.5, 3.5); this.vz = rand(-1.5, 1.5);
+  }
+  update(game, dt) {
+    this.age += dt;
+    if (this.age > 120) { this.dead = true; return; }
+    this.vx *= 0.96; this.vz *= 0.96;
+    this.physics(game.world, dt, 16);
+    if (this.y < -10) this.dead = true;
+    const p = game.player;
+    if (p.dead) return;
+    const d2 = dist2(this.x, this.y, this.z, p.x, p.y + 0.8, p.z);
+    if (d2 < 7) {
+      this.vx += (p.x - this.x) * dt * 22;
+      this.vy += (p.y + 0.7 - this.y) * dt * 22;
+      this.vz += (p.z - this.z) * dt * 22;
+    }
+    if (d2 < 0.8) {
+      this.dead = true;
+      p.xp += this.value;
+      Sfx.orb();
+      UI.refreshXp(p);
+    }
+  }
+  emit(verts, game) {
+    const l = 1.1 + Math.sin(this.age * 6) * 0.2;
+    addSprite(verts, this.x, this.y + Math.sin(this.age * 3) * 0.04 + 0.05, this.z,
+      0.09, game.player.yaw, TileIdx.xp, l);
+  }
+}
+
 // ---------------------------------------------------------------- arrow
 class Arrow extends Entity {
   constructor(x, y, z, vx, vy, vz, fromPlayer = false) {
@@ -191,6 +227,7 @@ class Mob extends Entity {
     const drops = this.def.drops();
     for (const [id, n] of drops) if (n > 0) game.spawnDrop(this.x, this.y + 0.5, this.z, id, n);
     game.particles.burst(this.x, this.y + this.h / 2, this.z, TileIdx.white, 10);
+    game.spawnXp(this.x, this.y + 0.5, this.z, this.def.hostile ? 5 : 2);
     if (this.def.hostile) game.stats.kills++;
   }
   update(game, dt) {
@@ -215,7 +252,7 @@ class Mob extends Entity {
         if (d2p > 100) { this.moveX = dx / dl; this.moveZ = dz / dl; }
         else if (d2p < 36) { this.moveX = -dx / dl; this.moveZ = -dz / dl; }
         else { this.moveX = 0; this.moveZ = 0; }
-        if (this.shootCd <= 0 && d2p < 180) {
+        if (this.shootCd <= 0 && d2p < 180 && this.canSee(game, p)) {
           this.shootCd = 2.2;
           const dy = (p.y + 1.4) - (this.y + 1.4);
           const sp = 16, dd = Math.sqrt(d2p);
@@ -272,6 +309,13 @@ class Mob extends Entity {
   explode(game) {
     this.dead = true;
     game.explode(this.x, this.y + 0.5, this.z, 2.6, 24);
+  }
+  canSee(game, p) {
+    const ex = this.x, ey = this.y + 1.4, ez = this.z;
+    const dx = p.x - ex, dy = (p.y + 1.4) - ey, dz = p.z - ez;
+    const d = Math.hypot(dx, dy, dz) || 1;
+    const hit = game.world.raycast(ex, ey, ez, dx / d, dy / d, dz / d, d);
+    return !hit;
   }
   emit(verts, game) {
     const l0 = Math.max(0.12, game.world.skyAt(this.x, this.y + 1, this.z));

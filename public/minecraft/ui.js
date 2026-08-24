@@ -71,6 +71,7 @@ const Sfx = {
   explosion() { this.noise(0.8, 120, 0.9, 0.7); this.tone(0.5, 90, 30, 0.5, 'sawtooth'); },
   splash() { this.noise(0.3, 1200, 0.3, 0.8); },
   levelup() { this.tone(0.3, 500, 1000, 0.2, 'sine'); },
+  orb() { this.tone(0.08, rand(900, 1400), rand(1400, 2000), 0.15, 'sine'); },
   mobHurt(kind) {
     if (kind === 'zombie') this.tone(0.25, 180, 90, 0.3, 'sawtooth');
     else if (kind === 'skeleton') this.noise(0.15, 1500, 0.3, 4);
@@ -79,6 +80,37 @@ const Sfx = {
     else this.tone(0.22, 500, 300, 0.28, 'triangle');
   },
   step(blockId) { this.noise(0.05, 600, 0.08, 1); },
+  musicOn: true,
+  note(f, dur, vol, delay = 0) {
+    try {
+      this.ensure();
+      const t = this.ctx.currentTime + delay;
+      const o = this.ctx.createOscillator();
+      o.type = 'sine'; o.frequency.value = f;
+      const o2 = this.ctx.createOscillator();
+      o2.type = 'triangle'; o2.frequency.value = f * 2;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(vol, t + dur * 0.3);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      const g2 = this.ctx.createGain(); g2.gain.value = 0.25;
+      o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.master);
+      o.start(t); o.stop(t + dur); o2.start(t); o2.stop(t + dur);
+    } catch (e) {}
+  },
+  ambient(night) {
+    if (!this.musicOn) return;
+    // gentle pentatonic phrase
+    const roots = night ? [110, 130.8, 146.8] : [220, 261.6, 293.7];
+    const scale = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2];
+    const root = roots[(Math.random() * roots.length) | 0];
+    let d = 0;
+    const n = randInt(3, 5);
+    for (let i = 0; i < n; i++) {
+      this.note(root * scale[(Math.random() * scale.length) | 0], rand(1.8, 3), 0.045, d);
+      d += rand(0.5, 1.2);
+    }
+  },
 };
 
 // ---------------------------------------------------------------- inventory model
@@ -480,6 +512,12 @@ const UI = {
       air.innerHTML = a;
     } else air.innerHTML = '';
     this.$('vignette').style.opacity = p.hp <= 6 ? '1' : '0';
+  },
+  refreshXp(p) {
+    let xp = p.xp, l = 0, need = 8;
+    while (xp >= need) { xp -= need; l++; need = 8 + l * 4; }
+    this.$('xpbar').style.width = Math.floor(xp / need * 100) + '%';
+    this.$('xplevel').textContent = l > 0 ? l : '';
   },
   showItemName() {
     const s = this.game.inv.held();

@@ -49,11 +49,16 @@
   .slot .cnt { position:absolute; right:3px; bottom:1px; color:#fff; font-size:15px; font-weight:700;
                text-shadow:1px 1px #000; pointer-events:none; }
   .slot .dur { position:absolute; left:4px; bottom:4px; height:3px; background:#3f3; pointer-events:none; }
-  #stats { position:absolute; bottom:58px; left:50%; transform:translateX(-50%); width:440px;
+  #xpwrap { position:absolute; bottom:57px; left:50%; transform:translateX(-50%); width:440px; height:5px;
+            background:#0008; border:1px solid #000; }
+  #xpbar { height:100%; width:0%; background:linear-gradient(#bef97a,#7ac74a); }
+  #xplevel { position:absolute; bottom:60px; left:50%; transform:translateX(-50%); color:#7f3;
+             font-size:16px; font-weight:800; text-shadow:1px 1px #000, -1px -1px #000, 1px -1px #000, -1px 1px #000; }
+  #stats { position:absolute; bottom:66px; left:50%; transform:translateX(-50%); width:440px;
            display:flex; justify-content:space-between; font-size:19px; text-shadow:1px 1px #000; }
   #hearts { letter-spacing:-2px; }
   #hunger { letter-spacing:-2px; }
-  #air { position:absolute; bottom:82px; left:50%; transform:translateX(-50%); width:440px;
+  #air { position:absolute; bottom:92px; left:50%; transform:translateX(-50%); width:440px;
          text-align:right; font-size:17px; text-shadow:1px 1px #000; letter-spacing:-1px; }
   #itemname { position:absolute; bottom:110px; width:100%; text-align:center; color:#fff;
               font-size:18px; font-weight:600; text-shadow:2px 2px #000; opacity:0; transition:opacity .4s; }
@@ -113,6 +118,8 @@
   <div id="hurtflash"></div>
   <div id="crosshair">+</div>
   <div id="stats"><span id="hearts"></span><span id="hunger"></span></div>
+  <div id="xpwrap"><div id="xpbar"></div></div>
+  <div id="xplevel"></div>
   <div id="air"></div>
   <div id="hotbar"></div>
   <div id="itemname"></div>
@@ -153,6 +160,12 @@
   <h2>Game Paused</h2>
   <button class="mcbtn" id="btnresume">Back to Game</button>
   <button class="mcbtn" id="btnquit">Save &amp; Quit to Title</button>
+  <div style="color:#ddd;font-size:14px;line-height:1.9;margin-top:22px;text-shadow:1px 1px #000;text-align:center">
+    <b>WASD</b> move · <b>Space</b> jump/swim · <b>Ctrl</b> sprint · <b>Shift</b> sneak<br>
+    <b>Left click</b> mine / attack · <b>Right click</b> place / use / eat · <b>Hold right</b> draw bow<br>
+    <b>E</b> inventory · <b>1–9</b> / <b>wheel</b> hotbar · <b>Q</b> drop item · <b>F3</b> debug<br>
+    Craft a <b>crafting table</b> for 3×3 recipes, a <b>furnace</b> to smelt, a <b>bed</b> to sleep
+  </div>
 </div>
 
 <!-- Death -->

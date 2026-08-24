@@ -8,6 +8,7 @@ class Player extends Entity {
     this.eye = 1.62;
     this.yaw = 0; this.pitch = 0;
     this.hp = 20; this.maxHp = 20;
+    this.xp = 0;
     this.hunger = 20; this.saturation = 5;
     this.air = 10; this.maxAir = 10;
     this.dead = false;
@@ -93,6 +94,17 @@ class Player extends Entity {
       this.fallStart = null;
     }
     if (inWater) this.fallStart = null;
+
+    // Bedrock-style auto-jump
+    if (this.onGround && !this.sneaking && !inWater && ml > 0) {
+      const ax = this.x + mx * 0.65, az = this.z + mz * 0.65;
+      const bAt = (dy) => { const id = world.getBlock(ax, this.y + dy, az); return id && Blocks[id].solid; };
+      if (bAt(0.3) && !bAt(1.3) && !bAt(2.2)) {
+        const wall = world.boxCollides(this.x + mx * 0.2 - this.w, this.y + 0.1, this.z + mz * 0.2 - this.w,
+          this.x + mx * 0.2 + this.w, this.y + 0.6, this.z + mz * 0.2 + this.w);
+        if (wall) this.vy = 8.4;
+      }
+    }
 
     // view bobbing
     const hspeed = Math.hypot(this.vx, this.vz);
@@ -270,6 +282,8 @@ class Player extends Entity {
   respawn(game) {
     this.dead = false;
     this.hp = this.maxHp; this.hunger = 20; this.saturation = 5; this.air = this.maxAir;
+    this.xp = 0;
+    UI.refreshXp(this);
     this.x = this.spawn.x; this.z = this.spawn.z;
     this.y = game.findSpawnY(this.x, this.z);
     this.vx = this.vy = this.vz = 0;

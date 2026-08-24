@@ -342,6 +342,8 @@ tiles('brown_mushroom', 'brown_mushroom', 'brown_mushroom', 'brown_mushroom');
 tiles('chest', 'chest_top', 'chest_top', 'chest_side', 'chest_front');
 tiles('wool', 'sheep_wool', 'sheep_wool', 'sheep_wool');
 tiles('bed', 'bed_top', 'oak_planks', 'bed_side');
+tiles('stone_slab', 'stone', 'stone', 'stone');
+tiles('oak_slab', 'oak_planks', 'oak_planks', 'oak_planks');
 
 // ---------------- item icons ----------------
 function toolIcon(name, kind, headC, handleC = [104, 82, 50]) {
@@ -494,6 +496,12 @@ T('spider_face', d => {
 });
 T('white', d => d.fill([255, 255, 255], 0));
 T('skin', d => { d.fill([232, 190, 152], 8); d.speckle([210, 168, 130], 16, 6); });
+T('xp', d => {
+  d.fill([0, 0, 0], 0, 0);
+  d.rect(5, 5, 6, 6, [120, 240, 60], 20);
+  d.rect(6, 6, 4, 4, [220, 255, 120], 14);
+  d.px(7, 7, [255, 255, 200]); d.px(8, 8, [255, 255, 200]);
+});
 
 // breaking crack overlays (4 stages)
 for (let stage = 0; stage < 4; stage++) {
