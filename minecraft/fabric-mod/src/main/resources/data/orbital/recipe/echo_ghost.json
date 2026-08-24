@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SPS",
+    "PEP",
+    "SPS"
+  ],
+  "key": {
+    "S": { "item": "minecraft:soul_sand" },
+    "P": { "item": "minecraft:phantom_membrane" },
+    "E": { "item": "minecraft:ender_eye" }
+  },
+  "result": { "id": "orbital:echo_ghost", "count": 1 }
+}

@@ -150,12 +150,70 @@ SLOW_CLOCK = recolour(CLOCK, {
     d: (92, 54, 12, 255),      # hands, dark brass
 })
 
+# Echo Ghost: a hooded figure fading out toward its trailing edge, so the
+# silhouette reads as something half-there rather than a solid mob.
+v = (0, 0, 0, 0)
+G1 = (86, 62, 128, 110)    # trailing wisp, barely there
+G2 = (128, 100, 176, 170)  # body, translucent
+G3 = (172, 148, 216, 220)  # body, denser
+G4 = (214, 200, 244, 255)  # highlight
+GE = (58, 232, 220, 255)   # the eyes
+GK = (44, 30, 72, 255)     # dark edge
+
+GHOST = [
+    [v, v, v, v, v, GK, GK, GK, GK, GK, v, v, v, v, v, v],
+    [v, v, v, v, GK, G3, G3, G3, G3, G3, GK, v, v, v, v, v],
+    [v, v, v, GK, G3, G4, G4, G3, G3, G3, G3, GK, v, v, v, v],
+    [v, v, v, GK, G3, G4, G3, G3, G3, G3, G3, GK, v, v, v, v],
+    [v, v, GK, G3, G3, G3, G3, G3, G3, G3, G3, G3, GK, v, v, v],
+    [v, v, GK, G3, GE, GE, G3, G3, GE, GE, G3, G3, GK, v, v, v],
+    [v, v, GK, G3, GE, GE, G3, G3, GE, GE, G3, G3, GK, v, v, v],
+    [v, v, GK, G3, G3, G3, G3, G3, G3, G3, G3, G3, GK, v, v, v],
+    [v, GK, G2, G3, G3, G3, G3, G3, G3, G3, G3, G3, G2, GK, v, v],
+    [v, GK, G2, G2, G3, G3, G3, G3, G3, G3, G3, G2, G2, GK, v, v],
+    [v, GK, G2, G2, G2, G2, G3, G3, G2, G2, G2, G2, G2, GK, v, v],
+    [v, GK, G1, G2, G2, G2, G2, G2, G2, G2, G2, G2, G1, GK, v, v],
+    [v, GK, G1, G1, G2, G2, G2, G2, G2, G2, G2, G1, G1, GK, v, v],
+    [v, v, GK, G1, G1, G1, G2, G2, G1, G1, G1, G1, GK, v, v, v],
+    [v, v, v, GK, G1, v, GK, G1, G1, v, GK, GK, v, v, v, v],
+    [v, v, v, v, GK, v, v, GK, GK, v, v, v, v, v, v, v],
+]
+
+# Echo Beacon: a dark plinth with a ghost-light rising out of it, so the pair
+# read as related without being the same picture twice.
+B1 = (46, 34, 70, 255)     # plinth, shadow
+B2 = (74, 58, 108, 255)    # plinth
+B3 = (108, 90, 150, 255)   # plinth, lit edge
+BL = (58, 232, 220, 255)   # beam
+BW = (206, 255, 250, 255)  # beam core
+
+BEACON = [
+    [v, v, v, v, v, v, BL, BW, BW, BL, v, v, v, v, v, v],
+    [v, v, v, v, v, v, BL, BW, BW, BL, v, v, v, v, v, v],
+    [v, v, v, v, v, v, v, BL, BL, v, v, v, v, v, v, v],
+    [v, v, v, v, v, G1, v, BL, BL, v, G1, v, v, v, v, v],
+    [v, v, v, v, G1, G2, v, BL, BL, v, G2, G1, v, v, v, v],
+    [v, v, v, v, G2, G3, GK, BL, BL, GK, G3, G2, v, v, v, v],
+    [v, v, v, v, G1, G2, v, BW, BW, v, G2, G1, v, v, v, v],
+    [v, v, v, v, v, G1, v, BW, BW, v, G1, v, v, v, v, v],
+    [v, v, v, GK, GK, GK, GK, BW, BW, GK, GK, GK, GK, v, v, v],
+    [v, v, GK, B3, B3, B3, B3, BW, BW, B3, B3, B3, B3, GK, v, v],
+    [v, v, GK, B3, B2, B2, B2, BL, BL, B2, B2, B2, B3, GK, v, v],
+    [v, v, GK, B2, B2, B1, B1, B1, B1, B1, B1, B2, B2, GK, v, v],
+    [v, GK, B3, B2, B2, B1, B1, B1, B1, B1, B1, B2, B2, B3, GK, v],
+    [v, GK, B2, B1, B1, B1, B1, B1, B1, B1, B1, B1, B1, B2, GK, v],
+    [v, GK, B1, B1, B1, B1, B1, B1, B1, B1, B1, B1, B1, B1, GK, v],
+    [v, v, GK, GK, GK, GK, GK, GK, GK, GK, GK, GK, GK, GK, v, v],
+]
+
 
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
                           ("time_stop_clock", STOP_CLOCK),
-                          ("slow_time_clock", SLOW_CLOCK)):
+                          ("slow_time_clock", SLOW_CLOCK),
+                          ("echo_ghost", GHOST),
+                          ("echo_beacon", BEACON)):
         out = art / f"{name}.png"
         assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
         assert len(pixels) == 16, f"{name} is not 16 tall"

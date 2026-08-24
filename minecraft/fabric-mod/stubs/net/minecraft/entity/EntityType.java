@@ -7,5 +7,6 @@ import net.minecraft.world.World;
 // create() on an EntityType<?> yields a capture that is not an Entity.
 public class EntityType<T extends Entity> {
     public static final EntityType<MobEntity> ALLAY = new EntityType<>();
+    public static final EntityType<MobEntity> VEX = new EntityType<>();
     public T create(World world, SpawnReason reason) { return null; }
 }

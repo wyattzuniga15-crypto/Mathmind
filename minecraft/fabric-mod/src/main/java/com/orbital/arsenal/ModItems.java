@@ -3,6 +3,8 @@ package com.orbital.arsenal;
 import com.orbital.arsenal.items.BlackHoleItem;
 import com.orbital.arsenal.items.KamehamehaItem;
 import com.orbital.arsenal.items.OrbitalLaserItem;
+import com.orbital.arsenal.items.EchoBeaconItem;
+import com.orbital.arsenal.items.EchoGhostItem;
 import com.orbital.arsenal.items.PotatoBombItem;
 import com.orbital.arsenal.items.SlowTimeClockItem;
 import com.orbital.arsenal.items.TimeStopClockItem;
@@ -28,6 +30,8 @@ public final class ModItems {
     public static Item POTATO_BOMB;
     public static Item TIME_STOP_CLOCK;
     public static Item SLOW_TIME_CLOCK;
+    public static Item ECHO_GHOST;
+    public static Item ECHO_BEACON;
     public static Item REWIND_CLOCK;
 
     private ModItems() {}
@@ -53,6 +57,8 @@ public final class ModItems {
         POTATO_BOMB = register("potato_bomb", PotatoBombItem::new);
         TIME_STOP_CLOCK = register("time_stop_clock", TimeStopClockItem::new);
         SLOW_TIME_CLOCK = register("slow_time_clock", SlowTimeClockItem::new);
+        ECHO_GHOST = register("echo_ghost", EchoGhostItem::new);
+        ECHO_BEACON = register("echo_beacon", EchoBeaconItem::new);
         REWIND_CLOCK = register("rewind_clock", RewindClockItem::new);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
@@ -64,6 +70,8 @@ public final class ModItems {
             entries.add(POTATO_BOMB);
             entries.add(TIME_STOP_CLOCK);
             entries.add(SLOW_TIME_CLOCK);
+            entries.add(ECHO_GHOST);
+            entries.add(ECHO_BEACON);
             entries.add(REWIND_CLOCK);
         });
     }

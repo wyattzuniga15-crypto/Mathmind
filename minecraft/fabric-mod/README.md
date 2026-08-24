@@ -1,10 +1,11 @@
 # Orbital Arsenal — Fabric mod source
 
-Nine genuinely registered items — `orbital:strike_cannon`,
+Eleven genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
 `orbital:orbital_laser`, `orbital:rewind_clock`,
 `orbital:potato_bomb`,
-`orbital:time_stop_clock`, `orbital:slow_time_clock` — with their own textures,
+`orbital:time_stop_clock`, `orbital:slow_time_clock`,
+`orbital:echo_ghost`, `orbital:echo_beacon` — with their own textures,
 names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
@@ -236,6 +237,35 @@ countdown has to be measured on the slowed clock: server ticks arrive five
 times a second instead of twenty, so waiting the usual number of them would
 stretch twenty seconds into eighty.
 
+**Echo Ghost** — press it and a translucent copy of you appears, replaying the
+**ten seconds you just lived**: the same path, the same turns, the same look up
+at the sky. Press it again for another. They accumulate.
+
+They are not copies of each other, which is the point. Each ghost takes its own
+snapshot of your past at the moment it is made, so walk somewhere, press, walk
+somewhere else, press — and the two of them are doing different things at once.
+Crouch and right-click to send them all away.
+
+Everyone's last ten seconds is recorded all the time, so the ghost appears the
+instant you press rather than starting a recording and making you wait for it.
+That is the whole feel of the item: you do something worth watching, and then
+you stand back and watch yourself do it. Ghosts loop rather than stopping at
+the end of their path — one that freezes after ten seconds looks broken, one
+that starts its walk again looks haunted.
+
+**Echo Beacon** — the same ghosts, raised on a timer instead of by hand. Switch
+it on and a new echo joins you **every sixty seconds**, each replaying whatever
+you happened to be doing when its minute came round. Leave it running and you
+slowly acquire a crowd. Right-click again to switch it off.
+
+Both cap at 24 ghosts per player, oldest discarded first. Both items exist to
+accumulate, and without a ceiling the beacon would keep going all night until
+the server was carrying a thousand entities nobody asked for — dropping the
+oldest keeps the crowd the size it is rather than simply refusing to grow.
+
+The ghosts are quiet: they walk your path and glow, and that is all. They do
+not fight.
+
 ## How it's put together
 
 ```
@@ -245,6 +275,7 @@ Scheduler.java          a tick queue
 weapons/Formation.java  concentric ring layout
 weapons/Shells.java     TNT that detonates on impact rather than on a timer
 time/TimeControl.java   freezing and slowing, through the vanilla tick manager
+echo/Echoes.java        rolling movement memory, and the ghosts that replay it
 weapons/Strikes.java    aiming, explosions, particles
 items/*.java            one class per weapon
 time/Journal.java       the rolling record the rewind clock replays

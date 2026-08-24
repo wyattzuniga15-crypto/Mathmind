@@ -4,6 +4,7 @@ import com.orbital.arsenal.companion.Brain;
 import com.orbital.arsenal.companion.Companion;
 import com.orbital.arsenal.companion.CompanionCommand;
 import com.orbital.arsenal.companion.CompanionConfig;
+import com.orbital.arsenal.echo.Echoes;
 import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.time.Souls;
 import net.fabricmc.loader.api.FabricLoader;
@@ -28,6 +29,7 @@ public class OrbitalArsenal implements ModInitializer {
             Scheduler.tick();
             Journal.tick();
             Souls.tick(server);
+            Echoes.tick(server);
             Companion.tickAll();
         });
         // Every death while a weapon is in play, so the clock can undo it.

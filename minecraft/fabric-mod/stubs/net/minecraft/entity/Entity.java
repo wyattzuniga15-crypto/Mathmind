@@ -23,6 +23,12 @@ public class Entity {
     public Vec3d getRotationVec(float t) { return null; }
     public BlockPos getBlockPos() { return null; }
     public void setPosition(double x, double y, double z) {}
+    public void setGlowing(boolean glowing) {}
+    public void setYaw(float yaw) {}
+    public void setPitch(float pitch) {}
+    public float getYaw() { return 0.0f; }
+    public float getPitch() { return 0.0f; }
+    public boolean isSneaking() { return false; }
     public boolean isRemoved() { return false; }
     public EntityType<?> getType() { return null; }
     public net.minecraft.text.Text getCustomName() { return null; }
