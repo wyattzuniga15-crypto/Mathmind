@@ -597,8 +597,18 @@ const Game = {
     horizon = mixc(horizon, [0.95, 0.55, 0.28], dusk * 0.65);
     const underwater = p.headInWater(this.world);
     let fogColor = underwater ? [0.1, 0.25, 0.5] : horizon;
+    // underground: fog fades into darkness, not sky color
+    const camSky = this.world.skyAt(p.x, p.y + p.eye, p.z);
+    if (!underwater && camSky < 0.6) {
+      const dark = clamp((0.6 - camSky) / 0.55, 0, 1);
+      fogColor = fogColor.map((v, i) => lerp(v, [0.008, 0.008, 0.014][i], dark));
+    }
     // smooth sprint FOV kick
     this._fov = lerp(this._fov || 72, underwater ? 66 : p.sprinting ? 80 : 72, 0.15);
+    // a held torch glows around the player
+    const heldS0 = this.inv.held();
+    const heldLight = (heldS0 && (heldS0.id === B.torch || heldS0.id === B.furnace_lit)) ?
+      [p.x, p.y + 1.3, p.z, 0.75] : null;
 
     // dynamic lights (torches etc)
     Renderer.setLights(this._lights || []);
@@ -626,7 +636,7 @@ const Game = {
         for (let i = 0; i < 4; i++) {
           const c = f.c[i];
           const [u, v] = tileUVc(ti, UVQ[i][0], UVQ[i][1]);
-          vtx.push([x + c[0], y + c[1], z + c[2], u, v, 1]);
+          vtx.push([x + c[0], y + c[1], z + c[2], u, v, 1, 0]);
         }
         pushQuad(crackV, vtx);
       }
@@ -658,7 +668,9 @@ const Game = {
       const hz = p.z + look[2] * (0.5 - dip * 0.6 - pull) + rt[2] * (0.34 - pull) + rt[2] * hbx;
       if (heldS && heldS.id < 256) {
         const b = Blocks[heldS.id];
-        if (b.tiles) addBox(handV, hx, hy - 0.12, hz, 0.13, 0.13, 0.13, p.yaw + 0.5, b.tiles, hl);
+        if (b.rt === RT_CROSS || b.rt === RT_TORCH)
+          addSprite(handV, hx, hy - 0.22, hz, 0.17, p.yaw + Math.PI / 2 + 0.35, b.tiles.side, hl);
+        else if (b.tiles) addBox(handV, hx, hy - 0.12, hz, 0.13, 0.13, 0.13, p.yaw + 0.5, b.tiles, hl);
       } else if (heldS) {
         const icon = Items[heldS.id].icon ?? TileIdx.white;
         addSprite(handV, hx, hy - 0.2, hz, 0.21, p.yaw + Math.PI / 2 + 0.35, icon, hl);
@@ -680,6 +692,7 @@ const Game = {
       outline: this.target ? [this.target.x, this.target.y, this.target.z] : null,
       underwater,
       fov: this._fov,
+      heldLight,
     });
 
     if (this.debugOn) {
@@ -734,6 +747,8 @@ const Game = {
   scanLights() {
     const p = this.player;
     const lights = [];
+    const held = this.inv.held();
+    if (held && held.id === B.torch) lights.push([p.x, p.y + 1.3, p.z, 0.75]);
     const R = 14;
     const x0 = Math.floor(p.x - R), x1 = Math.floor(p.x + R);
     const y0 = Math.max(0, Math.floor(p.y - 10)), y1 = Math.min(WORLD_H - 1, Math.floor(p.y + 12));

@@ -316,7 +316,11 @@ const Input = {
     window.addEventListener('keyup', e => { this.keys[e.code] = false; });
     window.addEventListener('blur', () => { this.keys = {}; this.mouseLeft = this.mouseRight = false; });
     canvas.addEventListener('mousedown', e => {
-      if (!this.locked && !game.lockFallback) { if (game.state === 'playing') game.lockPointer(); return; }
+      if (!this.locked) {
+        // keep retrying capture on every click — some hosts grant it late
+        if (game.state === 'playing' && !this.uiOpen) game.lockPointer();
+        if (!game.lockFallback) return;
+      }
       if (e.button === 0) { this.mouseLeft = true; this.leftClicks.push(1); }
       if (e.button === 2) { this.mouseRight = true; this.rightClicks.push(1); }
       if (e.button === 1) { e.preventDefault(); game.pickBlock(); }
@@ -328,6 +332,7 @@ const Input = {
     canvas.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === canvas;
+      if (this.locked && game.lockFallback) { game.lockFallback = false; game.msg('Mouse captured'); }
       if (this.onLock) this.onLock(this.locked);
     });
     document.addEventListener('mousemove', e => {

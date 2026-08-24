@@ -21,21 +21,22 @@ const Renderer = {
     layout(location=0) in vec3 aPos;
     layout(location=1) in vec2 aUV;
     layout(location=2) in float aLight;
+    layout(location=3) in float aBlock;
     uniform mat4 uPV;
     uniform vec3 uOffset;
     uniform float uTime;
     uniform int uWave;
-    out vec2 vUV; out float vLight; out vec3 vWorld;
+    out vec2 vUV; out float vLight; out float vBlock; out vec3 vWorld;
     void main() {
       vec3 p = aPos + uOffset;
       if (uWave == 1) p.y += sin(uTime * 2.0 + p.x * 0.7 + p.z * 0.9) * 0.045 - 0.02;
       vWorld = p;
-      vUV = aUV; vLight = aLight;
+      vUV = aUV; vLight = aLight; vBlock = aBlock;
       gl_Position = uPV * vec4(p, 1.0);
     }`;
     const fs = `#version 300 es
     precision highp float;
-    in vec2 vUV; in float vLight; in vec3 vWorld;
+    in vec2 vUV; in float vLight; in float vBlock; in vec3 vWorld;
     uniform sampler2D uTex;
     uniform float uAmbient;         // day factor 0..1
     uniform vec3 uFogColor;
@@ -56,10 +57,11 @@ const Renderer = {
         float d = length(L);
         pt = max(pt, uLights[i].w * clamp(1.0 - d / 12.0, 0.0, 1.0));
       }
-      float light = clamp(max(sky, pt * 0.95), 0.02, 1.25);
+      float bl = max(vBlock, pt);          // baked block light or dynamic light
+      float light = clamp(max(sky, bl * 0.97), 0.055, 1.25);
       vec3 col = tex.rgb * light;
-      // warm tint from torchlight
-      col += vec3(0.20, 0.10, 0.0) * pt * tex.rgb;
+      // warm tint from torch/lava light
+      col += vec3(0.20, 0.10, 0.0) * bl * tex.rgb;
       float fog = clamp((distance(uCam.xz, vWorld.xz) - uFogDist * 0.62) / (uFogDist * 0.38), 0.0, 1.0);
       col = mix(col, uFogColor, fog);
       fragColor = vec4(col, tex.a * uAlpha);
@@ -210,10 +212,10 @@ const Renderer = {
     if (!c.mesh) c.mesh = { solid: gl.createBuffer(), water: gl.createBuffer(), nSolid: 0, nWater: 0 };
     gl.bindBuffer(gl.ARRAY_BUFFER, c.mesh.solid);
     gl.bufferData(gl.ARRAY_BUFFER, data.solid, gl.STATIC_DRAW);
-    c.mesh.nSolid = data.solid.length / 6;
+    c.mesh.nSolid = data.solid.length / 7;
     gl.bindBuffer(gl.ARRAY_BUFFER, c.mesh.water);
     gl.bufferData(gl.ARRAY_BUFFER, data.water, gl.STATIC_DRAW);
-    c.mesh.nWater = data.water.length / 6;
+    c.mesh.nWater = data.water.length / 7;
   },
   dropChunk(c) {
     if (c.mesh) {
@@ -228,9 +230,11 @@ const Renderer = {
     gl.enableVertexAttribArray(0);
     gl.enableVertexAttribArray(1);
     gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 24, 0);
-    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 24, 12);
-    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 24, 20);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 28, 0);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 28, 12);
+    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 28, 20);
+    gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 28, 24);
   },
 
   // main render
@@ -262,7 +266,7 @@ const Renderer = {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.fsq);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2);
+    gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.DEPTH_TEST);
 
@@ -277,8 +281,13 @@ const Renderer = {
     gl.uniform1f(cp.u.uTime, S.time);
     gl.uniform1f(cp.u.uAlpha, 1);
     gl.uniform1i(cp.u.uWave, 0);
-    gl.uniform1i(cp.u.uNumLights, this.numLights);
-    gl.uniform4fv(cp.u.uLights, this.lights);
+    // terrain gets baked block light; only the player's held light is dynamic
+    if (!this.heldArr) this.heldArr = new Float32Array(32 * 4);
+    let heldN = 0;
+    if (S.heldLight) { this.heldArr.set(S.heldLight, 0); heldN = 1; }
+    const terrainLights = () => { gl.uniform1i(cp.u.uNumLights, heldN); gl.uniform4fv(cp.u.uLights, this.heldArr); };
+    const entityLights = () => { gl.uniform1i(cp.u.uNumLights, this.numLights); gl.uniform4fv(cp.u.uLights, this.lights); };
+    terrainLights();
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTex);
     gl.uniform1i(cp.u.uTex, 0);
@@ -300,12 +309,13 @@ const Renderer = {
 
     // ---------- entities ----------
     if (S.entVerts && S.entVerts.length) {
+      entityLights();
       gl.uniform3f(cp.u.uOffset, 0, 0, 0);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.entBuf);
       gl.bufferData(gl.ARRAY_BUFFER, S.entVerts, gl.DYNAMIC_DRAW);
       this.bindChunkAttribs();
       gl.disable(gl.CULL_FACE);
-      gl.drawArrays(gl.TRIANGLES, 0, S.entVerts.length / 6);
+      gl.drawArrays(gl.TRIANGLES, 0, S.entVerts.length / 7);
       gl.enable(gl.CULL_FACE);
     }
 
@@ -319,7 +329,7 @@ const Renderer = {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.crackBuf);
       gl.bufferData(gl.ARRAY_BUFFER, S.crackVerts, gl.DYNAMIC_DRAW);
       this.bindChunkAttribs();
-      gl.drawArrays(gl.TRIANGLES, 0, S.crackVerts.length / 6);
+      gl.drawArrays(gl.TRIANGLES, 0, S.crackVerts.length / 7);
       gl.disable(gl.BLEND);
       gl.disable(gl.POLYGON_OFFSET_FILL);
     }
@@ -331,11 +341,12 @@ const Renderer = {
       gl.bufferData(gl.ARRAY_BUFFER, S.partVerts, gl.DYNAMIC_DRAW);
       this.bindChunkAttribs();
       gl.disable(gl.CULL_FACE);
-      gl.drawArrays(gl.TRIANGLES, 0, S.partVerts.length / 6);
+      gl.drawArrays(gl.TRIANGLES, 0, S.partVerts.length / 7);
       gl.enable(gl.CULL_FACE);
     }
 
     // ---------- water (translucent) ----------
+    terrainLights();
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.depthMask(false);
@@ -362,7 +373,7 @@ const Renderer = {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.fsq);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2);
+    gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3);
     gl.disable(gl.CULL_FACE);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.CULL_FACE);
@@ -373,12 +384,13 @@ const Renderer = {
     if (S.handVerts && S.handVerts.length) {
       gl.clear(gl.DEPTH_BUFFER_BIT);
       gl.useProgram(cp.p);
+      entityLights();
       gl.uniform3f(cp.u.uOffset, 0, 0, 0);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.entBuf2 || (this.entBuf2 = gl.createBuffer()));
       gl.bufferData(gl.ARRAY_BUFFER, S.handVerts, gl.DYNAMIC_DRAW);
       this.bindChunkAttribs();
       gl.disable(gl.CULL_FACE);
-      gl.drawArrays(gl.TRIANGLES, 0, S.handVerts.length / 6);
+      gl.drawArrays(gl.TRIANGLES, 0, S.handVerts.length / 7);
       gl.enable(gl.CULL_FACE);
     }
 
@@ -399,7 +411,7 @@ const Renderer = {
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(L), gl.DYNAMIC_DRAW);
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-      gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2);
+      gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3);
       gl.drawArrays(gl.LINES, 0, L.length / 3);
     }
   },

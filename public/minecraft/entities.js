@@ -445,7 +445,7 @@ function emitEntityBox(verts, cx, cy0, cz, hx, hy, hz, yaw, tiles, light, yAdjus
       const lx = (p[0] * 2 - 1) * hx, lyy = (p[1] * 2 - 1) * hy, lz = (p[2] * 2 - 1) * hz;
       const [rx, rz] = rot(lx, lz);
       const [u, v] = tileUVc(ti, UVQ[i][0], UVQ[i][1]);
-      vtx.push([cx + rx, cy + lyy, cz + rz, u, v, light * shade]);
+      vtx.push([cx + rx, cy + lyy, cz + rz, u, v, light * shade, 0]);
     }
     pushQuad(verts, vtx);
   }
@@ -463,7 +463,7 @@ function addSprite(verts, cx, cy, cz, half, yaw, tile, light) {
       const [cxs, cys] = corners[i];
       const dx = cxs * half * cyaw, dz = -cxs * half * syaw;
       const [u, v] = tileUVc(tile, (cxs + 1) / 2, 1 - cys / 2);
-      vtx.push([cx + dx, cy + cys * half, cz + dz, u, v, light]);
+      vtx.push([cx + dx, cy + cys * half, cz + dz, u, v, light, 0]);
     }
     pushQuad(verts, vtx);
   }
@@ -511,7 +511,7 @@ class Particles {
       for (let i = 0; i < 4; i++) {
         const [a, b2] = cs[i];
         vtx.push([p.x + a * s * cyaw, p.y + b2 * s, p.z - a * s * syaw,
-          u0 + (a + 1) / 2 * us, v0 + (b2 + 1) / 2 * us, l]);
+          u0 + (a + 1) / 2 * us, v0 + (b2 + 1) / 2 * us, l, 0]);
       }
       pushQuad(verts, vtx);
     }

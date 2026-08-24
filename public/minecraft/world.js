@@ -238,7 +238,15 @@ class World {
   setBlockRaw(x, y, z, id) {
     if (y < 0 || y >= WORLD_H) return;
     const c = this.baseChunk(x >> 4, z >> 4);
+    const old = c.get(x & 15, y, z & 15);
     c.set(x & 15, y, z & 15, id);
+    // light emitters influence meshes up to 14 blocks away — remesh the 3x3 ring
+    if (EMIT[id] || EMIT[old]) {
+      for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
+        const cc = this.chunks.get(CKEY((x >> 4) + dx, (z >> 4) + dz));
+        if (cc) cc.dirty = true;
+      }
+    }
     const ci = (z & 15) * CHUNK + (x & 15);
     if (blocksSky(id) && y > c.hmax[ci]) c.hmax[ci] = y;
     else if (!blocksSky(id) && y === c.hmax[ci]) {
@@ -413,8 +421,63 @@ class World {
   }
 }
 
+// ---------------------------------------------------------------- block light (BFS, baked into meshes)
+const LPAD = 14, LW = CHUNK + LPAD * 2;
+const EMIT = new Uint8Array(256);        // block id -> light emission level (0-15)
+EMIT[B.torch] = 14; EMIT[B.lava] = 15; EMIT[B.furnace_lit] = 13;
+const _lightBuf = new Uint8Array(LW * LW * WORLD_H);
+const BFS_DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+
+function computeBlockLight(world, cx0, cz0) {
+  _lightBuf.fill(0);
+  const x0 = cx0 * CHUNK, z0 = cz0 * CHUNK;
+  const grid = [];
+  for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++)
+    grid.push(world.chunks.get(CKEY(cx0 + dx, cz0 + dz)) || null);
+  const blockAt = (wx, y, wz) => {
+    if (y < 0 || y >= WORLD_H) return 0;
+    const gx = (wx >> 4) - cx0 + 1, gz = (wz >> 4) - cz0 + 1;
+    if (gx < 0 || gx > 2 || gz < 0 || gz > 2) return 0;
+    const ch = grid[gz * 3 + gx];
+    return ch ? ch.blocks[(y * CHUNK + (wz & 15)) * CHUNK + (wx & 15)] : 0;
+  };
+  const q = [];
+  for (let g = 0; g < 9; g++) {
+    const ch = grid[g];
+    if (!ch) continue;
+    const bx = ch.cx * CHUNK - x0 + LPAD, bz = ch.cz * CHUNK - z0 + LPAD;
+    const bl = ch.blocks;
+    for (let i = 0; i < bl.length; i++) {
+      const e = EMIT[bl[i]];
+      if (!e) continue;
+      const px = bx + (i & 15), pz = bz + ((i >> 4) & 15);
+      if (px < 0 || px >= LW || pz < 0 || pz >= LW) continue;
+      const idx = ((i >> 8) * LW + pz) * LW + px;
+      if (_lightBuf[idx] < e) { _lightBuf[idx] = e; q.push(idx); }
+    }
+  }
+  let qi = 0;
+  while (qi < q.length) {
+    const idx = q[qi++];
+    const lvl = _lightBuf[idx];
+    if (lvl <= 1) continue;
+    const px = idx % LW, t = (idx / LW) | 0, pz = t % LW, y = (t / LW) | 0;
+    for (const d of BFS_DIRS) {
+      const nx = px + d[0], ny = y + d[1], nz = pz + d[2];
+      if (nx < 0 || nx >= LW || nz < 0 || nz >= LW || ny < 0 || ny >= WORLD_H) continue;
+      const nidx = (ny * LW + nz) * LW + nx;
+      const nl = lvl - 1;
+      if (_lightBuf[nidx] >= nl) continue;
+      const id = blockAt(x0 - LPAD + nx, ny, z0 - LPAD + nz);
+      if (id && Blocks[id].opaque) continue;
+      _lightBuf[nidx] = nl;
+      q.push(nidx);
+    }
+  }
+}
+
 // ---------------------------------------------------------------- meshing
-// vertex: x,y,z, u,v, light  (6 floats)
+// vertex: x,y,z, u,v, skyLight, blockLight  (7 floats)
 const FACES = [
   // dir, corners (4, CCW from outside), shade
   { d: [0, 1, 0],  c: [[0,1,1],[1,1,1],[1,1,0],[0,1,0]], shade: 1.0 },   // top
@@ -443,6 +506,11 @@ function meshChunk(world, c) {
   };
   const opaqueAt = (x, y, z) => { const id = get(x, y, z); return id !== 0 && Blocks[id].opaque; };
   const skyOf = (x, y, z) => world.skyAt(x0 + x, y, z0 + z);
+  computeBlockLight(world, c.cx, c.cz);
+  const blOf = (lx, y, lz) => {
+    if (y < 0) y = 0; else if (y >= WORLD_H) y = WORLD_H - 1;
+    return _lightBuf[(y * LW + lz + LPAD) * LW + lx + LPAD] / 15;
+  };
 
   for (let y = 0; y < WORLD_H; y++) for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
     const id = c.get(lx, y, lz);
@@ -455,6 +523,7 @@ function meshChunk(world, c) {
       const s = b.rt === RT_TORCH ? 0.5 : 1;
       const off = b.rt === RT_TORCH ? 0.25 : 0;
       const l = skyOf(lx, y, lz);
+      const cbl = blOf(lx, y, lz);
       const quads = [
         [[off, 0, off], [1 - off, 0, 1 - off], [1 - off, s, 1 - off], [off, s, off]],
         [[1 - off, 0, off], [off, 0, 1 - off], [off, s, 1 - off], [1 - off, s, off]],
@@ -466,7 +535,7 @@ function meshChunk(world, c) {
         for (let i = 0; i < 4; i++) {
           const p = q[order[i]];
           const [u, v] = tileUVc(ti, uvs[i][0], uvs[i][1]);
-          vtx.push([lx + p[0], y + p[1], lz + p[2], u, v, l * 0.95]);
+          vtx.push([lx + p[0], y + p[1], lz + p[2], u, v, l * 0.95, cbl]);
         }
         pushQuad(solid, vtx);
       }
@@ -477,19 +546,20 @@ function meshChunk(world, c) {
       const above = get(lx, y + 1, lz);
       const topY = (above === id) ? 1 : 0.875;
       const l = Math.max(0.35, skyOf(lx, y, lz));
+      const cbl = blOf(lx, y, lz);
       const arr = water;
       // top
       if (above !== id) {
         const f = FACES[0];
-        emitFace(arr, get, skyOf, lx, y, lz, f, b.tiles.top, l, topY, id === B.lava);
+        emitFace(arr, lx, y, lz, f, b.tiles.top, l, cbl, topY, id === B.lava);
       }
       // sides against air
       for (let fi = 2; fi < 6; fi++) {
         const f = FACES[fi];
         const n = get(lx + f.d[0], y + f.d[1], lz + f.d[2]);
-        if (n === 0) emitFace(arr, get, skyOf, lx, y, lz, f, b.tiles.side, l * f.shade, topY, id === B.lava);
+        if (n === 0) emitFace(arr, lx, y, lz, f, b.tiles.side, l * f.shade, cbl * f.shade, topY, id === B.lava);
       }
-      if (get(lx, y - 1, lz) === 0) emitFace(arr, get, skyOf, lx, y, lz, FACES[1], b.tiles.side, l * 0.55, topY, id === B.lava);
+      if (get(lx, y - 1, lz) === 0) emitFace(arr, lx, y, lz, FACES[1], b.tiles.side, l * 0.55, cbl * 0.55, topY, id === B.lava);
       continue;
     }
 
@@ -497,6 +567,7 @@ function meshChunk(world, c) {
       // half-height block (bed): scale the cube vertically
       const hh = b.height || 0.5;
       const l = skyOf(lx, y, lz);
+      const hbl = blOf(lx, y, lz);
       for (let fi = 0; fi < 6; fi++) {
         const f = FACES[fi];
         const nid = get(lx + f.d[0], y + f.d[1], lz + f.d[2]);
@@ -507,7 +578,7 @@ function meshChunk(world, c) {
           const p = f.c[i];
           const py = p[1] === 1 ? hh : 0;
           const [u, v] = tileUVc(ti, UVQ[i][0], fi >= 2 ? (p[1] === 1 ? 1 - hh : 1) : UVQ[i][1]);
-          vtx.push([lx + p[0], y + py, lz + p[2], u, v, Math.max(0.05, l * f.shade)]);
+          vtx.push([lx + p[0], y + py, lz + p[2], u, v, Math.max(0.05, l * f.shade), hbl * f.shade]);
         }
         pushQuad(solid, vtx);
       }
@@ -529,7 +600,8 @@ function meshChunk(world, c) {
       // light from the cell the face opens into
       const sky = ny >= WORLD_H ? 1 : skyOf(nx, ny, nz);
       const baseL = Math.max(0.04, sky) * f.shade * (Blocks[id].light ? 1.4 : 1);
-      emitSolidFace(solid, get, skyOf, lx, y, lz, f, fi, ti, baseL, inset);
+      const nbl = blOf(nx, ny, nz) * f.shade;
+      emitSolidFace(solid, get, lx, y, lz, f, fi, ti, baseL, nbl, inset);
     }
   }
   return {
@@ -543,13 +615,13 @@ function pushQuad(arr, v) {
   for (const i of [0, 1, 2, 0, 2, 3]) arr.push(...v[i]);
 }
 
-function emitFace(arr, get, skyOf, lx, y, lz, f, ti, light, topY, isLava) {
+function emitFace(arr, lx, y, lz, f, ti, light, bl, topY, isLava) {
   const vtx = [];
   for (let i = 0; i < 4; i++) {
     const p = f.c[i];
     const py = p[1] === 1 ? topY : 0;
     const [u, v] = tileUVc(ti, UVQ[i][0], UVQ[i][1]);
-    vtx.push([lx + p[0], y + py, lz + p[2], u, v, isLava ? 1.3 : light]);
+    vtx.push([lx + p[0], y + py, lz + p[2], u, v, isLava ? 1.3 : light, isLava ? 1 : bl]);
   }
   pushQuad(arr, vtx);
 }
@@ -576,7 +648,7 @@ function vertexAO(get, x, y, z, f, corner) {
 function axisIndex(t) { return t[0] ? 0 : t[1] ? 1 : 2; }
 function solidAt(get, x, y, z) { const id = get(x, y, z); return id !== 0 && Blocks[id].opaque; }
 
-function emitSolidFace(arr, get, skyOf, lx, y, lz, f, fi, ti, baseL, inset) {
+function emitSolidFace(arr, get, lx, y, lz, f, fi, ti, baseL, bl, inset) {
   const vtx = [];
   for (let i = 0; i < 4; i++) {
     const p = f.c[i];
@@ -587,7 +659,7 @@ function emitSolidFace(arr, get, skyOf, lx, y, lz, f, fi, ti, baseL, inset) {
       if (f.d[0]) px -= f.d[0] * inset;
       if (f.d[2]) pz -= f.d[2] * inset;
     }
-    vtx.push([px, py, pz, u, v, Math.max(0.03, baseL * ao)]);
+    vtx.push([px, py, pz, u, v, Math.max(0.03, baseL * ao), bl * ao]);
   }
   pushQuad(arr, vtx);
 }
