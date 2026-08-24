@@ -34,6 +34,13 @@ public final class Portals {
     /** Below this there is no momentum worth preserving, so it gets a nudge out instead. */
     private static final double MIN_EXIT_SPEED = 0.35;
 
+    private static final int RING_POINTS = 40;
+    private static final int INNER_POINTS = 12;
+    private static final double RING_WIDE = 0.95;
+    private static final double RING_TALL = 1.2;
+    /** Redraw rate. These particles linger, so a few times a second looks solid. */
+    private static final int DRAW_EVERY = 4;
+
     public record Portal(Vec3d at, Vec3d normal, ServerWorld world) {}
 
     private static final class Pair {
@@ -53,6 +60,11 @@ public final class Portals {
         } else {
             pair.blue = portal;
         }
+        // Draw it at once rather than waiting for the next redraw, so shooting
+        // a portal and seeing one happen together.
+        draw(portal, orange ? ParticleTypes.FLAME : ParticleTypes.SOUL_FIRE_FLAME, 0);
+        portal.world().spawnParticles(ParticleTypes.END_ROD, true, true,
+                portal.at().x, portal.at().y, portal.at().z, 30, 0.5, 0.6, 0.5, 0.02);
     }
 
     public static boolean linked(PlayerEntity owner) {
@@ -64,10 +76,13 @@ public final class Portals {
         PAIRS.remove(owner);
     }
 
+    private static int now = 0;
+
     public static void tick(MinecraftServer server) {
         if (PAIRS.isEmpty()) {
             return;
         }
+        now++;
         SETTLING.entrySet().removeIf(entry -> {
             int left = entry.getValue() - 1;
             entry.setValue(left);
@@ -80,8 +95,10 @@ public final class Portals {
                 return true;
             }
             Pair pair = entry.getValue();
-            draw(pair.blue, ParticleTypes.SOUL_FIRE_FLAME);
-            draw(pair.orange, ParticleTypes.FLAME);
+            if (now % DRAW_EVERY == 0) {
+                draw(pair.blue, ParticleTypes.SOUL_FIRE_FLAME, now);
+                draw(pair.orange, ParticleTypes.FLAME, now);
+            }
             if (pair.blue != null && pair.orange != null) {
                 carry(pair.blue, pair.orange);
                 carry(pair.orange, pair.blue);
@@ -131,31 +148,56 @@ public final class Portals {
         entity.setVelocity(out);
         entity.addVelocity(0.0, 0.0, 0.0);
 
-        to.world().spawnParticles(ParticleTypes.END_ROD, exit.x, exit.y, exit.z, 20, 0.4, 0.4, 0.4, 0.05);
+        to.world().spawnParticles(ParticleTypes.END_ROD, true, true,
+                exit.x, exit.y, exit.z, 20, 0.4, 0.4, 0.4, 0.05);
     }
 
-    /** Draw the ring so a portal is somewhere you can see rather than remember. */
-    private static void draw(Portal portal, ParticleEffect colour) {
+    /**
+     * Draw a portal so it can actually be seen.
+     *
+     * Two things were making these near-invisible. Ordinary particles are
+     * culled by the client at about 32 blocks, so a portal placed across a
+     * valley simply was not sent — the forced flag is what /particle force uses
+     * to override that, and it is the difference between seeing a portal you
+     * shot at a distant cliff and having to walk to it.
+     *
+     * And drawing one packet per ring point every tick meant hundreds a second
+     * per portal, which the client throttles. These particles linger for a
+     * couple of seconds, so the ring is redrawn a few times a second instead
+     * and still looks continuous — fewer packets and a denser ring at once.
+     */
+    private static void draw(Portal portal, ParticleEffect colour, int phase) {
         if (portal == null) {
             return;
         }
         // Two directions across the portal's face, found from its normal. Any
         // pair perpendicular to it will do — the ring is round either way.
         Vec3d normal = portal.normal();
-        Vec3d across = Math.abs(normal.y) > 0.9
+        Vec3d seed = Math.abs(normal.y) > 0.9
                 ? new Vec3d(1.0, 0.0, 0.0)
                 : new Vec3d(0.0, 1.0, 0.0);
-        Vec3d u = cross(normal, across).normalize();
+        Vec3d u = cross(normal, seed).normalize();
         Vec3d v = cross(normal, u).normalize();
+        ServerWorld world = portal.world();
 
-        for (int i = 0; i < 24; i++) {
-            double angle = (i / 24.0) * Math.PI * 2.0;
-            double wide = Math.cos(angle) * 0.95;
-            double tall = Math.sin(angle) * 1.15;
+        for (int i = 0; i < RING_POINTS; i++) {
+            double angle = ((i + phase * 0.35) / RING_POINTS) * Math.PI * 2.0;
             Vec3d point = portal.at()
-                    .add(u.multiply(wide))
-                    .add(v.multiply(tall));
-            portal.world().spawnParticles(colour, point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
+                    .add(u.multiply(Math.cos(angle) * RING_WIDE))
+                    .add(v.multiply(Math.sin(angle) * RING_TALL));
+            world.spawnParticles(colour, true, true, point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
+        }
+
+        // A few motes across the opening as well, so it reads as a surface you
+        // could step through rather than a hoop drawn in the air.
+        for (int i = 0; i < INNER_POINTS; i++) {
+            double angle = ((i * 2.4) + phase * 0.6);
+            double spread = 0.35 + 0.5 * ((i % 3) / 3.0);
+            Vec3d point = portal.at()
+                    .add(u.multiply(Math.cos(angle) * RING_WIDE * spread))
+                    .add(v.multiply(Math.sin(angle) * RING_TALL * spread));
+            world.spawnParticles(ParticleTypes.END_ROD, true, true,
+                    point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
         }
     }
 

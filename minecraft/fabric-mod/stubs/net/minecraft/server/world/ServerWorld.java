@@ -13,6 +13,7 @@ public class ServerWorld extends World {
     public net.minecraft.server.MinecraftServer getServer() { return null; }
     public Iterable<Entity> iterateEntities() { return java.util.List.of(); }
     public void spawnParticles(ParticleEffect effect, double x, double y, double z, int count, double dx, double dy, double dz, double speed) {}
+    public void spawnParticles(ParticleEffect effect, boolean force, boolean important, double x, double y, double z, int count, double dx, double dy, double dz, double speed) {}
     public void createExplosion(Entity source, double x, double y, double z, float power, ExplosionSourceType type) {}
     public BlockState getBlockState(BlockPos pos) { return null; }
     public void setBlockState(BlockPos pos, BlockState state, int flags) {}
