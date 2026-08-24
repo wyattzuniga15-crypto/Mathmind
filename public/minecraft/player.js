@@ -39,6 +39,11 @@ class Player extends Entity {
     if (input.key('KeyS')) fw -= 1;
     if (input.key('KeyA')) st -= 1;
     if (input.key('KeyD')) st += 1;
+    if (input.analog) {
+      fw = clamp(input.analog.fw, -1, 1);
+      st = clamp(input.analog.st, -1, 1);
+      if (input.analog.sprint && fw > 0.5 && this.hunger > 6) this.sprinting = true;
+    }
     this.sneaking = input.key('ShiftLeft') || input.key('ShiftRight');
     if (input.key('ControlLeft') && fw > 0 && this.hunger > 6) this.sprinting = true;
     if (fw <= 0 || this.sneaking || this.hunger <= 6) this.sprinting = false;
@@ -158,7 +163,7 @@ class Player extends Entity {
         this.bowCharge = Math.min(1, (this.bowCharge || 0) + dt);
       } else if (this.bowCharge > 0.15) {
         // release
-        const look = this.lookDir();
+        const look = input.aimRay || this.lookDir();
         const sp = 10 + this.bowCharge * 22;
         game.arrows.push(new Arrow(
           this.x + look[0] * 0.4, this.y + this.eye - 0.1, this.z + look[2] * 0.4,
@@ -189,15 +194,15 @@ class Player extends Entity {
       }
     } else this.eatT = 0;
 
-    // ---- mining ----
-    const look = this.lookDir();
+    // ---- mining (aim from touch point when present, else the crosshair) ----
+    const look = input.aimRay || this.lookDir();
     const hit = world.raycast(this.x, this.y + this.eye, this.z, look[0], look[1], look[2], 5);
     game.target = hit;
     if (input.mouseLeft && !input.uiOpen) {
       this.swing = 0.25;
       if (hit) {
         // attack mob takes precedence — handled in main via entity ray; mine block here
-        if (!game.tryAttack()) {
+        if (!game.tryAttack(look)) {
           const key = hit.x + ',' + hit.y + ',' + hit.z;
           const heldId = held ? held.id : 0;
           const bt = breakTime(hit.id, heldId);

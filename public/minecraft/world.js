@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------- world: chunks, generation, meshing
 
 const CHUNK = 16, WORLD_H = 128, SEA = 44;
-const VIEW_R = 6;               // chunk load radius
+let VIEW_R = 6;                 // chunk load radius (reduced on touch devices)
 const CKEY = (cx, cz) => cx + ',' + cz;
 
 class Chunk {

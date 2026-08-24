@@ -221,6 +221,12 @@ const UI = {
       const cnt = document.createElement('span'); cnt.className = 'cnt';
       const dur = document.createElement('div'); dur.className = 'dur';
       el.append(cv, cnt, dur);
+      const idx = i;
+      el.addEventListener('pointerdown', () => {
+        if (game.state !== 'playing' || Input.uiOpen) return;
+        game.inv.sel = idx;
+        this.refreshHotbar(); this.showItemName();
+      });
       hb.appendChild(el);
       this.hotEls.push({ el, cv: cv.getContext('2d'), cnt, dur });
     }

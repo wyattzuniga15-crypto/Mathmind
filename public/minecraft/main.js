@@ -36,10 +36,14 @@ const Game = {
   // ---------------- boot ----------------
   boot() {
     this.canvas = document.getElementById('glcanvas');
+    this.touchMode = window.matchMedia('(pointer: coarse)').matches ||
+      (navigator.maxTouchPoints > 0 && !window.matchMedia('(pointer: fine)').matches);
+    if (this.touchMode) VIEW_R = 5;   // lighter world for phones
     Renderer.init(this.canvas);
     this.inv = new Inventory();
     UI.init(this);
     Input.init(this.canvas, this);
+    TouchUI.init(this);
     Input.onLock = locked => {
       // ignore unlock events fired during UI open/close transitions
       if (!locked && this.state === 'playing' && !Input.uiOpen &&
@@ -48,11 +52,11 @@ const Game = {
     this.drawTitleBg();
     const hasSave = !!Store.get(SAVE_KEY);
     document.getElementById('worldinfo').textContent = hasSave ? 'Saved world found — Play resumes it' : '';
-    if (!window.matchMedia('(pointer:fine)').matches) {
-      const warn = document.createElement('div');
-      warn.style.cssText = 'position:relative;color:#ffb3b3;font-size:14px;margin-top:14px;text-shadow:1px 1px #000;text-align:center';
-      warn.textContent = 'Heads up: BlockCraft needs a mouse and keyboard to play.';
-      document.getElementById('btnplay').after(warn);
+    if (this.touchMode) {
+      const note = document.createElement('div');
+      note.style.cssText = 'position:relative;color:#cfe9c0;font-size:14px;margin-top:14px;text-shadow:1px 1px #000;text-align:center;line-height:1.6';
+      note.innerHTML = 'Touch controls: joystick to move · drag to look ·<br>tap to place/attack · hold to mine';
+      document.getElementById('btnplay').after(note);
     }
     document.getElementById('btnplay').addEventListener('click', () => { Sfx.click(); this.startSurvival(); });
     document.getElementById('btnresume').addEventListener('click', () => { Sfx.click(); this.resume(); });
@@ -159,7 +163,24 @@ const Game = {
     this.lockPointer();
   },
 
+  // world-space ray through a screen point (for touch aiming)
+  screenRay(clientX, clientY) {
+    const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+    const ndcX = (clientX / w) * 2 - 1, ndcY = 1 - (clientY / h) * 2;
+    const f = 1 / Math.tan((this._fov || 72) * Math.PI / 360);
+    const vx = ndcX * (w / h) / f, vy = ndcY / f, vz = -1;
+    const p = this.player;
+    const cp = Math.cos(p.pitch), sp = Math.sin(p.pitch);
+    const cy = Math.cos(p.yaw), sy = Math.sin(p.yaw);
+    const wx = cy * vx + sy * sp * vy + sy * cp * vz;
+    const wy = cp * vy - sp * vz;
+    const wz = -sy * vx + cy * sp * vy + cy * cp * vz;
+    const l = Math.hypot(wx, wy, wz) || 1;
+    return [wx / l, wy / l, wz / l];
+  },
+
   lockPointer() {
+    if (this.touchMode) return;
     this._uiT = performance.now();
     try {
       const r = this.canvas.requestPointerLock();
@@ -172,7 +193,7 @@ const Game = {
     }, 900);
   },
   enableLockFallback() {
-    if (this.lockFallback) return;
+    if (this.lockFallback || this.touchMode) return;
     this.lockFallback = true;
     this.msg('Mouse capture unavailable — hold a mouse button and drag to look');
   },
@@ -326,9 +347,9 @@ const Game = {
     this.drops.push(d);
   },
 
-  tryAttack() {
+  tryAttack(ray) {
     if (this.attackCd > 0) return this._lastAttackHit || false;
-    const p = this.player, look = p.lookDir();
+    const p = this.player, look = ray || p.lookDir();
     for (const m of this.mobs) {
       // ray vs expanded AABB by sampling
       for (let t = 0.5; t <= 3.5; t += 0.25) {
@@ -523,6 +544,12 @@ const Game = {
 
       p.update(this, dt, Input);
       this.attackCd -= dt;
+
+      // touch aim lingers briefly after the finger lifts
+      if (Input.aimRay && !TouchUI.holdActive) {
+        Input.aimTTL = (Input.aimTTL ?? 0.3) - dt;
+        if (Input.aimTTL <= 0) { Input.aimRay = null; Input.aimTTL = undefined; }
+      }
 
       // entities
       for (const m of this.mobs) m.update(this, dt);
