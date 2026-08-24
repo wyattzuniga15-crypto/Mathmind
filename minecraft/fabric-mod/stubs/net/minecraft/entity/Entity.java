@@ -24,6 +24,10 @@ public class Entity {
     public BlockPos getBlockPos() { return null; }
     public void setPosition(double x, double y, double z) {}
     public void setGlowing(boolean glowing) {}
+    public void setInvisible(boolean invisible) {}
+    public void setNoGravity(boolean noGravity) {}
+    public void setInvulnerable(boolean invulnerable) {}
+    public void discard() {}
     public void setYaw(float yaw) {}
     public void setPitch(float pitch) {}
     public float getYaw() { return 0.0f; }

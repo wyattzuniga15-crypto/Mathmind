@@ -346,9 +346,25 @@ nothing but `getHealth` and `setHealth` — stable for many versions — instead
 an attribute registry that has been renamed twice recently. Nothing that hits
 it needs to know any of this.
 
-It wears a ravager. A genuinely custom monster needs a client-side entity
-renderer, which is a far larger piece of work than anything else here; the
-mechanics are real, the silhouette is borrowed.
+**What it looks like** is a floating clockwork orrery: a crying-obsidian core
+under a beacon crown, with three amethyst blocks turning close in and six
+purpur pillars turning the other way further out. As its health falls the whole
+mechanism winds tighter and spins faster.
+
+There is a ravager inside it, invisible. That is the hitbox and the thing that
+walks toward you; the construct is what you see.
+
+A bespoke monster model would need a client-side entity renderer, and since
+1.21.2 that means render states — a large API I have no way to verify from
+here, on a mod that ships as one jar with no client half. So the shape is built
+instead from invisible armour stands, each wearing a block on its head, placed
+and spun by mod code every tick.
+
+That is a different trade rather than a lesser one. It is entirely server-side,
+so it works on an unmodified client and cannot break when rendering changes —
+and for this boss it is arguably the better answer, because what it produces
+*is* a clock: nested rings turning at different speeds around a core. A
+hand-modelled monster would have had to imply that.
 
 **Chronarch's Heart** — what it was doing to you, now yours. Right-click and
 you snap back to where you stood **ten seconds ago, with the health you had

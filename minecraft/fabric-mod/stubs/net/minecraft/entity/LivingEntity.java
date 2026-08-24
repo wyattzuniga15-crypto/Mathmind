@@ -9,4 +9,5 @@ public class LivingEntity extends Entity {
     public void setHealth(float health) {}
     public void kill(ServerWorld world) {}
     public boolean addStatusEffect(StatusEffectInstance effect) { return true; }
+    public void equipStack(EquipmentSlot slot, net.minecraft.item.ItemStack stack) {}
 }

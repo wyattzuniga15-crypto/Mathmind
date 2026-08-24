@@ -5,6 +5,10 @@ public class Blocks {
     public static final Block BEDROCK = new Block();
     public static final Block FARMLAND = new Block();
     public static final Block POTATOES = new Block();
+    public static final Block CRYING_OBSIDIAN = new Block();
+    public static final Block BEACON = new Block();
+    public static final Block AMETHYST_BLOCK = new Block();
+    public static final Block PURPUR_PILLAR = new Block();
     public static final Block DIAMOND_ORE = new Block();
     public static final Block DEEPSLATE_DIAMOND_ORE = new Block();
     public static final Block EMERALD_ORE = new Block();

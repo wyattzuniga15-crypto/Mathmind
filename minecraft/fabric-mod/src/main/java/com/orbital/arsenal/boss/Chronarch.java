@@ -57,14 +57,16 @@ public final class Chronarch {
         final MobEntity body;
         final ServerWorld world;
         final ServerBossBar bar;
+        final Construct shape;
         float pool = POOL;
         float lastSeen;
         int age;
 
-        Fight(MobEntity body, ServerWorld world, ServerBossBar bar) {
+        Fight(MobEntity body, ServerWorld world, ServerBossBar bar, Construct shape) {
             this.body = body;
             this.world = world;
             this.bar = bar;
+            this.shape = shape;
             this.lastSeen = body.getMaxHealth();
         }
     }
@@ -83,11 +85,20 @@ public final class Chronarch {
         body.setCustomName(Text.literal("§5The Chronarch"));
         body.setCustomNameVisible(true);
         body.setHealth(body.getMaxHealth());
+        // Invisible, but still the thing that walks at you and takes the hits.
+        // What you see is the construct; what you fight is this.
+        body.setInvisible(true);
         world.spawnEntity(body);
+
+        Construct shape = Construct.assemble(world, at);
+        if (shape == null) {
+            body.discard();
+            return false;
+        }
 
         ServerBossBar bar = new ServerBossBar(
                 Text.literal("§5The Chronarch"), BossBar.Color.PURPLE, BossBar.Style.NOTCHED_10);
-        FIGHTS.add(new Fight(body, world, bar));
+        FIGHTS.add(new Fight(body, world, bar, shape));
 
         world.playSound(null, body.getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN,
                 SoundCategory.MASTER, 100.0F, 0.5F);
@@ -105,6 +116,7 @@ public final class Chronarch {
     private static boolean run(Fight fight) {
         if (fight.body.isRemoved()) {
             fight.bar.clearPlayers();
+            fight.shape.dispel();
             return true;
         }
         fight.age++;
@@ -125,6 +137,8 @@ public final class Chronarch {
 
         float fraction = fight.pool / POOL;
         fight.bar.setPercent(Math.max(0.0f, fraction));
+        // Every tick, so the rings turn smoothly rather than stepping.
+        fight.shape.place(body(fight), fight.age, Math.max(0.0f, fraction));
         audience(fight);
 
         if (fraction <= PHASE_TWO && fight.age % SLOW_EVERY == 0) {
@@ -185,6 +199,7 @@ public final class Chronarch {
     private static void die(Fight fight) {
         Vec3d at = body(fight);
         fight.bar.clearPlayers();
+        fight.shape.dispel();
         announce(fight, "§6✦ The Chronarch falls out of time");
         fight.world.playSound(null, fight.body.getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN,
                 SoundCategory.MASTER, 100.0F, 1.4F);
