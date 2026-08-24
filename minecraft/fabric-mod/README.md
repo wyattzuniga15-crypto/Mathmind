@@ -1,9 +1,10 @@
 # Orbital Arsenal — Fabric mod source
 
-Seven genuinely registered items — `orbital:strike_cannon`,
+Nine genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
 `orbital:orbital_laser`, `orbital:rewind_clock`,
-`orbital:potato_bomb` — with their own textures,
+`orbital:potato_bomb`,
+`orbital:time_stop_clock`, `orbital:slow_time_clock` — with their own textures,
 names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
@@ -209,6 +210,32 @@ the first detonates — sowing any earlier would plant a field and then blow it
 up. It also walks *down* to find the floor rather than planting at the height it
 was aimed at, because after a blast the ground is nowhere near where it started.
 
+**Time Stop Clock** — the world stops dead for **fifteen seconds** and you keep
+moving. Mobs stand still mid-stride, arrows hang in the air, lit TNT stops
+counting down, fluids stop flowing and the sun stops climbing — and you walk
+through all of it, mining and building and swinging as normal. Right-click
+again to let time go early.
+
+**Slow Motion Clock** — the world drops to **quarter speed for twenty seconds**
+while you carry on at your own. Where the Time Stop is absolute, this leaves
+the world moving: mobs still come for you, slowly enough to walk around, and a
+lit TNT gives you four times as long to get clear.
+
+Both ride Minecraft's own tick manager — the machinery behind `/tick freeze`
+and `/tick rate` — rather than anything invented here. That matters most for
+the freeze, because **vanilla's freeze already exempts players by design**.
+Doing it by hand would mean finding and pausing every mob, projectile, falling
+block, fluid, redstone circuit and block entity in the world, and getting one
+of them wrong is a mob that keeps walking toward you while time is stopped.
+
+Two things fall out of using the real tick rate rather than faking one. Only
+one clock can be running at a time — freezing on top of a slowdown would leave
+the rate to be restored by whichever timer fired last, and that failure mode is
+a world stuck at quarter speed with no way back. And the slowdown's own
+countdown has to be measured on the slowed clock: server ticks arrive five
+times a second instead of twenty, so waiting the usual number of them would
+stretch twenty seconds into eighty.
+
 ## How it's put together
 
 ```
@@ -217,6 +244,7 @@ ModItems.java           the three registrations and the creative tab
 Scheduler.java          a tick queue
 weapons/Formation.java  concentric ring layout
 weapons/Shells.java     TNT that detonates on impact rather than on a timer
+time/TimeControl.java   freezing and slowing, through the vanilla tick manager
 weapons/Strikes.java    aiming, explosions, particles
 items/*.java            one class per weapon
 time/Journal.java       the rolling record the rewind clock replays

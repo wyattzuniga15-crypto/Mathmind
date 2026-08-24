@@ -10,6 +10,7 @@ import net.minecraft.world.World;
 public class ServerWorld extends World {
     public void playSound(Entity except, BlockPos pos, SoundEvent sound, SoundCategory cat, float vol, float pitch) {}
     public void spawnEntity(Entity e) {}
+    public net.minecraft.server.MinecraftServer getServer() { return null; }
     public Iterable<Entity> iterateEntities() { return java.util.List.of(); }
     public void spawnParticles(ParticleEffect effect, double x, double y, double z, int count, double dx, double dy, double dz, double speed) {}
     public void createExplosion(Entity source, double x, double y, double z, float power, ExplosionSourceType type) {}

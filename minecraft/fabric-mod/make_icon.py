@@ -125,10 +125,37 @@ POTATO = [
     [_t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t, _t],
 ]
 
+# The two time clocks share the Rewind Clock's shape, recoloured. They are a
+# set — three clocks in an inventory need to read as siblings at 16 pixels,
+# and re-drawing the dial three times would only make them drift apart.
+def recolour(art, swaps):
+    return [[swaps.get(px, px) for px in row] for row in art]
+
+
+# Time Stop: frozen pale blue, the metal gone to ice.
+STOP_CLOCK = recolour(CLOCK, {
+    P: (206, 238, 252, 255),   # face, frost white
+    g: (108, 170, 208, 255),   # rim, cold steel
+    C: (150, 220, 250, 255),   # glint
+    c: (216, 246, 255, 255),
+    d: (24, 60, 96, 255),      # hands, deep ice
+})
+
+# Slow Motion: amber, like everything is moving through syrup.
+SLOW_CLOCK = recolour(CLOCK, {
+    P: (250, 226, 160, 255),   # face, warm amber
+    g: (176, 122, 44, 255),    # rim, old brass
+    C: (255, 214, 120, 255),   # glint
+    c: (255, 244, 200, 255),
+    d: (92, 54, 12, 255),      # hands, dark brass
+})
+
 
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
-    for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO)):
+    for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
+                          ("time_stop_clock", STOP_CLOCK),
+                          ("slow_time_clock", SLOW_CLOCK)):
         out = art / f"{name}.png"
         assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
         assert len(pixels) == 16, f"{name} is not 16 tall"
