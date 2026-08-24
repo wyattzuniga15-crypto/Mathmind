@@ -4,6 +4,13 @@
 const SAVE_KEY = 'blockcraft_save_v1';
 const DAY_LENGTH = 600; // seconds per full day
 
+// localStorage can throw in sandboxed embeds — fall back to in-memory saves
+const Store = {
+  mem: {},
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return this.mem[k] ?? null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { this.mem[k] = v; } },
+};
+
 const Game = {
   state: 'title',   // title | loading | playing | paused | dead
   world: null, player: null, inv: null,
@@ -39,7 +46,7 @@ const Game = {
           performance.now() - (this._uiT || 0) > 600) this.pause();
     };
     this.drawTitleBg();
-    const hasSave = !!localStorage.getItem(SAVE_KEY);
+    const hasSave = !!Store.get(SAVE_KEY);
     document.getElementById('worldinfo').textContent = hasSave ? 'Saved world found — Play resumes it' : '';
     if (!window.matchMedia('(pointer:fine)').matches) {
       const warn = document.createElement('div');
@@ -80,7 +87,7 @@ const Game = {
   startSurvival() {
     document.getElementById('title').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
-    const saved = localStorage.getItem(SAVE_KEY);
+    const saved = Store.get(SAVE_KEY);
     let data = null;
     if (saved) { try { data = JSON.parse(saved); } catch (e) { data = null; } }
     this.world = new World(data ? data.seed : (Math.random() * 0xFFFFFFFF) >>> 0);
@@ -156,8 +163,18 @@ const Game = {
     this._uiT = performance.now();
     try {
       const r = this.canvas.requestPointerLock();
-      if (r && r.catch) r.catch(() => {});
-    } catch (e) {}
+      if (r && r.catch) r.catch(() => this.enableLockFallback());
+    } catch (e) { this.enableLockFallback(); }
+    // if the lock never engages (blocked by the embedding page), fall back
+    clearTimeout(this._lockChk);
+    this._lockChk = setTimeout(() => {
+      if (this.state === 'playing' && !document.pointerLockElement) this.enableLockFallback();
+    }, 900);
+  },
+  enableLockFallback() {
+    if (this.lockFallback) return;
+    this.lockFallback = true;
+    this.msg('Mouse capture unavailable — hold a mouse button and drag to look');
   },
 
   findSpawnY(x, z) {
@@ -210,7 +227,7 @@ const Game = {
     if (!this.world || !this.player) return;
     try {
       const p = this.player;
-      localStorage.setItem(SAVE_KEY, this.world.serialize({
+      Store.set(SAVE_KEY, this.world.serialize({
         x: p.x, y: p.y, z: p.z, yaw: p.yaw, pitch: p.pitch,
         hp: p.hp, hunger: p.hunger, xp: p.xp, spawn: p.spawn,
         inv: this.inv.serialize(), stats: this.stats,
@@ -228,6 +245,8 @@ const Game = {
         e.preventDefault();
       } else if (code === 'Escape' && Input.uiOpen) {
         UI.close();
+      } else if (code === 'Escape' && this.lockFallback && this.state === 'playing') {
+        this.pause();
       } else if (code === 'KeyQ' && !Input.uiOpen && this.state === 'playing') {
         const s = this.inv.held();
         if (s) { this.dropFromPlayer(s.id, 1); this.inv.consumeHeld(); }

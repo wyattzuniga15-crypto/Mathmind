@@ -316,7 +316,7 @@ const Input = {
     window.addEventListener('keyup', e => { this.keys[e.code] = false; });
     window.addEventListener('blur', () => { this.keys = {}; this.mouseLeft = this.mouseRight = false; });
     canvas.addEventListener('mousedown', e => {
-      if (!this.locked) { if (game.state === 'playing') canvas.requestPointerLock(); return; }
+      if (!this.locked && !game.lockFallback) { if (game.state === 'playing') game.lockPointer(); return; }
       if (e.button === 0) { this.mouseLeft = true; this.leftClicks.push(1); }
       if (e.button === 2) { this.mouseRight = true; this.rightClicks.push(1); }
       if (e.button === 1) { e.preventDefault(); game.pickBlock(); }
@@ -331,7 +331,10 @@ const Input = {
       if (this.onLock) this.onLock(this.locked);
     });
     document.addEventListener('mousemove', e => {
-      if (!this.locked || game.state !== 'playing') return;
+      if (game.state !== 'playing' || this.uiOpen) return;
+      // normal path: pointer locked. Fallback (pointer lock unavailable, e.g.
+      // embedded pages): drag with any mouse button held to look around.
+      if (!this.locked && !(game.lockFallback && (e.buttons & 7))) return;
       const p = game.player;
       const sens = 0.0024;
       p.yaw -= e.movementX * sens;
