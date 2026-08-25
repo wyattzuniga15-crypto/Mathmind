@@ -105,6 +105,28 @@
   #tooltip { position:fixed; background:#1a0a2ae8; color:#fff; border:2px solid #25015b; border-radius:3px;
              padding:4px 8px; font-size:14px; pointer-events:none; z-index:51; display:none; }
 
+  /* ---------- boss bar / dimension / creative ---------- */
+  #bosswrap { position:absolute; top:14px; left:50%; transform:translateX(-50%); width:min(52%,520px);
+              display:none; text-align:center; }
+  #bossname { color:#e6d4ff; font-size:14px; font-weight:700; text-shadow:1px 1px #000; letter-spacing:1px; }
+  #bossbar { height:10px; background:#2118268c; border:2px solid #000; margin-top:3px; }
+  #bossbar div { height:100%; width:100%; background:linear-gradient(#e05fe0,#7a1f9e); transition:width .2s; }
+  #bosshint { color:#c8a8e8; font-size:11px; text-shadow:1px 1px #000; margin-top:2px; }
+  #modetag { position:absolute; top:8px; right:120px; color:#9fe0ff; font-size:12px; font-weight:700;
+             text-shadow:1px 1px #000; display:none; }
+  #ctabs { display:flex; gap:3px; margin-bottom:6px; flex-wrap:wrap; }
+  .ctab { font:inherit; font-size:12px; font-weight:700; padding:5px 9px; cursor:pointer; color:#3f3f3f;
+          background:#8b8b8b; border:2px solid; border-color:#fff #373737 #373737 #fff; }
+  .ctab.on { background:#c6c6c6; color:#000; }
+  #cpal { max-height:210px; overflow-y:auto; }
+
+  /* ---------- credits ---------- */
+  #credits { background:#05030acc; z-index:38; overflow:hidden; }
+  #credits h2 { color:#ffd75e; font-size:40px; text-shadow:3px 3px #000; margin-bottom:6px; text-align:center; }
+  #credits .sub { color:#d7c4ff; font-size:17px; text-shadow:2px 2px #000; margin-bottom:20px; text-align:center; }
+  #creditstats { color:#fff; font-size:15px; line-height:1.9; text-shadow:1px 1px #000; text-align:center; margin-bottom:22px; }
+  #creditroll { color:#bdb0d8; font-size:13px; line-height:1.9; text-align:center; margin-bottom:22px; }
+
   /* ---------- pause / death ---------- */
   #pause { background:#0008; z-index:35; }
   #pause h2, #death h2 { color:#fff; font-size:34px; text-shadow:2px 2px #000; margin-bottom:24px; }
@@ -162,6 +184,12 @@
   <div id="hotbar"></div>
   <div id="itemname"></div>
   <div id="msg"></div>
+  <div id="modetag"></div>
+  <div id="bosswrap">
+    <div id="bossname">Ender Dragon</div>
+    <div id="bossbar"><div></div></div>
+    <div id="bosshint"></div>
+  </div>
   <div id="debug"></div>
 </div>
 
@@ -195,6 +223,11 @@
       </div>
       <div id="furnout"></div>
     </div>
+    <div id="creativezone" class="hidden">
+      <h3>Creative</h3>
+      <div id="ctabs"></div>
+      <div id="cpal" class="grid"></div>
+    </div>
     <h3>Inventory</h3>
     <div id="maingrid" class="grid" style="margin-bottom:10px"></div>
     <div id="bargrid" class="grid"></div>
@@ -208,6 +241,7 @@
 <div id="pause" class="screen hidden">
   <h2>Game Paused</h2>
   <button class="mcbtn" id="btnresume">Back to Game</button>
+  <button class="mcbtn" id="btnmode">Switch to Creative</button>
   <button class="mcbtn" id="btnquit">Save &amp; Quit to Title</button>
   <div style="color:#ddd;font-size:14px;line-height:1.9;margin-top:22px;text-shadow:1px 1px #000;text-align:center">
     <b>WASD</b> move · <b>Space</b> jump/swim · <b>Ctrl</b> sprint · <b>Shift</b> sneak<br>
@@ -224,6 +258,19 @@
   <button class="mcbtn" id="btnrespawn">Respawn</button>
 </div>
 
+<!-- Credits -->
+<div id="credits" class="screen hidden">
+  <h2>You beat BlockCraft!</h2>
+  <div class="sub">The Ender Dragon is slain and The End is free.</div>
+  <div id="creditstats"></div>
+  <div id="creditroll">
+    Built block by block · procedural worlds, textures and sound<br>
+    Overworld · The Nether · The End<br>
+    Thanks for playing
+  </div>
+  <button class="mcbtn" id="btncredits">Keep Playing</button>
+</div>
+
 <!-- Loading -->
 <div id="loading" class="screen hidden">
   <h2>Building terrain…</h2>
@@ -237,6 +284,7 @@
   <div id="logo">BLOCK<span>CRAFT</span></div>
   <div id="tagline">Survive the night!</div>
   <button class="mcbtn" id="btnplay">Play Survival</button>
+  <button class="mcbtn" id="btncreative" style="font-size:18px;padding:11px 0;width:300px">Creative Mode</button>
   <div id="title-foot"><span>BlockCraft — private build</span><span id="worldinfo"></span></div>
 </div>
 
@@ -244,11 +292,14 @@
 <script src="blocks.js"></script>
 <script src="atlas.js"></script>
 <script src="world.js"></script>
+<script src="dimgen.js"></script>
 <script src="render.js"></script>
 <script src="entities.js"></script>
+<script src="boss.js"></script>
 <script src="player.js"></script>
 <script src="ui.js"></script>
 <script src="touch.js"></script>
 <script src="main.js"></script>
+<script src="dims.js"></script>
 </body>
 </html>

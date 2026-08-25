@@ -11,8 +11,9 @@ requests. It is an original work for private use, not affiliated with Mojang or 
 - **Local**: open `index.html` in any browser with WebGL2 (Chrome, Edge, Firefox), or serve
   the folder with any static server.
 
-There is a single **Play Survival** button. Your world is saved automatically (every 20
-seconds and on pause/quit) to your browser's localStorage, and the button resumes it.
+Two buttons: **Play Survival** and **Creative Mode**. Each keeps its own saved world,
+stored automatically (every 20 seconds and on pause/quit) in your browser's localStorage,
+and the matching button resumes it. You can switch mode mid-game from the pause menu.
 
 ## Controls
 
@@ -30,7 +31,30 @@ seconds and on pause/quit) to your browser's localStorage, and the button resume
 | Q | Drop held item |
 | Middle click | Pick targeted block from inventory |
 | F3 | Debug overlay |
+| M | Toggle music |
 | Esc | Pause |
+| Double-tap Space | Fly (creative) — Space up, Shift down |
+
+On a phone or tablet the game switches to touch controls: a floating joystick to move
+(push to the edge to sprint), drag anywhere to look, tap to place or attack, hold to mine,
+plus jump, sneak, inventory and pause buttons.
+
+## Beating the game
+
+The full progression is here, the same shape as the real thing:
+
+1. Gather wood and stone, craft tools, survive the first nights.
+2. Mine **diamonds**, then build a 4x5 **obsidian** frame and light it with **flint and
+   steel** (iron ingot + flint) to open a **Nether portal**.
+3. In the **Nether**, find a **fortress** and kill **blazes** for blaze rods; craft
+   **blaze powder**.
+4. Back in the **Overworld**, hunt **endermen** at night for **ender pearls**, and combine
+   them with blaze powder into **eyes of ender**.
+5. **Throw an eye** to point the way to the buried **stronghold**, a few hundred blocks
+   out, and fill the twelve **end portal frames** to open the way.
+6. In **The End**, break the **end crystals** on the obsidian pillars — they heal the
+   dragon — then bring down the **Ender Dragon**.
+7. The exit portal opens, a dragon egg is left behind, and the credits roll.
 
 ## Features
 
@@ -48,6 +72,14 @@ seconds and on pause/quit) to your browser's localStorage, and the button resume
   breaking cracks, first-person hand, torch point-lighting, ambient occlusion
 - Beds set your respawn point and skip the night; saplings regrow trees; sand and gravel
   fall; wheat can be planted from seeds
+- **Three dimensions**: the Overworld, the Nether (netherrack caverns, lava seas,
+  glowstone, quartz, nether fortresses with loot) and The End (a floating island of end
+  stone, obsidian pillars, end crystals and the dragon), each with its own sky and light
+- **Creative mode**: flight, invulnerability, instant mining, unlimited blocks and a
+  tabbed palette of every block and item in the game
+- **Mobs of every dimension**: ghasts and blazes that hover and throw fire, zombie pigmen
+  that turn on you when struck, endermen that blink away when hit
+- TNT with chain reactions, water and lava making obsidian, XP levels, achievements
 - All audio synthesized live with WebAudio
 
 ## Files
@@ -64,3 +96,7 @@ seconds and on pause/quit) to your browser's localStorage, and the button resume
 | `player.js` | Player movement, mining/placing, hunger, input |
 | `ui.js` | Sounds, inventory model, crafting logic, DOM UI, HUD |
 | `main.js` | Game state machine, streaming, day/night, spawning, saving |
+| `dimgen.js` | Nether and End terrain, nether fortresses, the stronghold |
+| `dims.js` | Travel between dimensions, portals, eyes of ender, creative mode, credits |
+| `boss.js` | End crystals and the Ender Dragon |
+| `touch.js` | Touch controls for phones and tablets |

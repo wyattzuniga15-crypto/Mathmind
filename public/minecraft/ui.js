@@ -80,6 +80,10 @@ const Sfx = {
     else this.tone(0.22, 500, 300, 0.28, 'triangle');
   },
   step(blockId) { this.noise(0.05, 600, 0.08, 1); },
+  fireball() { this.noise(0.35, 700, 0.35, 0.8); this.tone(0.3, 260, 90, 0.2, 'sawtooth'); },
+  portal() { this.tone(0.7, 90, 260, 0.22, 'sine'); this.noise(0.6, 400, 0.18, 0.6); },
+  dragon() { this.tone(0.9, 160, 60, 0.45, 'sawtooth'); this.noise(0.7, 220, 0.35, 0.5); },
+  crystal() { this.tone(0.35, 900, 200, 0.3, 'triangle'); this.noise(0.4, 1400, 0.3, 1); },
   musicOn: true,
   note(f, dur, vol, delay = 0) {
     try {
@@ -272,6 +276,13 @@ const UI = {
   },
   hover(container, i) {
     let s = null;
+    if (container === this.$('cpal')) {
+      const tip = this.$('tooltip');
+      if (this.palIds && this.palIds[i] !== undefined) {
+        tip.textContent = itemLabel(this.palIds[i]); tip.style.display = 'block';
+      }
+      return;
+    }
     if (container === this.$('maingrid')) s = this.game.inv.slots[9 + i];
     else if (container === this.$('bargrid')) s = this.game.inv.slots[i];
     else if (container === this.$('craftgrid')) s = this.craftSlots[i];
@@ -321,6 +332,8 @@ const UI = {
     }
     if (this.mode === 'chest' && this.chestEls)
       for (let i = 0; i < 27; i++) this.drawSlot(this.chestEls[i], this.chestRef[i]);
+    if (this.game.creative && this.palEls && this.palIds)
+      this.palIds.forEach((id, i) => this.drawSlot(this.palEls[i], { id, count: 1 }));
     // ghost
     const g = this.$('ghost');
     if (inv.cursor) {
@@ -361,6 +374,8 @@ const UI = {
       this.furnFuelEl = this.buildGrid(this.$('furnfuel'), 1, (i, e) => this.slotClick(0, 'furnfuel', e))[0];
       this.furnOutEl = this.buildGrid(this.$('furnout'), 1, (i, e) => this.slotClick(0, 'furnout', e))[0];
     }
+    this.$('creativezone').classList.toggle('hidden', !this.game.creative || mode === 'furnace' || mode === 'chest');
+    if (this.game.creative && mode !== 'furnace' && mode !== 'chest') this.buildCreative();
     this.game._uiT = performance.now();
     if (mode === 'chest') {
       this.chestRef = ref;
@@ -535,6 +550,78 @@ const UI = {
     } else air.innerHTML = '';
     this.$('vignette').style.opacity = p.hp <= 6 ? '1' : '0';
   },
+  // ---------------- boss bar ----------------
+  refreshBoss(d) {
+    const wrap = this.$('bosswrap');
+    if (!d || d.dead) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    this.$('bossbar').firstElementChild.style.width = Math.max(0, d.hp / d.maxHp * 100) + '%';
+    const left = this.game.crystals.filter(c => !c.dead).length;
+    this.$('bosshint').textContent = left
+      ? `${left} end crystal${left > 1 ? 's' : ''} still healing it`
+      : 'Unshielded — bring it down!';
+  },
+
+  setGameMode(creative) {
+    const tag = this.$('modetag');
+    tag.style.display = creative ? 'block' : 'none';
+    tag.textContent = 'CREATIVE';
+    const b = this.$('btnmode');
+    if (b) b.textContent = creative ? 'Switch to Survival' : 'Switch to Creative';
+    this.$('creativezone').classList.toggle('hidden', !creative);
+  },
+
+  // ---------------- creative palette ----------------
+  CREATIVE_TABS: [
+    ['Nature', () => [B.grass_block, B.dirt, B.stone, B.cobblestone, B.sand, B.gravel, B.snow_block, B.ice,
+      B.oak_log, B.birch_log, B.spruce_log, B.oak_leaves, B.spruce_leaves, B.tall_grass, B.dandelion, B.poppy,
+      B.red_mushroom, B.brown_mushroom, B.pumpkin, B.cactus, B.oak_sapling, B.water, B.lava, B.obsidian]],
+    ['Building', () => [B.oak_planks, B.stone_bricks, B.brick_block, B.sandstone, B.mossy_cobblestone, B.glass,
+      B.wool, B.bookshelf, B.stone_slab, B.oak_slab, B.purpur_block, B.nether_bricks, B.torch, B.crafting_table,
+      B.furnace, B.chest, B.bed, B.tnt, B.farmland]],
+    ['Nether', () => [B.netherrack, B.soul_sand, B.glowstone, B.quartz_ore, B.nether_bricks,
+      I.nether_quartz, I.glowstone_dust, I.blaze_rod, I.blaze_powder, I.flint_and_steel, I.gunpowder]],
+    ['End', () => [B.end_stone, B.end_portal_frame, B.purpur_block, B.dragon_egg, B.obsidian,
+      I.ender_pearl, I.eye_of_ender]],
+    ['Tools', () => {
+      const out = [];
+      for (const pre of ['wooden', 'stone', 'iron', 'golden', 'diamond'])
+        for (const k of ['pickaxe', 'axe', 'shovel', 'sword']) out.push(I[pre + '_' + k]);
+      out.push(I.bow, I.arrow, I.flint_and_steel);
+      return out;
+    }],
+    ['Items', () => [I.coal, I.charcoal, I.iron_ingot, I.gold_ingot, I.diamond, I.stick, I.string, I.feather,
+      I.leather, I.flint, I.bone, I.egg, I.apple, I.bread, I.steak, I.cooked_porkchop, I.cooked_chicken,
+      I.wheat, I.wheat_seeds, I.rotten_flesh]],
+  ],
+  buildCreative() {
+    const tabs = this.$('ctabs');
+    tabs.innerHTML = '';
+    this.CREATIVE_TABS.forEach(([name], i) => {
+      const b = document.createElement('button');
+      b.className = 'ctab' + (i === (this.ctab || 0) ? ' on' : '');
+      b.textContent = name;
+      b.addEventListener('pointerdown', e => {
+        e.preventDefault(); e.stopPropagation();
+        this.ctab = i; Sfx.click(); this.buildCreative();
+      });
+      tabs.appendChild(b);
+    });
+    const ids = this.CREATIVE_TABS[this.ctab || 0][1]().filter(id => id !== undefined);
+    this.palEls = this.buildGrid(this.$('cpal'), ids.length, (i, e) => {
+      const id = ids[i];
+      const def = itemDef(id);
+      const stack = { id, count: def.durability ? 1 : maxStack(id) };
+      if (def.durability) stack.dur = def.durability;
+      if (this.game.inv.cursor) this.game.inv.cursor = null;
+      else this.game.inv.cursor = stack;
+      Sfx.click();
+      this.refreshAll();
+    });
+    ids.forEach((id, i) => this.drawSlot(this.palEls[i], { id, count: 1 }));
+    this.palIds = ids;
+  },
+
   refreshXp(p) {
     let xp = p.xp, l = 0, need = 8;
     while (xp >= need) { xp -= need; l++; need = 8 + l * 4; }

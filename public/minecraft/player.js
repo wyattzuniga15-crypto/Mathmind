@@ -61,13 +61,31 @@ class Player extends Entity {
     const ml = Math.hypot(mx, mz);
     if (ml > 1) { mx /= ml; mz /= ml; }
 
+    if (world.getBlock(this.x, this.y - 0.2, this.z) === B.soul_sand) speed *= 0.45;
     const onIce = world.getBlock(this.x, this.y - 0.5, this.z) === B.ice;
     const accel = this.onGround ? (onIce ? 2.5 : 22) : 5.5;
     this.vx = lerp(this.vx, mx * speed, clamp(accel * dt, 0, 1));
     this.vz = lerp(this.vz, mz * speed, clamp(accel * dt, 0, 1));
 
+    // creative flight: double-tap jump to take off, then rise and sink freely
+    if (game.creative) {
+      const jump = input.key('Space');
+      if (jump && !this._jumpWas) {
+        const now = performance.now();
+        if (now - (this._lastJump || 0) < 320) { this.flying = !this.flying; this.vy = 0; }
+        this._lastJump = now;
+      }
+      this._jumpWas = jump;
+      if (this.onGround && this.vy <= 0 && !jump) this.flying = false;
+      if (this.flying) {
+        const down = this.sneaking;
+        this.vy = jump ? 8 : down ? -8 : this.vy * 0.75;
+        speed *= 1.6;
+      }
+    } else this.flying = false;
+
     // jump / swim
-    if (input.key('Space')) {
+    if (input.key('Space') && !this.flying) {
       if (inWater) this.vy = Math.min(this.vy + 26 * dt, 3.6);
       else if (this.onGround) {
         this.vy = 8.4;
@@ -86,7 +104,16 @@ class Player extends Entity {
     // ---- physics + fall damage ----
     const wasGround = this.onGround;
     const prevVy = this.vy;
-    this.physics(world, dt);
+    if (this.flying) {
+      const step = (ax, v) => {
+        const nx = this.x + (ax === 0 ? v : 0), ny = this.y + (ax === 1 ? v : 0), nz = this.z + (ax === 2 ? v : 0);
+        if (!world.boxCollides(nx - this.w, ny, nz - this.w, nx + this.w, ny + this.h, nz + this.w)) {
+          this.x = nx; this.y = ny; this.z = nz;
+        }
+      };
+      step(0, this.vx * dt); step(1, this.vy * dt); step(2, this.vz * dt);
+      this.onGround = false; this.fallStart = null;
+    } else this.physics(world, dt);
     if (!this.onGround && this.fallStart === null && this.vy < 0) this.fallStart = this.y + -this.vy * 0; // set below
     if (this.vy < 0 && this.fallStart === null) this.fallStart = this.y - this.vy * dt;
     if (this.fallStart !== null && this.fallStart < this.y) this.fallStart = this.y;
@@ -140,6 +167,7 @@ class Player extends Entity {
     } else { this.air = this.maxAir; this.airT = 0; }
 
     // ---- hunger / regen ----
+    if (game.creative) { this.hunger = 20; this.hp = this.maxHp; this.air = this.maxAir; }
     this.exhaustion += (this.sprinting ? 0.28 : 0.02) * dt * hspeed * 0.25;
     if (this.exhaustion > 4) {
       this.exhaustion -= 4;
@@ -205,7 +233,8 @@ class Player extends Entity {
         if (!game.tryAttack(look)) {
           const key = hit.x + ',' + hit.y + ',' + hit.z;
           const heldId = held ? held.id : 0;
-          const bt = breakTime(hit.id, heldId);
+          let bt = breakTime(hit.id, heldId);
+          if (game.creative && bt !== Infinity) bt = 0.05;
           if (bt === Infinity) { this.mining = null; }
           else {
             if (!this.mining || this.mining.key !== key) {
@@ -237,6 +266,7 @@ class Player extends Entity {
     while (input.rightClicks.length) {
       input.rightClicks.pop();
       if (input.uiOpen) continue;
+      if (held && held.id === I.eye_of_ender && !hit) { game.throwEye(); continue; }
       if (heldDef && heldDef.food && this.hunger < 20) continue; // eating instead
       if (hit) {
         const tid = hit.id;
@@ -245,6 +275,23 @@ class Player extends Entity {
         if (tid === B.chest) { game.openChest(hit.x, hit.y, hit.z); continue; }
         if (tid === B.bed) { game.sleep(hit.x, hit.y, hit.z); continue; }
         if (tid === B.tnt) { game.igniteTnt(hit.x, hit.y, hit.z); continue; }
+        // flint and steel lights a portal frame (or sets netherrack alight)
+        if (held && held.id === I.flint_and_steel) {
+          if (tid === B.obsidian && game.lightPortal(hit.x, hit.y, hit.z)) {
+            game.inv.damageHeld(game);
+          } else {
+            Sfx.dig(B.stone);
+            game.particles.burst(hit.x + 0.5, hit.y + 1, hit.z + 0.5, TileIdx.fireball, 4, 1);
+            game.inv.damageHeld(game);
+          }
+          continue;
+        }
+        // eyes of ender slot into portal frames; otherwise they are thrown
+        if (held && held.id === I.eye_of_ender) {
+          if (tid === B.end_portal_frame) game.fillFrame(hit.x, hit.y, hit.z);
+          else game.throwEye();
+          continue;
+        }
         // plant seeds on top of grass/dirt
         if (held && held.id === I.wheat_seeds && hit.face[1] === 1 &&
             (tid === B.grass_block || tid === B.dirt || tid === B.farmland) &&
@@ -286,7 +333,7 @@ class Player extends Entity {
   }
 
   hurt(game, dmg, kx = 0, kz = 0, isFall = false) {
-    if (this.dead || dmg <= 0) return;
+    if (this.dead || dmg <= 0 || game.creative) return;
     if (this.hurtCd > 0 && !isFall) return;
     this.hurtCd = 0.7;
     this.hp -= dmg;

@@ -27,8 +27,12 @@ function blocksSky(id) {
 }
 
 class World {
-  constructor(seed) {
+  constructor(seed, dim = 'overworld') {
     this.seed = seed >>> 0;
+    this.dim = dim;
+    this.fortressSpots = [];
+    this.dragonDead = false;
+    this.strongholdBuilt = false;
     this.chunks = new Map();
     this.diffs = {};            // "x,y,z" -> id  (player edits, saved)
     this.furnaces = {};         // "x,y,z" -> {in:[id,n], fuel:[id,n], out:[id,n], burn:0, burnMax:0, prog:0}
@@ -77,6 +81,8 @@ class World {
     if (c) return c;
     c = new Chunk(cx, cz);
     this.chunks.set(key, c);
+    if (this.dim === 'nether') { genNether(this, c, cx, cz); this.computeHeightmap(c); return c; }
+    if (this.dim === 'end') { genEnd(this, c, cx, cz); this.computeHeightmap(c); return c; }
     const s = this.seed;
     for (let lx = 0; lx < CHUNK; lx++) for (let lz = 0; lz < CHUNK; lz++) {
       const wx = cx * CHUNK + lx, wz = cz * CHUNK + lz;
@@ -133,6 +139,9 @@ class World {
     // ensure ring of base chunks so features can cross borders
     for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) this.baseChunk(cx + dx, cz + dz);
     c.populated = true;
+    if (this.dim === 'nether') { popNether(this, c, cx, cz); c.dirty = true; return; }
+    if (this.dim === 'end') { popEnd(this, c, cx, cz); c.dirty = true; return; }
+    popStronghold(this, c, cx, cz);
     const rng = mulberry32(this.seed ^ Math.imul(cx, 341873128) ^ Math.imul(cz, 132897987));
     const setg = (x, y, z, id, soft) => {
       if (y < 1 || y >= WORLD_H) return;
@@ -339,6 +348,8 @@ class World {
 
   // sky light at cell (0..1); leaves don't block
   skyAt(x, y, z) {
+    if (this.dim === 'nether') return 0.55;
+    if (this.dim === 'end') return 0.72;
     const c = this.chunks.get(CKEY(x >> 4, z >> 4));
     if (!c) return 1;
     const hm = c.hmax[(z & 15) * CHUNK + (x & 15)];
@@ -385,12 +396,21 @@ class World {
   }
 
   // ---------------- save / load ----------------
-  serialize(player, timeOfDay) {
-    return JSON.stringify({
-      v: 2, seed: this.seed, time: timeOfDay,
-      diffs: this.diffs, furnaces: this.furnaces, chests: this.chests,
-      player,
-    });
+  strongholdPos() {
+    if (!this._sh) this._sh = strongholdPos(this.seed);
+    return this._sh;
+  }
+  dump() {
+    return { diffs: this.diffs, furnaces: this.furnaces, chests: this.chests,
+             dragonDead: this.dragonDead, strongholdBuilt: this.strongholdBuilt };
+  }
+  restore(d) {
+    if (!d) return;
+    this.diffs = d.diffs || {};
+    this.furnaces = d.furnaces || {};
+    this.chests = d.chests || {};
+    this.dragonDead = !!d.dragonDead;
+    this.strongholdBuilt = !!d.strongholdBuilt;
   }
   applyDiffsToChunk(c) {
     // called after populate; diffs already applied via setBlockRaw path on load

@@ -78,6 +78,20 @@ defBlock(47, 'bed', { hardness:0.3, rt:RT_HALF, opaque:false, height:0.5 });
 defBlock(48, 'stone_slab', { hardness:10, tool:T_PICK, needsTool:1, rt:RT_HALF, opaque:false, height:0.5 });
 defBlock(49, 'oak_slab', { hardness:3, tool:T_AXE, flammable:true, rt:RT_HALF, opaque:false, height:0.5 });
 defBlock(50, 'tnt', { hardness:0.1 });
+// --- the Nether ---
+defBlock(51, 'netherrack', { hardness:0.4, tool:T_PICK, needsTool:1 });
+defBlock(52, 'soul_sand', { hardness:0.5, tool:T_SHOVEL, slow:true });
+defBlock(53, 'glowstone', { hardness:0.3, light:1, drops:['glowstone_dust',3] });
+defBlock(54, 'quartz_ore', { hardness:3, tool:T_PICK, needsTool:1, drops:['nether_quartz',1] });
+defBlock(55, 'nether_bricks', { hardness:10, tool:T_PICK, needsTool:1 });
+defBlock(56, 'nether_portal', { solid:false, opaque:false, hardness:-1, light:0.85, portal:'nether' });
+// --- the End ---
+defBlock(57, 'end_stone', { hardness:15, tool:T_PICK, needsTool:1 });
+defBlock(58, 'end_portal_frame', { hardness:-1 });
+defBlock(59, 'end_portal_frame_filled', { hardness:-1, light:0.5, drops:()=>null });
+defBlock(60, 'end_portal', { solid:false, opaque:false, hardness:-1, light:0.6, portal:'end' });
+defBlock(61, 'dragon_egg', { hardness:9, tool:T_PICK, light:0.4 });
+defBlock(62, 'purpur_block', { hardness:7.5, tool:T_PICK, needsTool:1 });
 
 // ---------------------------------------------------------------- items (ids >= 256)
 const I = {}; // name -> id
@@ -119,6 +133,13 @@ defItem('feather', {});
 defItem('flint', {});
 defItem('egg', { stack: 16 });
 defItem('bow', { stack: 1, durability: 96, dmg: 1 });
+defItem('flint_and_steel', { stack: 1, durability: 64 });
+defItem('glowstone_dust', {});
+defItem('nether_quartz', {});
+defItem('blaze_rod', {});
+defItem('blaze_powder', {});
+defItem('ender_pearl', { stack: 16 });
+defItem('eye_of_ender', { stack: 16 });
 
 const TOOL_TIERS = [
   ['wooden', 1, 4, 60, 1],   // prefix, tier, speed, durability, bonus dmg
@@ -165,6 +186,11 @@ recipe('oak_slab', 6, [['oak_planks','oak_planks','oak_planks']]);
 recipe('bed', 1, [['wool','wool','wool'],['oak_planks','oak_planks','oak_planks']]);
 recipe('bow', 1, [[P,'stick','string'],['stick',P,'string'],[P,'stick','string']]);
 recipe('arrow', 4, [['flint'],['stick'],['feather']]);
+recipe('flint_and_steel', 1, null, ['iron_ingot', 'flint']);
+recipe('blaze_powder', 2, null, ['blaze_rod']);
+recipe('eye_of_ender', 1, null, ['ender_pearl', 'blaze_powder']);
+recipe('nether_bricks', 1, [['netherrack','netherrack'],['netherrack','netherrack']]);
+recipe('purpur_block', 4, [['nether_quartz','nether_quartz'],['nether_quartz','nether_quartz']]);
 recipe('tnt', 1, [['gunpowder','sand','gunpowder'],['sand','gunpowder','sand'],['gunpowder','sand','gunpowder']]);
 recipe('snow_block', 1, [['snow_block']]); // no-op safeguard
 Recipes.pop();

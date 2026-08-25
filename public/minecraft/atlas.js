@@ -1,8 +1,8 @@
 'use strict';
 // ---------------------------------------------------------------- procedural texture atlas
-// 16px tiles in a 16x16 grid (256x256 canvas). Everything is drawn in code.
+// 16px tiles in a 32x32 grid (512x512 canvas). Everything is drawn in code.
 
-const ATLAS_TILES = 16, TILE = 16, ATLAS_PX = ATLAS_TILES * TILE;
+const ATLAS_TILES = 32, TILE = 16, ATLAS_PX = ATLAS_TILES * TILE;  // 512px, room for every dimension
 const atlasCanvas = document.createElement('canvas');
 atlasCanvas.width = atlasCanvas.height = ATLAS_PX;
 const actx = atlasCanvas.getContext('2d', { willReadFrequently: true });
@@ -306,6 +306,162 @@ T('bed_side', d => {
   d.rect(0, 13, 16, 3, [130, 96, 56], 8);
 });
 
+// ---------------- nether & end tiles ----------------
+T('netherrack', d => {
+  d.fill([110, 38, 38], 14);
+  d.speckle([78, 24, 24], 40, 10); d.speckle([140, 56, 52], 26, 10);
+  for (let k = 0; k < 5; k++) {
+    const x = (d.rng() * 14) | 0, y = (d.rng() * 14) | 0;
+    d.rect(x, y, 2, 1, [70, 20, 20], 6);
+  }
+});
+T('soul_sand', d => {
+  d.fill([84, 64, 52], 10); d.speckle([62, 46, 36], 30, 8);
+  // faces pressed into the sand
+  for (const [ox, oy] of [[3, 4], [9, 8]]) {
+    d.rect(ox, oy, 4, 4, [58, 44, 34], 5);
+    d.px(ox + 1, oy + 1, [38, 28, 22]); d.px(ox + 3, oy + 1, [38, 28, 22]);
+    d.rect(ox + 1, oy + 3, 3, 1, [38, 28, 22]);
+  }
+});
+T('glowstone', d => {
+  d.fill([132, 100, 48], 12);
+  for (let k = 0; k < 16; k++) {
+    const x = (d.rng() * 14) | 0, y = (d.rng() * 14) | 0;
+    d.rect(x, y, 2, 2, [255, 226, 140], 24);
+  }
+  d.speckle([255, 248, 200], 18, 6);
+});
+T('quartz_ore', d => {
+  d.fill([110, 38, 38], 14); d.speckle([78, 24, 24], 26, 10);
+  for (let k = 0; k < 5; k++) {
+    const x = 2 + (d.rng() * 11) | 0, y = 2 + (d.rng() * 11) | 0;
+    d.rect(x, y, 2, 2, [235, 230, 222], 12);
+    d.px(x + 1, y + 1, [190, 184, 176]);
+  }
+});
+T('nether_bricks', d => {
+  d.fill([44, 22, 26], 8);
+  for (const y of [0, 8]) d.rect(0, y, 16, 1, [26, 12, 15], 4);
+  d.rect(7, 1, 1, 7, [26, 12, 15], 4); d.rect(3, 9, 1, 7, [26, 12, 15], 4); d.rect(11, 9, 1, 7, [26, 12, 15], 4);
+  d.speckle([64, 34, 38], 20, 8);
+});
+T('nether_portal', d => {
+  d.fill([120, 40, 190], 26, 210);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const sw = Math.sin(x * 0.9 + y * 0.5) * Math.cos(y * 0.8 - x * 0.3);
+    if (sw > 0.35) d.px(x, y, [196, 122, 240], 225);
+    else if (sw < -0.55) d.px(x, y, [74, 18, 128], 235);
+  }
+});
+T('end_stone', d => {
+  d.fill([220, 222, 168], 10);
+  d.speckle([196, 198, 142], 34, 8); d.speckle([240, 242, 196], 20, 6);
+});
+T('end_frame_top', d => {
+  d.fill([88, 100, 84], 8);
+  d.rect(3, 3, 10, 10, [58, 68, 56], 6);
+});
+T('end_frame_top_filled', d => {
+  d.fill([88, 100, 84], 8);
+  d.rect(3, 3, 10, 10, [30, 34, 30], 4);
+  d.rect(4, 4, 8, 8, [86, 200, 176], 22);
+  d.px(6, 6, [200, 255, 240]); d.px(9, 9, [40, 120, 108]);
+});
+T('end_frame_side', d => {
+  d.fill([88, 100, 84], 8);
+  d.rect(0, 0, 16, 4, [116, 128, 108], 6);
+  d.speckle([66, 76, 64], 18, 6);
+});
+T('end_portal', d => {
+  d.fill([6, 4, 16], 4);
+  for (let k = 0; k < 26; k++) {
+    const x = (d.rng() * 16) | 0, y = (d.rng() * 16) | 0;
+    const c = d.rng();
+    d.px(x, y, c < 0.5 ? [150, 220, 210] : c < 0.8 ? [110, 90, 200] : [230, 240, 255]);
+  }
+});
+T('dragon_egg', d => {
+  d.fill([16, 10, 24], 6);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    if ((x + y) % 5 === 0) d.px(x, y, [58, 34, 78], 255);
+  }
+  d.speckle([120, 80, 160], 12, 10);
+});
+T('purpur_block', d => {
+  d.fill([170, 126, 170], 10);
+  d.speckle([150, 104, 152], 30, 8); d.speckle([196, 160, 196], 18, 6);
+});
+
+// ---------------- nether & end mob skins ----------------
+T('enderman_skin', d => { d.fill([16, 14, 20], 6); d.speckle([28, 24, 34], 16, 6); });
+T('enderman_face', d => {
+  d.fill([16, 14, 20], 6);
+  d.rect(2, 6, 5, 2, [200, 120, 255], 20);
+  d.rect(9, 6, 5, 2, [200, 120, 255], 20);
+  d.px(3, 6, [245, 220, 255]); d.px(12, 7, [245, 220, 255]);
+});
+T('ghast_skin', d => { d.fill([226, 226, 226], 8); d.speckle([200, 200, 204], 22, 6); });
+T('ghast_face', d => {
+  d.fill([226, 226, 226], 8);
+  d.rect(2, 5, 4, 3, [40, 40, 40], 4); d.rect(10, 5, 4, 3, [40, 40, 40], 4);
+  d.rect(4, 10, 8, 3, [40, 40, 40], 4);
+});
+T('ghast_face_angry', d => {
+  d.fill([226, 226, 226], 8);
+  d.rect(2, 5, 4, 3, [220, 40, 40], 10); d.rect(10, 5, 4, 3, [220, 40, 40], 10);
+  d.rect(3, 10, 10, 4, [180, 30, 30], 8);
+});
+T('blaze_skin', d => {
+  d.fill([246, 180, 40], 22);
+  d.speckle([255, 230, 120], 30, 20); d.speckle([210, 110, 20], 22, 14);
+});
+T('blaze_face', d => {
+  d.fill([246, 180, 40], 18);
+  d.rect(3, 5, 3, 3, [70, 50, 10], 6); d.rect(10, 5, 3, 3, [70, 50, 10], 6);
+  d.rect(5, 10, 6, 2, [110, 60, 10], 6);
+});
+T('pigman_skin', d => { d.fill([148, 110, 96], 12); d.speckle([90, 130, 70], 16, 10); });
+T('pigman_face', d => {
+  d.fill([214, 150, 150], 12);
+  d.rect(3, 5, 2, 2, [20, 20, 20]); d.rect(11, 5, 2, 2, [20, 20, 20]);
+  d.rect(5, 9, 6, 4, [176, 110, 116], 8);
+  d.px(6, 11, [90, 40, 46]); d.px(9, 11, [90, 40, 46]);
+  d.speckle([110, 140, 80], 10, 8);
+});
+T('dragon_skin', d => {
+  d.fill([26, 22, 34], 8);
+  d.speckle([44, 38, 58], 26, 8);
+  for (let y = 0; y < 16; y += 4) d.rect(0, y, 16, 1, [12, 10, 16], 4);
+});
+T('dragon_face', d => {
+  d.fill([26, 22, 34], 8);
+  d.rect(2, 4, 5, 3, [210, 60, 210], 24); d.rect(9, 4, 5, 3, [210, 60, 210], 24);
+  d.rect(4, 11, 8, 2, [70, 60, 84], 8);
+  d.px(3, 5, [255, 200, 255]); d.px(12, 5, [255, 200, 255]);
+});
+T('dragon_wing', d => {
+  d.fill([32, 26, 44], 10);
+  for (let y = 0; y < 16; y += 5) d.rect(0, y, 16, 1, [16, 12, 22], 4);
+  d.speckle([54, 44, 72], 18, 8);
+});
+T('crystal', d => {
+  d.fill([0, 0, 0], 0, 0);
+  for (let y = 1; y < 15; y++) {
+    const w = 7 - Math.abs(y - 8) * 0.7;
+    for (let x = 8 - w; x <= 8 + w; x++) d.px(x, y, [222, 240, 220], 205);
+  }
+  d.rect(6, 6, 4, 4, [180, 255, 220], 235);
+  d.px(7, 4, [255, 255, 255]); d.px(9, 11, [140, 200, 180]);
+});
+T('fireball', d => {
+  d.fill([0, 0, 0], 0, 0);
+  for (let y = 2; y < 14; y++) for (let x = 2; x < 14; x++) {
+    const dx = x - 8, dy = y - 8, r = Math.hypot(dx, dy);
+    if (r < 5.6) d.px(x, y, r < 2.4 ? [255, 246, 190] : r < 4 ? [255, 170, 40] : [220, 90, 20], 245);
+  }
+});
+
 // ---------------- assign block tiles ----------------
 function tiles(name, top, bottom, side, front) {
   Blocks[B[name]].tiles = { top: TileIdx[top], bottom: TileIdx[bottom], side: TileIdx[side], front: front ? TileIdx[front] : TileIdx[side] };
@@ -360,6 +516,18 @@ tiles('bed', 'bed_top', 'oak_planks', 'bed_side');
 tiles('stone_slab', 'stone', 'stone', 'stone');
 tiles('oak_slab', 'oak_planks', 'oak_planks', 'oak_planks');
 tiles('tnt', 'tnt_top', 'tnt_top', 'tnt_side');
+tiles('netherrack', 'netherrack', 'netherrack', 'netherrack');
+tiles('soul_sand', 'soul_sand', 'soul_sand', 'soul_sand');
+tiles('glowstone', 'glowstone', 'glowstone', 'glowstone');
+tiles('quartz_ore', 'quartz_ore', 'quartz_ore', 'quartz_ore');
+tiles('nether_bricks', 'nether_bricks', 'nether_bricks', 'nether_bricks');
+tiles('nether_portal', 'nether_portal', 'nether_portal', 'nether_portal');
+tiles('end_stone', 'end_stone', 'end_stone', 'end_stone');
+tiles('end_portal_frame', 'end_frame_top', 'end_frame_side', 'end_frame_side');
+tiles('end_portal_frame_filled', 'end_frame_top_filled', 'end_frame_side', 'end_frame_side');
+tiles('end_portal', 'end_portal', 'end_portal', 'end_portal');
+tiles('dragon_egg', 'dragon_egg', 'dragon_egg', 'dragon_egg');
+tiles('purpur_block', 'purpur_block', 'purpur_block', 'purpur_block');
 
 // ---------------- item icons ----------------
 function toolIcon(name, kind, headC, handleC = [104, 82, 50]) {
@@ -456,6 +624,48 @@ icon('bow', d => {
   d.px(9, 4, w); d.px(10, 5, w); d.px(11, 6, w); d.px(4, 9, w); d.px(5, 10, w); d.px(6, 11, w);
   d.px(12, 7, w); d.px(12, 8, w); d.px(7, 12, w); d.px(8, 12, w);
   for (let i = 0; i < 9; i++) d.px(11 - i + 2, 3 + i, s);   // string
+});
+
+icon('flint_and_steel', d => {
+  d.fill([0,0,0],0,0);
+  d.pat(['................','.....gggg.......','....g....g......','...g..dd..g.....','..g..d..d..g....','.g..d....d......','....d.....s.....','.........ss.....','........sss.....','.......ss.......'],
+    { g: [120, 120, 128], d: [90, 90, 96], s: [150, 110, 60] });
+  d.rect(3, 10, 5, 4, [150, 110, 60], 10);
+  d.rect(4, 11, 3, 2, [110, 78, 40], 6);
+});
+icon('glowstone_dust', d => {
+  d.fill([0,0,0],0,0);
+  for (let k = 0; k < 22; k++) d.px(3 + ((d.rng()*10)|0), 4 + ((d.rng()*9)|0), [255, 232, 150]);
+});
+icon('nether_quartz', d => {
+  d.fill([0,0,0],0,0);
+  d.pat(['................','......mm........','.....mmmm.......','....mmmmmm......','...mmmmmmmm.....','...dmmmmmmd.....','....dmmmmd......','.....dddd.......'], { m: [238, 232, 222], d: [176, 168, 158] });
+});
+icon('blaze_rod', d => {
+  d.fill([0,0,0],0,0);
+  for (let i = 0; i < 11; i++) { d.px(4 + i, 12 - i, [252, 200, 40]); d.px(5 + i, 12 - i, [220, 150, 20]); }
+  d.px(3, 13, [252, 220, 90]); d.px(14, 2, [252, 220, 90]);
+});
+icon('blaze_powder', d => {
+  d.fill([0,0,0],0,0);
+  for (let k = 0; k < 22; k++) d.px(3 + ((d.rng()*10)|0), 4 + ((d.rng()*9)|0), d.rng() < 0.5 ? [252, 180, 30] : [230, 120, 20]);
+});
+icon('ender_pearl', d => {
+  d.fill([0,0,0],0,0);
+  for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) {
+    const r = Math.hypot(x - 7.5, y - 7.5);
+    if (r < 4.6) d.px(x, y, r < 2 ? [180, 250, 230] : [40, 150, 130], 250);
+  }
+  d.px(5, 5, [225, 255, 245]);
+});
+icon('eye_of_ender', d => {
+  d.fill([0,0,0],0,0);
+  for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) {
+    const r = Math.hypot(x - 7.5, y - 7.5);
+    if (r < 4.6) d.px(x, y, [30, 130, 110], 250);
+  }
+  d.rect(6, 5, 3, 6, [240, 245, 230], 8);
+  d.rect(7, 7, 1, 2, [20, 20, 20]);
 });
 
 // ---------------- mob skin tiles ----------------

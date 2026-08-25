@@ -41,6 +41,7 @@ const Renderer = {
     uniform float uAmbient;         // day factor 0..1
     uniform vec3 uFogColor;
     uniform float uFogDist;
+    uniform float uFogNear;
     uniform vec3 uCam;
     uniform float uAlpha;
     uniform int uNumLights;
@@ -62,7 +63,7 @@ const Renderer = {
       vec3 col = tex.rgb * light;
       // warm tint from torch/lava light
       col += vec3(0.20, 0.10, 0.0) * bl * tex.rgb;
-      float fog = clamp((distance(uCam.xz, vWorld.xz) - uFogDist * 0.62) / (uFogDist * 0.38), 0.0, 1.0);
+      float fog = clamp((distance(uCam.xz, vWorld.xz) - uFogDist * uFogNear) / max(uFogDist * (1.0 - uFogNear), 0.001), 0.0, 1.0);
       col = mix(col, uFogColor, fog);
       fragColor = vec4(col, tex.a * uAlpha);
     }`;
@@ -84,6 +85,7 @@ const Renderer = {
     in vec3 vDir;
     uniform vec3 uSunDir;
     uniform float uDay;      // 0..1
+    uniform int uSkyMode;    // 0 overworld, 1 nether, 2 end
     uniform vec3 uZenith; uniform vec3 uHorizon;
     out vec4 fragColor;
     float hash(vec3 p){ p = fract(p*0.3183099+vec3(0.1,0.2,0.3)); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
@@ -91,6 +93,22 @@ const Renderer = {
       vec3 d = normalize(vDir);
       float t = clamp(d.y * 0.5 + 0.5, 0.0, 1.0);
       vec3 col = mix(uHorizon, uZenith, pow(t, 0.8));
+      if (uSkyMode == 1) {
+        // the Nether: a low, roiling red haze with no sky at all
+        float f = hash(floor(d * 30.0 + vec3(uDay * 3.0)));
+        col = mix(uHorizon, uZenith, pow(t, 1.4)) * (0.85 + f * 0.3);
+        fragColor = vec4(col, 1.0);
+        return;
+      }
+      if (uSkyMode == 2) {
+        // The End: void, lit only by its cold scattered stars
+        vec3 sp2 = floor(d * 140.0);
+        float st2 = step(0.9973, hash(sp2));
+        col = mix(uHorizon, uZenith, pow(t, 1.1));
+        col += vec3(0.75, 0.68, 0.95) * st2 * (0.6 + 0.5 * hash(sp2 + 3.0));
+        fragColor = vec4(col, 1.0);
+        return;
+      }
       // sun
       float s = dot(d, uSunDir);
       col += vec3(1.0, 0.85, 0.5) * smoothstep(0.9985, 0.9995, s) * 1.2;
@@ -261,6 +279,7 @@ const Renderer = {
     gl.uniformMatrix4fv(this.skyProg.u.uInvPV, false, inv);
     gl.uniform3f(this.skyProg.u.uSunDir, S.sunDir[0], S.sunDir[1], S.sunDir[2]);
     gl.uniform1f(this.skyProg.u.uDay, S.day);
+    gl.uniform1i(this.skyProg.u.uSkyMode, S.skyMode || 0);
     gl.uniform3fv(this.skyProg.u.uZenith, S.zenith);
     gl.uniform3fv(this.skyProg.u.uHorizon, S.horizon);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.fsq);
@@ -277,6 +296,7 @@ const Renderer = {
     gl.uniform1f(cp.u.uAmbient, S.day);
     gl.uniform3fv(cp.u.uFogColor, fc);
     gl.uniform1f(cp.u.uFogDist, S.underwater ? 30 : VIEW_R * CHUNK);
+    gl.uniform1f(cp.u.uFogNear, S.underwater ? 0.3 : (S.fogNear ?? 0.62));
     gl.uniform3f(cp.u.uCam, S.cam.x, S.cam.y, S.cam.z);
     gl.uniform1f(cp.u.uTime, S.time);
     gl.uniform1f(cp.u.uAlpha, 1);
@@ -365,6 +385,7 @@ const Renderer = {
     gl.uniform1f(cp.u.uAlpha, 1);
 
     // ---------- clouds ----------
+    if (!S.skyMode) {
     gl.useProgram(this.cloudProg.p);
     gl.uniformMatrix4fv(this.cloudProg.u.uPV, false, this.pv);
     gl.uniform3f(this.cloudProg.u.uCam, S.cam.x, S.cam.y, S.cam.z);
@@ -377,6 +398,7 @@ const Renderer = {
     gl.disable(gl.CULL_FACE);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.CULL_FACE);
+    }
     gl.depthMask(true);
     gl.disable(gl.BLEND);
 

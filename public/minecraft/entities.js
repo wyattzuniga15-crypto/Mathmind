@@ -198,6 +198,40 @@ class Arrow extends Entity {
   }
 }
 
+// ---------------------------------------------------------------- fireball
+class Fireball extends Entity {
+  constructor(x, y, z, vx, vy, vz, power) {
+    super(x, y, z);
+    this.vx = vx; this.vy = vy; this.vz = vz;
+    this.w = 0.15; this.h = 0.3;
+    this.power = power;           // 0 = blaze bolt, 1 = ghast fireball
+  }
+  update(game, dt) {
+    this.age += dt;
+    if (this.age > 10) { this.dead = true; return; }
+    const nx = this.x + this.vx * dt, ny = this.y + this.vy * dt, nz = this.z + this.vz * dt;
+    const id = game.world.getBlock(nx, ny, nz);
+    const p = game.player;
+    const hitPlayer = !p.dead && Math.abs(nx - p.x) < 0.55 && Math.abs(nz - p.z) < 0.55 &&
+      ny > p.y - 0.3 && ny < p.y + 2;
+    if ((id && Blocks[id].solid) || hitPlayer) {
+      this.dead = true;
+      if (this.power) game.explode(this.x, this.y, this.z, 2.2, 12);
+      else {
+        game.particles.burst(this.x, this.y, this.z, TileIdx.fireball, 8, 2);
+        Sfx.thud();
+        if (hitPlayer) p.hurt(game, 5, this.vx * 0.1, this.vz * 0.1);
+      }
+      return;
+    }
+    this.x = nx; this.y = ny; this.z = nz;
+    if (Math.random() < 0.5) game.particles.burst(this.x, this.y, this.z, TileIdx.fireball, 1, 0.3);
+  }
+  emit(verts, game) {
+    addSprite(verts, this.x, this.y, this.z, this.power ? 0.4 : 0.16, game.player.yaw, TileIdx.fireball, 1.4);
+  }
+}
+
 // ---------------------------------------------------------------- mobs
 const MOB_DEFS = {
   zombie: { hp: 20, speed: 2.1, hostile: true, dmg: 3, burns: true,
@@ -216,6 +250,15 @@ const MOB_DEFS = {
     drops: () => [[B.wool, randInt(1, 2)]] },
   chicken: { hp: 4, speed: 1.1, hostile: false,
     drops: () => [[I.chicken, 1], [I.feather, randInt(0, 2)]] },
+  // --- the Nether and beyond ---
+  enderman: { hp: 40, speed: 2.7, hostile: true, dmg: 5, teleports: true,
+    drops: () => [[I.ender_pearl, randInt(0, 1)]] },
+  ghast: { hp: 10, speed: 1.5, hostile: true, dmg: 0, flying: true, shoots: 1, hover: 22,
+    drops: () => [[I.gunpowder, randInt(0, 2)]] },
+  blaze: { hp: 20, speed: 1.8, hostile: true, dmg: 0, flying: true, shoots: 0, hover: 3,
+    drops: () => [[I.blaze_rod, randInt(0, 2)]], light: true },
+  pigman: { hp: 20, speed: 2.0, hostile: false, neutral: true, dmg: 4,
+    drops: () => [[I.gold_ingot, randInt(0, 1)], [I.rotten_flesh, randInt(0, 1)]] },
 };
 
 class Mob extends Entity {
@@ -225,8 +268,10 @@ class Mob extends Entity {
     const d = MOB_DEFS[kind];
     this.hp = d.hp; this.maxHp = d.hp;
     this.def = d;
-    this.w = kind === 'chicken' ? 0.22 : kind === 'spider' ? 0.6 : 0.32;
-    this.h = kind === 'chicken' ? 0.7 : kind === 'spider' ? 0.8 : 1.8;
+    const SIZES = { chicken: [0.22, 0.7], spider: [0.6, 0.8], enderman: [0.3, 2.9],
+                    ghast: [1.9, 3.8], blaze: [0.3, 1.8] };
+    const sz = SIZES[kind] || [0.32, 1.8];
+    this.w = sz[0]; this.h = sz[1];
     this.yaw = rand(0, Math.PI * 2);
     this.wanderT = 0;
     this.moveX = 0; this.moveZ = 0;
@@ -238,7 +283,8 @@ class Mob extends Entity {
     this.anim = 0;
   }
   hurt(game, dmg, kx = 0, kz = 0) {
-    if (this.hurtT > 0.3) { }
+    if (this.def.neutral) this.angry = true;          // provoked pigmen swarm
+    if (this.def.teleports && Math.random() < 0.5 && this.hp > dmg) this.blink(game);
     this.hp -= dmg;
     this.hurtT = 0.5;
     this.vx += kx * 6; this.vz += kz * 6; this.vy = Math.max(this.vy, 5);
@@ -265,8 +311,11 @@ class Mob extends Entity {
       if (this.burnT > 1) { this.burnT = 0; this.hurt(game, 2); game.particles.burst(this.x, this.y + this.h, this.z, TileIdx.lava, 3); }
     }
 
+    // ghasts and blazes float instead of walking
+    if (this.def.flying) { this.flyUpdate(game, dt, p, d2p); return; }
+
     let targeting = false;
-    if (this.def.hostile && !p.dead && d2p < 20 * 20) {
+    if ((this.def.hostile || this.angry) && !p.dead && d2p < (this.angry ? 32 * 32 : 20 * 20)) {
       targeting = true;
       const dx = p.x - this.x, dz = p.z - this.z;
       const dl = Math.hypot(dx, dz) || 1;
@@ -339,6 +388,82 @@ class Mob extends Entity {
     this.dead = true;
     game.explode(this.x, this.y + 0.5, this.z, 2.6, 24);
   }
+  flyUpdate(game, dt, p, d2p) {
+    const world = game.world;
+    const aggro = !p.dead && d2p < 46 * 46;
+    // hold station above the ground, drifting toward or away from the player
+    let ty = this.y;
+    let gy = this.y;
+    for (let y = Math.floor(this.y); y > 2; y--) {
+      const id = world.getBlock(this.x, y, this.z);
+      if (id && Blocks[id].solid) { gy = y + 1; break; }
+    }
+    ty = gy + this.def.hover;
+    this.vy = lerp(this.vy, clamp((ty - this.y) * 1.5, -4, 4), 0.08);
+    if (aggro) {
+      const dx = p.x - this.x, dz = p.z - this.z;
+      const dl = Math.hypot(dx, dz) || 1;
+      this.yaw = Math.atan2(dx, dz);
+      const want = this.def.shoots ? 16 : 6;      // ghasts keep their distance
+      const push = (dl - want) / Math.max(dl, 1);
+      this.vx = lerp(this.vx, dx * push * this.def.speed * 0.5, 0.04);
+      this.vz = lerp(this.vz, dz * push * this.def.speed * 0.5, 0.04);
+      if (this.shootCd <= 0 && d2p < 40 * 40 && this.canSee(game, p)) {
+        this.shootCd = this.def.shoots ? 3.2 : 1.8;
+        const ex = this.x, ey = this.y + this.h * 0.5, ez = this.z;
+        const tx = p.x - ex, ty2 = (p.y + 1.2) - ey, tz = p.z - ez;
+        const d = Math.hypot(tx, ty2, tz) || 1;
+        const sp2 = this.def.shoots ? 12 : 18;
+        const n = this.def.shoots ? 1 : 3;        // blazes fire a short burst
+        for (let i = 0; i < n; i++) {
+          const j = i * 0.06;
+          game.fireballs.push(new Fireball(ex, ey, ez,
+            (tx / d + rand(-j, j)) * sp2, (ty2 / d + rand(-j, j)) * sp2, (tz / d + rand(-j, j)) * sp2,
+            this.def.shoots));
+        }
+        Sfx.fireball();
+      }
+    } else {
+      this.wanderT -= dt;
+      if (this.wanderT <= 0) {
+        this.wanderT = rand(2, 6);
+        this.yaw = rand(0, Math.PI * 2);
+        this.vx = Math.sin(this.yaw) * this.def.speed * 0.5;
+        this.vz = Math.cos(this.yaw) * this.def.speed * 0.5;
+      }
+    }
+    // drift, bouncing off anything solid
+    const step = (ax, v) => {
+      const nx = this.x + (ax === 0 ? v : 0), ny = this.y + (ax === 1 ? v : 0), nz = this.z + (ax === 2 ? v : 0);
+      if (world.boxCollides(nx - this.w, ny, nz - this.w, nx + this.w, ny + this.h, nz + this.w)) {
+        if (ax === 0) this.vx = -this.vx * 0.4;
+        else if (ax === 1) this.vy = -this.vy * 0.4;
+        else this.vz = -this.vz * 0.4;
+        return;
+      }
+      this.x = nx; this.y = ny; this.z = nz;
+    };
+    step(0, this.vx * dt); step(1, this.vy * dt); step(2, this.vz * dt);
+    this.anim += dt;
+    if (this.kind === 'blaze' && Math.random() < 0.25)
+      game.particles.burst(this.x, this.y + 0.4, this.z, TileIdx.fireball, 1, 0.6);
+    if (this.y < -10) this.dead = true;
+  }
+
+  blink(game) {
+    // endermen vanish and reappear a short way off
+    for (let tries = 0; tries < 12; tries++) {
+      const nx = this.x + rand(-9, 9), nz = this.z + rand(-9, 9);
+      const ny = game.findSpawnY(nx, nz);
+      if (ny < 2 || ny > WORLD_H - 3) continue;
+      if (game.world.boxCollides(nx - this.w, ny, nz - this.w, nx + this.w, ny + this.h, nz + this.w)) continue;
+      game.particles.burst(this.x, this.y + 1, this.z, TileIdx.enderman_face, 10, 2);
+      this.x = nx; this.y = ny; this.z = nz;
+      game.particles.burst(nx, ny + 1, nz, TileIdx.enderman_face, 10, 2);
+      Sfx.pop();
+      return;
+    }
+  }
   canSee(game, p) {
     const ex = this.x, ey = this.y + 1.4, ez = this.z;
     const dx = p.x - ex, dy = (p.y + 1.4) - ey, dz = p.z - ez;
@@ -361,12 +486,55 @@ class Mob extends Entity {
       // body
       addBoxYaw(verts, x, y + 0.75 + 0.375, z, yaw, 0, 0, 0.26, 0.375, 0.15, { all: shirt }, l);
       // arms (zombie holds arms forward)
-      const armAng = this.def.hostile && k === 'zombie' ? -1.4 : swing;
+      const armAng = (k === 'zombie' || k === 'pigman') ? -1.4 : swing;
       limb(verts, x, y + 1.42, z, yaw, 0.36, 0, 0.1, 0.1, 0.68, armT, l, armAng);
-      limb(verts, x, y + 1.42, z, yaw, -0.36, 0, 0.1, 0.1, 0.68, armT, l, k === 'zombie' ? armAng : -swing);
+      limb(verts, x, y + 1.42, z, yaw, -0.36, 0, 0.1, 0.1, 0.68, armT, l, (k === 'zombie' || k === 'pigman') ? armAng : -swing);
       // head
       addBoxYaw(verts, x, y + 1.5 + 0.25, z, yaw, 0, 0, 0.25, 0.25, 0.25, { all: skinSide, front: skinFace }, l);
     };
+    if (k === 'enderman') {
+      const y = this.y, T2 = Tt('enderman_skin');
+      limb(verts, x, y + 1.3, z, yaw, 0.11, 0, 0.07, 0.07, 1.3, T2, l, swing);
+      limb(verts, x, y + 1.3, z, yaw, -0.11, 0, 0.07, 0.07, 1.3, T2, l, -swing);
+      addBoxYaw(verts, x, y + 1.3 + 0.55, z, yaw, 0, 0, 0.17, 0.55, 0.11, { all: T2 }, l);
+      limb(verts, x, y + 2.4, z, yaw, 0.26, 0, 0.06, 0.06, 1.25, T2, l, -swing * 0.6);
+      limb(verts, x, y + 2.4, z, yaw, -0.26, 0, 0.06, 0.06, 1.25, T2, l, swing * 0.6);
+      addBoxYaw(verts, x, y + 2.62, z, yaw, 0, 0, 0.22, 0.22, 0.22,
+        { all: T2, front: Tt('enderman_face') }, Math.max(l, 0.9));
+      return;
+    }
+    if (k === 'ghast') {
+      const y = this.y, T2 = Tt('ghast_skin');
+      const face = this.shootCd > 2.4 ? Tt('ghast_face_angry') : Tt('ghast_face');
+      addBoxYaw(verts, x, y + 2.1, z, yaw, 0, 0, 1.6, 1.6, 1.6, { all: T2, front: face }, Math.max(l, 0.75));
+      // nine drifting tentacles
+      for (let i = 0; i < 9; i++) {
+        const ox = ((i % 3) - 1) * 0.9, oz = (((i / 3) | 0) - 1) * 0.9;
+        const len = 0.7 + ((i * 7) % 5) * 0.22;
+        const sway = Math.sin(this.anim * 1.6 + i) * 0.1;
+        addBoxYaw(verts, x + sway, y + 0.5 - len / 2 + 0.1, z, yaw, ox, oz, 0.16, len / 2, 0.16,
+          { all: T2 }, Math.max(l, 0.6));
+      }
+      return;
+    }
+    if (k === 'blaze') {
+      const y = this.y;
+      addBoxYaw(verts, x, y + 1.1, z, yaw, 0, 0, 0.28, 0.34, 0.28,
+        { all: Tt('blaze_skin'), front: Tt('blaze_face') }, 1.5);
+      // rods spinning around the core
+      for (let i = 0; i < 8; i++) {
+        const a = this.anim * 1.8 + (i / 8) * Math.PI * 2;
+        const r = 0.42 + (i % 2) * 0.16;
+        const ry = 0.5 + (i % 3) * 0.35 + Math.sin(this.anim * 2 + i) * 0.08;
+        addBoxYaw(verts, x + Math.cos(a) * r, y + ry, z + Math.sin(a) * r, 0, 0, 0,
+          0.06, 0.22, 0.06, { all: Tt('blaze_skin') }, 1.6);
+      }
+      return;
+    }
+    if (k === 'pigman') {
+      humanoid(Tt('pigman_face'), Tt('pigman_skin'), Tt('zombie_shirt'), Tt('zombie_pants'), Tt('pigman_skin'));
+      return;
+    }
     if (k === 'zombie') humanoid(Tt('zombie_face'), Tt('zombie_skin'), Tt('zombie_shirt'), Tt('zombie_pants'), Tt('zombie_skin'));
     else if (k === 'skeleton') humanoid(Tt('skel_face'), Tt('skel_bone'), Tt('skel_bone'), Tt('skel_bone'), Tt('skel_bone'));
     else if (k === 'creeper') {

@@ -14,7 +14,8 @@ const Store = {
 const Game = {
   state: 'title',   // title | loading | playing | paused | dead
   world: null, player: null, inv: null,
-  mobs: [], drops: [], arrows: [], xporbs: [], tnts: [],
+  mobs: [], drops: [], arrows: [], xporbs: [], tnts: [], fireballs: [], crystals: [],
+  worlds: {}, dim: 'overworld', dragon: null, creative: false, dimEnts: {},
   particles: new Particles(),
   target: null,
   dayTime: 0.3, day: 1,
@@ -52,13 +53,24 @@ const Game = {
     this.drawTitleBg();
     const hasSave = !!Store.get(SAVE_KEY);
     document.getElementById('worldinfo').textContent = hasSave ? 'Saved world found — Play resumes it' : '';
+    if (hasSave) {
+      try {
+        const d = JSON.parse(Store.get(SAVE_KEY));
+        if (d && d.creative) document.getElementById('btncreative').textContent = 'Creative Mode (saved)';
+      } catch (e) {}
+    }
     if (this.touchMode) {
       const note = document.createElement('div');
       note.style.cssText = 'position:relative;color:#cfe9c0;font-size:14px;margin-top:14px;text-shadow:1px 1px #000;text-align:center;line-height:1.6';
       note.innerHTML = 'Touch controls: joystick to move · drag to look ·<br>tap to place/attack · hold to mine';
       document.getElementById('btnplay').after(note);
     }
-    document.getElementById('btnplay').addEventListener('click', () => { Sfx.click(); this.startSurvival(); });
+    document.getElementById('btnplay').addEventListener('click', () => { Sfx.click(); this.creative = false; this.startSurvival(); });
+    document.getElementById('btncreative').addEventListener('click', () => {
+      Sfx.click(); this.creative = true; this.startSurvival();
+    });
+    document.getElementById('btnmode').addEventListener('click', () => { Sfx.click(); this.setCreative(!this.creative); });
+    document.getElementById('btncredits').addEventListener('click', () => { Sfx.click(); this.closeCredits(); });
     document.getElementById('btnresume').addEventListener('click', () => { Sfx.click(); this.resume(); });
     document.getElementById('btnquit').addEventListener('click', () => { Sfx.click(); this.quitToTitle(); });
     document.getElementById('btnrespawn').addEventListener('click', () => { Sfx.click(); this.respawn(); });
@@ -94,12 +106,27 @@ const Game = {
     const saved = Store.get(SAVE_KEY);
     let data = null;
     if (saved) { try { data = JSON.parse(saved); } catch (e) { data = null; } }
-    this.world = new World(data ? data.seed : (Math.random() * 0xFFFFFFFF) >>> 0);
+    // a saved world keeps its own mode unless you pick the other one deliberately
+    if (data && !!data.creative !== this.creative) data = null;
+    const seed = data ? data.seed : (Math.random() * 0xFFFFFFFF) >>> 0;
+    this.worlds = {
+      overworld: new World(seed, 'overworld'),
+      nether: new World(seed ^ 0x4E37, 'nether'),
+      end: new World(seed ^ 0xE4D, 'end'),
+    };
+    this.worlds.nether._sh = this.worlds.overworld.strongholdPos();
+    this.dim = 'overworld';
+    this.world = this.worlds.overworld;
+    this.dimEnts = {};
     if (data) {
-      this.world.loadDiffs(data.diffs);
-      this.world.furnaces = data.furnaces || {};
-      this.world.chests = data.chests || {};
+      if (data.dims) for (const k in this.worlds) this.worlds[k].restore(data.dims[k]);
+      else {   // older single-dimension save
+        this.world.loadDiffs(data.diffs);
+        this.world.furnaces = data.furnaces || {};
+        this.world.chests = data.chests || {};
+      }
       this.dayTime = data.time ?? 0.3;
+      this.creative = !!data.creative;
     } else this.dayTime = 0.3;
 
     // find spawn point on land
@@ -151,6 +178,14 @@ const Game = {
       this.player.spawn = { x: sx, y: this.player.y, z: sz };
     }
     this.mobs = []; this.drops = []; this.arrows = []; this.xporbs = []; this.tnts = [];
+    this.fireballs = []; this.crystals = []; this.dragon = null;
+    if (data && data.player && data.player.dim && data.player.dim !== 'overworld') {
+      this.dim = data.player.dim;
+      this.world = this.worlds[this.dim];
+      this.pregen(this.player.x, this.player.z);
+      if (this.dim === 'end') this.startEndFight();
+    }
+    UI.setGameMode(this.creative);
     UI.refreshXp(this.player);
     // seed some passive mobs nearby
     for (let i = 0; i < 14; i++) this.trySpawnPassive(true);
@@ -211,6 +246,7 @@ const Game = {
     if (this.state !== 'playing') return;
     this.state = 'paused';
     document.getElementById('pause').classList.remove('hidden');
+    document.exitPointerLock();     // otherwise the menu can't be clicked
     this.save();
   },
   resume() {
@@ -223,6 +259,7 @@ const Game = {
     location.reload();
   },
   onPlayerDeath() {
+    if (this.creative) { this.player.dead = false; this.player.hp = this.player.maxHp; return; }
     // scatter inventory
     for (let i = 0; i < 36; i++) {
       const s = this.inv.slots[i];
@@ -248,16 +285,22 @@ const Game = {
     if (!this.world || !this.player) return;
     try {
       const p = this.player;
-      Store.set(SAVE_KEY, this.world.serialize({
-        x: p.x, y: p.y, z: p.z, yaw: p.yaw, pitch: p.pitch,
-        hp: p.hp, hunger: p.hunger, xp: p.xp, spawn: p.spawn,
-        inv: this.inv.serialize(), stats: this.stats,
-      }, this.dayTime));
+      const dims = {};
+      for (const k in this.worlds) dims[k] = this.worlds[k].dump();
+      Store.set(SAVE_KEY, JSON.stringify({
+        v: 3, seed: this.worlds.overworld.seed, time: this.dayTime, creative: this.creative, dims,
+        player: {
+          x: p.x, y: p.y, z: p.z, yaw: p.yaw, pitch: p.pitch, dim: this.dim,
+          hp: p.hp, hunger: p.hunger, xp: p.xp, spawn: p.spawn,
+          inv: this.inv.serialize(), stats: this.stats,
+        },
+      }));
     } catch (e) { console.warn('save failed', e); }
   },
 
   // ---------------- keys ----------------
   onKey(code, e) {
+    if (this.state === 'credits') { if (code === 'Escape' || code === 'Enter') this.closeCredits(); return; }
     if (this.state === 'dead' && (code === 'Enter' || code === 'Space')) { this.respawn(); return; }
     if (this.state === 'playing' || this.state === 'paused') {
       if (code === 'KeyE') {
@@ -293,7 +336,7 @@ const Game = {
     Sfx.breakBlk(id);
     this.particles.burst(x + 0.5, y + 0.5, z + 0.5, b.tiles ? b.tiles.side : TileIdx.white, 14, 2.5);
     this.world.setBlock(x, y, z, 0);
-    const d = blockDrops(id, heldId);
+    const d = this.creative ? null : blockDrops(id, heldId);
     if (d) this.spawnDrop(x + 0.5, y + 0.3, z + 0.5, d[0], d[1]);
     // mining xp for ores (only when they actually drop)
     if (d) {
@@ -307,11 +350,11 @@ const Game = {
       delete this.world.chests[key];
     }
     this.stats.mined++;
-    if (b.hardness > 0.1) this.inv.damageHeld(this);
+    if (b.hardness > 0.1 && !this.creative) this.inv.damageHeld(this);
   },
   placeBlock(x, y, z, id) {
     this.world.setBlock(x, y, z, id);
-    this.inv.consumeHeld();
+    if (!this.creative) this.inv.consumeHeld();
     Sfx.place();
     this.stats.placed++;
     if (id === B.oak_sapling) this.growths.push({ x, y, z, at: this.timeSec + rand(30, 70) });
@@ -350,6 +393,24 @@ const Game = {
   tryAttack(ray) {
     if (this.attackCd > 0) return this._lastAttackHit || false;
     const p = this.player, look = ray || p.lookDir();
+    // the boss and its crystals are hit the same way, just with bigger boxes
+    for (let t = 0.5; t <= 4.5; t += 0.3) {
+      const px = p.x + look[0] * t, py = p.y + p.eye + look[1] * t, pz = p.z + look[2] * t;
+      for (const c of this.crystals) {
+        if (c.dead) continue;
+        if (Math.abs(px - c.x) < 0.8 && Math.abs(pz - c.z) < 0.8 && Math.abs(py - (c.y + 0.7)) < 1.1) {
+          this.attackCd = 0.4; c.hurt(this); return true;
+        }
+      }
+      const d = this.dragon;
+      if (d && !d.dying && Math.abs(px - d.x) < 4.4 && Math.abs(pz - d.z) < 4.4 && Math.abs(py - d.y) < 2.6) {
+        this.attackCd = 0.5;
+        const held = this.inv.held();
+        d.hurt(this, held ? (itemDef(held.id).dmg || 1) : 1);
+        if (held && held.dur !== undefined) this.inv.damageHeld(this);
+        return true;
+      }
+    }
     for (const m of this.mobs) {
       // ray vs expanded AABB by sampling
       for (let t = 0.5; t <= 3.5; t += 0.25) {
@@ -562,6 +623,15 @@ const Game = {
       this.xporbs = this.xporbs.filter(o => !o.dead);
       for (const t2 of this.tnts) t2.update(this, dt);
       this.tnts = this.tnts.filter(t2 => !t2.dead);
+      for (const f of this.fireballs) f.update(this, dt);
+      this.fireballs = this.fireballs.filter(f => !f.dead);
+      for (const c of this.crystals) c.update(this, dt);
+      if (this.dragon) {
+        const d = this.dragon;
+        d.update(this, dt);
+        if (d.dead && this.dragon === d) this.dragon = null;
+      }
+      this.checkPortal(dt);
       this.particles.update(this.world, dt);
 
       // despawn far mobs
@@ -570,9 +640,17 @@ const Game = {
 
       // spawn timers
       this.spawnT -= dt;
-      if (this.spawnT <= 0) { this.spawnT = 1.6; if (this.day < 0.5) this.trySpawnHostile(); else if (Math.random() < 0.25) this.trySpawnHostile(); }
+      if (this.spawnT <= 0) {
+        this.spawnT = this.dim === 'overworld' ? 1.6 : 2.6;
+        if (this.creative) { /* creative worlds stay peaceful */ }
+        else if (this.dim !== 'overworld' || this.day < 0.5 || Math.random() < 0.25) this.trySpawnDim();
+      }
       this.passiveT -= dt;
-      if (this.passiveT <= 0) { this.passiveT = 8; if (Math.random() < 0.5) this.trySpawnPassive(); }
+      if (this.passiveT <= 0) {
+        this.passiveT = 8;
+        if (this.dim === 'overworld' && Math.random() < 0.5) this.trySpawnPassive();
+      }
+      this.updateEyes(dt);
 
       // world ticks
       this.world.runTicks(this);
@@ -622,10 +700,20 @@ const Game = {
     let zenith = mixc([0.012, 0.015, 0.05], [0.32, 0.55, 0.92], this.day);
     let horizon = mixc([0.03, 0.04, 0.1], [0.66, 0.82, 0.96], this.day);
     horizon = mixc(horizon, [0.95, 0.55, 0.28], dusk * 0.65);
+    let skyMode = 0;
+    if (this.dim === 'nether') {
+      skyMode = 1;
+      this.day = 0.86;
+      zenith = [0.13, 0.022, 0.020]; horizon = [0.34, 0.07, 0.045];
+    } else if (this.dim === 'end') {
+      skyMode = 2;
+      this.day = 0.82;
+      zenith = [0.022, 0.014, 0.05]; horizon = [0.08, 0.05, 0.13];
+    }
     const underwater = p.headInWater(this.world);
     let fogColor = underwater ? [0.1, 0.25, 0.5] : horizon;
     // underground: fog fades into darkness, not sky color
-    const camSky = this.world.skyAt(p.x, p.y + p.eye, p.z);
+    const camSky = this.dim === 'overworld' ? this.world.skyAt(p.x, p.y + p.eye, p.z) : 1;
     if (!underwater && camSky < 0.6) {
       const dark = clamp((0.6 - camSky) / 0.55, 0, 1);
       fogColor = fogColor.map((v, i) => lerp(v, [0.008, 0.008, 0.014][i], dark));
@@ -647,6 +735,9 @@ const Game = {
     for (const a of this.arrows) a.emit(entV, this);
     for (const o of this.xporbs) o.emit(entV, this);
     for (const t2 of this.tnts) t2.emit(entV, this);
+    for (const f of this.fireballs) f.emit(entV, this);
+    for (const c of this.crystals) if (!c.dead) c.emit(entV, this);
+    if (this.dragon) this.dragon.emit(entV, this);
     const partV = [];
     this.particles.emit(partV, p, this.world);
 
@@ -710,7 +801,7 @@ const Game = {
     Renderer.frame({
       world: this.world,
       cam: { x: p.x, y: p.y + eyeH + bobA, z: p.z, pitch: p.pitch, yaw: p.yaw },
-      day: this.day, sunDir, zenith, horizon, fogColor,
+      day: this.day, sunDir, zenith, horizon, fogColor, skyMode,
       time: this.timeSec,
       entVerts: entV.length ? new Float32Array(entV) : null,
       partVerts: partV.length ? new Float32Array(partV) : null,
@@ -720,13 +811,14 @@ const Game = {
       underwater,
       fov: this._fov,
       heldLight,
+      fogNear: this.dim === 'nether' ? 0.28 : 0.62,
     });
 
     if (this.debugOn) {
       document.getElementById('debug').textContent =
         `fps ${this.fps.toFixed(0)}\n` +
         `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
-        `biome ${this.world.biomeAt(p.x, p.z)}  time ${(this.dayTime * 24).toFixed(1)}h\n` +
+        `dim ${this.dim}  biome ${this.dim === 'overworld' ? this.world.biomeAt(p.x, p.z) : '-'}  time ${(this.dayTime * 24).toFixed(1)}h\n` +
         `chunks ${this.world.chunks.size}  mobs ${this.mobs.length}  drops ${this.drops.length}`;
     }
   },
