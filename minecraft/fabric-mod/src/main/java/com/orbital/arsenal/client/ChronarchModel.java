@@ -28,6 +28,8 @@ public class ChronarchModel extends EntityModel<LivingEntityRenderState> {
     private final ModelPart smallHand;
     private final ModelPart leftLeg;
     private final ModelPart rightLeg;
+    private final ModelPart leftShoulder;
+    private final ModelPart rightShoulder;
 
     public ChronarchModel(ModelPart root) {
         super(root);
@@ -38,44 +40,71 @@ public class ChronarchModel extends EntityModel<LivingEntityRenderState> {
         this.smallHand = this.core.getChild("small_hand");
         this.leftLeg = root.getChild("left_leg");
         this.rightLeg = root.getChild("right_leg");
+        this.leftShoulder = this.core.getChild("left_shoulder");
+        this.rightShoulder = this.core.getChild("right_shoulder");
     }
 
     public static TexturedModelData getTexturedModelData() {
         ModelData data = new ModelData();
         ModelPartData root = data.getRoot();
 
-        // The body hangs from the origin, so a taller boss grows upward rather
-        // than sinking its legs into the floor.
+        // Everything hangs off the root at the feet, and negative y is up.
+        // Sizes here are model units: sixteen to a block. The body is 26 wide
+        // and 18 deep against 16-unit legs, which is what makes it read as
+        // heavy — a tall thin box just reads as tall.
         ModelPartData core = root.addChild("core",
-                ModelPartBuilder.create().uv(0, 0).cuboid(-9.0F, -18.0F, -6.0F, 18.0F, 18.0F, 12.0F),
-                ModelTransform.origin(0.0F, -18.0F, 0.0F));
+                ModelPartBuilder.create().uv(0, 0)
+                        .cuboid(-13.0F, -26.0F, -9.0F, 26.0F, 26.0F, 18.0F),
+                ModelTransform.origin(0.0F, -16.0F, 0.0F));
 
+        // Sits directly on the body's top face. The first version put this
+        // eighteen units above the body's own origin, which floated it two
+        // blocks over the boss's head looking like a bug — because it was one.
         core.addChild("crown",
-                ModelPartBuilder.create().uv(0, 30).cuboid(-6.0F, -6.0F, -4.0F, 12.0F, 6.0F, 8.0F),
-                ModelTransform.origin(0.0F, -18.0F, 0.0F));
+                ModelPartBuilder.create().uv(0, 77)
+                        .cuboid(-8.0F, -8.0F, -6.0F, 16.0F, 8.0F, 12.0F),
+                ModelTransform.origin(0.0F, -26.0F, 0.0F));
 
-        // A flat band standing proud of the body, so the silhouette has a
-        // waist rather than being one slab.
+        // Wider and deeper than the body, so it overhangs on every side.
         core.addChild("ring",
-                ModelPartBuilder.create().uv(0, 44).cuboid(-11.0F, -2.0F, -8.0F, 22.0F, 4.0F, 16.0F),
-                ModelTransform.origin(0.0F, -8.0F, 0.0F));
+                ModelPartBuilder.create().uv(0, 45)
+                        .cuboid(-17.0F, -2.0F, -13.0F, 34.0F, 5.0F, 26.0F),
+                ModelTransform.origin(0.0F, -9.0F, 0.0F));
 
-        // Both hands sit just off the front face and turn about its centre.
+        // Shoulders are pure bulk: they give it width at the top so the
+        // silhouette is broad rather than a column.
+        core.addChild("left_shoulder",
+                ModelPartBuilder.create().uv(58, 77)
+                        .cuboid(-5.0F, -6.0F, -9.0F, 10.0F, 12.0F, 18.0F),
+                ModelTransform.origin(17.0F, -20.0F, 0.0F));
+        core.addChild("right_shoulder",
+                ModelPartBuilder.create().uv(58, 77)
+                        .cuboid(-5.0F, -6.0F, -9.0F, 10.0F, 12.0F, 18.0F),
+                ModelTransform.origin(-17.0F, -20.0F, 0.0F));
+
+        // Both hands stand just clear of the front face and turn about the
+        // middle of the dial.
         core.addChild("big_hand",
-                ModelPartBuilder.create().uv(48, 0).cuboid(-1.0F, -7.0F, 0.0F, 2.0F, 8.0F, 1.0F),
-                ModelTransform.origin(0.0F, -9.0F, -6.5F));
+                ModelPartBuilder.create().uv(42, 98)
+                        .cuboid(-1.0F, -10.0F, 0.0F, 2.0F, 11.0F, 1.0F),
+                ModelTransform.origin(0.0F, -13.0F, -9.6F));
         core.addChild("small_hand",
-                ModelPartBuilder.create().uv(54, 0).cuboid(-1.0F, -4.0F, 0.0F, 2.0F, 5.0F, 1.0F),
-                ModelTransform.origin(0.0F, -9.0F, -6.5F));
+                ModelPartBuilder.create().uv(50, 98)
+                        .cuboid(-1.0F, -6.0F, 0.0F, 2.0F, 7.0F, 1.0F),
+                ModelTransform.origin(0.0F, -13.0F, -9.6F));
 
+        // Thick and short. Long legs would make it look like it could run.
         root.addChild("left_leg",
-                ModelPartBuilder.create().uv(40, 30).cuboid(-3.0F, 0.0F, -3.0F, 6.0F, 18.0F, 6.0F),
-                ModelTransform.origin(5.0F, -18.0F, 0.0F));
+                ModelPartBuilder.create().uv(0, 98)
+                        .cuboid(-5.0F, 0.0F, -5.0F, 10.0F, 16.0F, 10.0F),
+                ModelTransform.origin(7.0F, -16.0F, 0.0F));
         root.addChild("right_leg",
-                ModelPartBuilder.create().uv(40, 30).cuboid(-3.0F, 0.0F, -3.0F, 6.0F, 18.0F, 6.0F),
-                ModelTransform.origin(-5.0F, -18.0F, 0.0F));
+                ModelPartBuilder.create().uv(0, 98)
+                        .cuboid(-5.0F, 0.0F, -5.0F, 10.0F, 16.0F, 10.0F),
+                ModelTransform.origin(-7.0F, -16.0F, 0.0F));
 
-        return TexturedModelData.of(data, 64, 64);
+        // 128 square, because the body alone needs 88 by 44 of it.
+        return TexturedModelData.of(data, 128, 128);
     }
 
     @Override
@@ -91,6 +120,10 @@ public class ChronarchModel extends EntityModel<LivingEntityRenderState> {
 
         // A slow sway on the core, and legs driven by the walk cycle.
         this.core.roll = (float) Math.cos(state.age * 0.05F) * 0.03F;
+        // The shoulders breathe against the sway, so the mass looks carried
+        // rather than welded on.
+        this.leftShoulder.roll = (float) Math.cos(state.age * 0.05F) * 0.06F;
+        this.rightShoulder.roll = -this.leftShoulder.roll;
         float swing = state.limbSwingAnimationProgress;
         float amount = state.limbSwingAmplitude;
         this.leftLeg.pitch = (float) Math.cos(swing * 0.6F) * 0.9F * amount;

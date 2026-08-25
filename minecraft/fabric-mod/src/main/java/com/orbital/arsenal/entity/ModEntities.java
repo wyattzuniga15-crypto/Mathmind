@@ -23,7 +23,7 @@ public final class ModEntities {
         CHRONARCH = Registry.register(Registries.ENTITY_TYPE, CHRONARCH_KEY,
                 EntityType.Builder.create(ChronarchEntity::new, SpawnGroup.MONSTER)
                         // Wide and tall: it should not fit through a door.
-                        .dimensions(1.8F, 3.4F)
+                        .dimensions(2.6F, 3.4F)
                         .build(CHRONARCH_KEY));
         FabricDefaultAttributeRegistry.register(CHRONARCH, ChronarchEntity.createChronarchAttributes());
     }
