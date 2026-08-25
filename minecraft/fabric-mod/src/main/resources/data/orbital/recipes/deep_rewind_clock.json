@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["ACA", "CEC", "ACA"],
+  "key": {
+    "A": { "item": "minecraft:amethyst_shard" },
+    "C": { "item": "minecraft:clock" },
+    "E": { "item": "minecraft:ender_eye" }
+  },
+  "result": { "id": "orbital:deep_rewind_clock", "count": 1 }
+}

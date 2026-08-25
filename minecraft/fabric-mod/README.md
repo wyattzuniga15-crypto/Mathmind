@@ -1,6 +1,6 @@
 # Orbital Arsenal — Fabric mod source
 
-Seventeen genuinely registered items — `orbital:strike_cannon`,
+Twenty genuinely registered items — `orbital:strike_cannon`,
 `orbital:tactical_nuke`, `orbital:kamehameha`, `orbital:black_hole`,
 `orbital:orbital_laser`, `orbital:rewind_clock`,
 `orbital:potato_bomb`,
@@ -8,7 +8,8 @@ Seventeen genuinely registered items — `orbital:strike_cannon`,
 `orbital:echo_ghost`, `orbital:echo_beacon`,
 `orbital:fast_forward_clock`, `orbital:ore_sense`, `orbital:bottled_chunk`,
 `orbital:portal_gun`,
-`orbital:chronarch_seal`, `orbital:chronarch_heart` — with their own textures,
+`orbital:chronarch_seal`, `orbital:chronarch_heart`,
+`orbital:deep_rewind_clock`, `orbital:long_rewind_clock`, `orbital:genesis_clock` — with their own textures,
 names, creative tab entries and crafting recipes.
 
 **You have to build this yourself.** I couldn't: this project needs Minecraft,
@@ -140,7 +141,8 @@ every half second, which is what makes it hurt anything standing in the beam —
 including you, if you aim at your own feet. And what it cuts goes all the way
 down, so looking straight down opens a hole to bedrock underneath you.
 
-**Rewind Clock** — right-click and the last **thirty seconds** of damage is put
+**The rewind clocks** — four of them, reaching back **one minute**, **five**,
+**ten**, or **everything still recorded**. Right-click and that much damage is put
 back. The only thing here that builds rather than destroys, and the only answer
 to the rest of the arsenal: fire the black hole into your own base and this is
 what gets it back.
@@ -160,7 +162,22 @@ what died. Positions need only the *oldest* sample replayed rather than every
 one, since walking all 150 of them backwards ends in exactly the same place
 having done the work 150 times.
 
+All four read the same record, and each takes only the frames inside its own
+reach. Undoing the last minute does not spend the previous nine — a deeper
+clock can still reach them afterwards. One journal rather than four, because
+four would each have to watch every block change in the world and would file
+the same change four times over.
+
+Cooldowns climb with reach — 10 seconds, 30, a minute, two — so undoing ten
+minutes is a decision rather than a habit.
+
 Three limits, all of them reachable in normal use of this mod:
+
+**Putting mobs back reaches two minutes; raising the dead reaches an hour.**
+They cost very different amounts to record — a position sample is every entity
+in the world several times a second, while a death is one small record and
+deaths are rare. So the deep clocks will raise anything that died in the last
+hour, but only the shallower ones can put survivors back where they stood.
 
 **Mobs come back, but as new animals.** Everything that died inside the window
 is put back on its feet where it fell, keeping its name, and every surviving
@@ -178,10 +195,17 @@ holding the clock backwards through the world is not an undo, it is a shove.
 
 Dropped items also stay dropped.
 
-**Very large events overrun it.** The record caps at two million changes, which
-is about forty megabytes. The black hole alone makes twenty-two million, so its
+**Nothing older than an hour survives, and the Genesis Clock is not a world
+reset.** It undoes everything *still recorded*, which is as far back as memory
+reaches — not a return to the world as it generated. Genuinely regenerating
+terrain would mean re-running world generation over every chunk, which
+Minecraft gives a mod no safe way to do while a world is open.
+
+**Very large events overrun it.** The record caps at four million changes,
+which is about ninety megabytes. The black hole alone makes twenty-two million, so its
 oldest changes are evicted while it is still digging and an undo afterwards
-restores only the last part of it. The cap is there because the alternative is
+restores only the last part of it — and no deeper clock helps, because the
+frames are gone rather than merely out of reach. The cap is there because the alternative is
 running the game out of memory, which is a worse answer than an incomplete
 undo. The nuke, at 1.27 million, fits comfortably.
 

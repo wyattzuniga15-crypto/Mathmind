@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["ECE", "CNC", "ECE"],
+  "key": {
+    "E": { "item": "minecraft:ender_eye" },
+    "C": { "item": "minecraft:clock" },
+    "N": { "item": "minecraft:nether_star" }
+  },
+  "result": { "id": "orbital:long_rewind_clock", "count": 1 }
+}

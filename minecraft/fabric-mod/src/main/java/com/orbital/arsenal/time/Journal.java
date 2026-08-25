@@ -28,20 +28,34 @@ import net.minecraft.util.math.BlockPos;
  * Two limits are worth stating plainly, because both are reachable in normal
  * use of this mod:
  *
- * The window is thirty seconds. Anything older is dropped as it ages out —
- * that is what keeps this from growing without bound in a world that is being
- * built in as well as blown up.
+ * One record serves every clock. Each asks for a different reach — a minute,
+ * five, ten, or everything still held — and takes only the frames inside it,
+ * leaving older ones for the deeper clocks. That is why there is one journal
+ * rather than four: four would each have to see every block change in the
+ * world, and the same change would be filed four times over.
  *
- * The record also caps at two million changes, which is the real constraint.
- * Two million entries costs roughly forty megabytes; the black hole alone
- * makes twenty-two million, so the oldest of its changes are evicted while it
- * is still digging and a rewind after one restores only the last part. The cap
- * exists because the alternative is running the game out of memory, which is a
- * worse answer than an incomplete undo.
+ * Two limits, both reachable:
+ *
+ * Nothing older than an hour is kept, whichever clock is asking. Even the
+ * deepest cannot reach past that.
+ *
+ * The real constraint is the four million change cap, about ninety megabytes.
+ * The black hole alone makes twenty-two million, so its oldest changes are
+ * evicted while it is still digging and an undo afterwards restores only the
+ * last part of it. The cap exists because the alternative is running the game
+ * out of memory, which is a worse answer than an incomplete undo.
  */
 public final class Journal {
-    private static final int WINDOW = 600;             // 30 seconds
-    private static final int MAX_ENTRIES = 2_000_000;
+    /** The reaches the clocks ask for, in ticks. */
+    public static final int ONE_MINUTE = 1_200;
+    public static final int FIVE_MINUTES = 6_000;
+    public static final int TEN_MINUTES = 12_000;
+    /** Everything still held — which the hour cap below bounds in practice. */
+    public static final int EVERYTHING = Integer.MAX_VALUE;
+
+    /** Nothing older than this is kept, whichever clock asks. */
+    private static final int MAX_WINDOW = 72_000;      // one hour
+    private static final int MAX_ENTRIES = 4_000_000;  // roughly 90 MB
     private static final int RESTORE_PER_TICK = 40_000;
 
     /**
@@ -112,7 +126,7 @@ public final class Journal {
     private static void trim(Log log) {
         while (!log.frames.isEmpty()) {
             Frame oldest = log.frames.peekFirst();
-            if (now - oldest.tick <= WINDOW && log.entries <= MAX_ENTRIES) {
+            if (now - oldest.tick <= MAX_WINDOW && log.entries <= MAX_ENTRIES) {
                 return;
             }
             log.frames.pollFirst();
@@ -132,31 +146,47 @@ public final class Journal {
     }
 
     /**
-     * Put the world back as it stood thirty seconds ago, and report how many
-     * changes that is. Returns 0 if nothing has happened worth undoing.
+     * Put the world back as it stood `windowTicks` ago, and report how many
+     * changes that took. Returns 0 if nothing inside that reach was recorded.
      *
-     * Replay runs newest first: a position changed several times inside the
-     * window is walked back through each of them and ends on the state it held
-     * at the start, which is the only order that gets that right.
+     * Only frames inside the window are taken. Everything older stays, so
+     * undoing the last minute leaves the previous nine intact and a deeper
+     * clock can still reach them afterwards.
+     *
+     * Replay runs newest first, the only order that walks a position changed
+     * several times inside the window back to the state it held at the start
+     * rather than to some middle one.
      */
-    public static int rewind(ServerWorld world) {
+    public static int rewind(ServerWorld world, int windowTicks) {
         Log log = LOGS.get(world);
         if (log == null || log.entries == 0) {
             return 0;
         }
-        int total = log.entries;
 
-        // Take the record away from the live log before replaying it. Otherwise
-        // the restore's own writes would land in the frames still being read.
-        ArrayDeque<Frame> frames = new ArrayDeque<>(log.frames);
-        log.frames.clear();
+        // Take the frames in scope off the live log before replaying them, or
+        // the restore's own writes would land in frames still being read.
+        ArrayDeque<Frame> replay = new ArrayDeque<>();
+        int total = 0;
+        while (!log.frames.isEmpty()) {
+            Frame newest = log.frames.peekLast();
+            if ((long) now - newest.tick > windowTicks) {
+                break;
+            }
+            log.frames.pollLast();
+            log.entries -= newest.size;
+            total += newest.size;
+            // Newest first, so taking from the front replays in the right order.
+            replay.addLast(newest);
+        }
         log.current = null;
-        log.entries = 0;
+        if (total == 0) {
+            return 0;
+        }
 
         Scheduler.repeat(() -> {
             int budget = RESTORE_PER_TICK;
             while (budget > 0) {
-                Frame frame = frames.peekLast();
+                Frame frame = replay.peekFirst();
                 if (frame == null) {
                     return false;
                 }
@@ -164,15 +194,15 @@ public final class Journal {
                     frame.size--;
                     BlockPos at = BlockPos.fromLong(frame.pos[frame.size]);
                     suppressed = true;
-                    // Flag 2 again: neighbour updates across a restore this size
-                    // cost more than the restore, and re-settling sand and water
-                    // that were mid-fall is not wanted anyway.
+                    // Flag 2 again: neighbour updates across a restore this
+                    // size cost more than the restore, and re-settling sand
+                    // and water that were mid-fall is not wanted anyway.
                     world.setBlockState(at, frame.was[frame.size], 2);
                     suppressed = false;
                     budget--;
                 }
                 if (frame.size == 0) {
-                    frames.pollLast();
+                    replay.pollFirst();
                 }
             }
             return true;

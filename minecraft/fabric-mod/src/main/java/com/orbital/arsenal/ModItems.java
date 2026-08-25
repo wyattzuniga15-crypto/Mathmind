@@ -15,6 +15,7 @@ import com.orbital.arsenal.items.PotatoBombItem;
 import com.orbital.arsenal.items.SlowTimeClockItem;
 import com.orbital.arsenal.items.TimeStopClockItem;
 import com.orbital.arsenal.items.RewindClockItem;
+import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.items.StrikeCannonItem;
 import com.orbital.arsenal.items.TacticalNukeItem;
 import java.util.function.Function;
@@ -45,6 +46,9 @@ public final class ModItems {
     public static Item CHRONARCH_SEAL;
     public static Item CHRONARCH_HEART;
     public static Item REWIND_CLOCK;
+    public static Item DEEP_REWIND_CLOCK;
+    public static Item LONG_REWIND_CLOCK;
+    public static Item GENESIS_CLOCK;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -85,7 +89,16 @@ public final class ModItems {
         PORTAL_GUN = register("portal_gun", PortalGunItem::new);
         CHRONARCH_SEAL = register("chronarch_seal", ChronarchSealItem::new);
         CHRONARCH_HEART = register("chronarch_heart", ChronarchHeartItem::new);
-        REWIND_CLOCK = register("rewind_clock", RewindClockItem::new);
+        // Same item, four reaches. Cooldowns climb with them: undoing ten
+        // minutes should be a decision, not a habit.
+        REWIND_CLOCK = register("rewind_clock",
+                settings -> new RewindClockItem(settings, Journal.ONE_MINUTE, "1 minute", 200));
+        DEEP_REWIND_CLOCK = register("deep_rewind_clock",
+                settings -> new RewindClockItem(settings, Journal.FIVE_MINUTES, "5 minutes", 600));
+        LONG_REWIND_CLOCK = register("long_rewind_clock",
+                settings -> new RewindClockItem(settings, Journal.TEN_MINUTES, "10 minutes", 1200));
+        GENESIS_CLOCK = register("genesis_clock",
+                settings -> new RewindClockItem(settings, Journal.EVERYTHING, "everything", 2400));
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
@@ -105,6 +118,9 @@ public final class ModItems {
             entries.add(CHRONARCH_SEAL);
             entries.add(CHRONARCH_HEART);
             entries.add(REWIND_CLOCK);
+            entries.add(DEEP_REWIND_CLOCK);
+            entries.add(LONG_REWIND_CLOCK);
+            entries.add(GENESIS_CLOCK);
         });
         return registered;
     }

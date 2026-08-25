@@ -12,33 +12,40 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**
- * Puts the last thirty seconds back.
+ * The clocks that put the world back — one class, four reaches.
  *
- * The only thing here that builds rather than destroys, and the only answer to
- * the rest of the arsenal — fire the black hole into your own base and this is
- * what gets it back.
+ * A minute, five, ten, and everything still recorded. They differ only in how
+ * far they look and what they cost to use, so four near-identical classes would
+ * be four places to fix the same bug. The reach is handed in at registration.
  *
- * It restores blocks, where mobs were standing, and mobs that died — the
- * three things these weapons take away.
+ * All four read the same record. A shallow rewind takes only the frames inside
+ * its own window and leaves the rest, so undoing the last minute does not spend
+ * the previous nine — a deeper clock can still reach them afterwards.
  *
- * Resurrection has one honest limit worth knowing before you rely on it: a mob
- * comes back as the same kind of creature in the same place, keeping its name,
- * but it is a new animal. A tamed wolf comes back wild, a villager comes back
- * without its trades, and nothing comes back holding what it was carrying.
- * Restoring those needs a mob's full saved state, and the calls for that were
- * reworked in recent versions to something I could not verify from here — so
- * this does the part that can be done correctly rather than the part that
- * might silently do nothing.
+ * They restore blocks, where mobs were standing, and mobs that died. They do
+ * not restore a mob's inventory, its taming or a villager's trades: those need
+ * a mob's full saved state, and the calls for it were reworked in recent
+ * versions into something I could not verify. A revived mob is the same
+ * creature in the same place with the same name, but it is a new animal.
  */
 public class RewindClockItem extends Item {
-    private static final int COOLDOWN = 200;
+    private final int reach;
+    private final String label;
+    private final int cooldown;
 
-    public RewindClockItem(Settings settings) {
+    /**
+     * @param reach how far back to undo, in ticks
+     * @param label how to name that reach in chat
+     * @param cooldown ticks before it can be used again — deeper clocks wait longer
+     */
+    public RewindClockItem(Settings settings, int reach, String label, int cooldown) {
         super(settings);
+        this.reach = reach;
+        this.label = label;
+        this.cooldown = cooldown;
     }
 
     @Override
@@ -47,14 +54,14 @@ public class RewindClockItem extends Item {
             return ActionResult.SUCCESS;
         }
 
-        int restored = Journal.rewind(serverWorld);
-        int[] living = Souls.rewind(serverWorld);
+        int restored = Journal.rewind(serverWorld, reach);
+        int[] living = Souls.rewind(serverWorld, reach);
         if (restored == 0 && living[0] == 0 && living[1] == 0) {
-            user.sendMessage(Text.literal("§7⟲ nothing to undo"), true);
+            user.sendMessage(Text.literal("§7⟲ nothing in the last " + label + " to undo"), true);
             return ActionResult.SUCCESS;
         }
 
-        StringBuilder report = new StringBuilder("§b⟲ REWIND — " + restored + " blocks");
+        StringBuilder report = new StringBuilder("§b⟲ REWIND " + label + " — " + restored + " blocks");
         if (living[0] > 0) {
             report.append(", ").append(living[0]).append(" moved back");
         }
@@ -64,11 +71,11 @@ public class RewindClockItem extends Item {
         user.sendMessage(Text.literal(report.toString()), true);
         serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM,
                 SoundCategory.MASTER, 3.0F, 2.0F);
-        Vec3d at = new Vec3d(user.getX(), user.getY() + 1.0, user.getZ());
-        serverWorld.spawnParticles(ParticleTypes.END_ROD, at.x, at.y, at.z, 60, 1.5, 1.5, 1.5, 0.08);
+        serverWorld.spawnParticles(ParticleTypes.END_ROD, true, true,
+                user.getX(), user.getY() + 1.0, user.getZ(), 60, 1.5, 1.5, 1.5, 0.08);
 
         ItemStack stack = user.getStackInHand(hand);
-        user.getItemCooldownManager().set(stack, COOLDOWN);
+        user.getItemCooldownManager().set(stack, cooldown);
         return ActionResult.SUCCESS;
     }
 }

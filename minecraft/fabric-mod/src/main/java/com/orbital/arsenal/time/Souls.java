@@ -32,8 +32,17 @@ import net.minecraft.text.Text;
  * few times a second rather than every tick and stops counting past a ceiling.
  */
 public final class Souls {
-    /** Matches Journal's window, in ticks. */
-    private static final int WINDOW = 600;
+    /**
+     * Positions and deaths are kept for very different lengths of time, because
+     * they cost very different amounts. A position sample is every entity in
+     * the world several times a second; a death is one small record, and deaths
+     * are rare. So the deep clocks can raise anything that died in the last
+     * hour, while putting survivors back where they stood reaches only two
+     * minutes — past that the samples would cost more memory than the block
+     * record they accompany.
+     */
+    private static final int POSITION_WINDOW = 2_400;   // two minutes
+    private static final int DEATH_WINDOW = 72_000;     // one hour
     /**
      * Positions are sampled every few ticks rather than every one. Where a mob
      * stood half a second either side of the truth is indistinguishable once
@@ -46,7 +55,7 @@ public final class Souls {
      * number of mobs at once, and every one held costs memory until it ages
      * out of the window.
      */
-    private static final int MAX_DEATHS = 4000;
+    private static final int MAX_DEATHS = 20_000;
     /**
      * A ceiling on how many entities one snapshot will hold. Sampling runs
      * constantly now, so a world with a pathological number of entities — a mob
@@ -150,30 +159,41 @@ public final class Souls {
     }
 
     private static void trim(Record record) {
-        while (!record.positions.isEmpty() && now - record.positions.peekFirst().tick > WINDOW) {
+        while (!record.positions.isEmpty()
+                && now - record.positions.peekFirst().tick > POSITION_WINDOW) {
             record.positions.pollFirst();
         }
-        while (!record.deaths.isEmpty() && now - record.deaths.peekFirst().tick > WINDOW) {
+        while (!record.deaths.isEmpty() && now - record.deaths.peekFirst().tick > DEATH_WINDOW) {
             record.deaths.pollFirst();
         }
     }
 
     /**
-     * Put the living world back: survivors to where they stood, the dead back
-     * on their feet.
+     * Put the living world back as far as `windowTicks` reaches: survivors to
+     * where they stood, the dead back on their feet.
+     *
+     * Anything older than the window is left where it is, so a shallow clock
+     * cannot quietly consume what a deeper one would have restored.
      *
      * @return {moved, revived}
      */
-    public static int[] rewind(ServerWorld world) {
-        Record record = RECORDS.remove(world);
+    public static int[] rewind(ServerWorld world, int windowTicks) {
+        Record record = RECORDS.get(world);
         if (record == null) {
             return new int[] {0, 0};
         }
 
         int moved = 0;
-        // Only the oldest snapshot matters. Walking every sample backwards
-        // would end in exactly the same place, having done the work 150 times.
-        Snapshot oldest = record.positions.peekFirst();
+        // The oldest snapshot still inside the window. Walking every sample
+        // back would end in the same place having done the work a hundred
+        // times over.
+        Snapshot oldest = null;
+        for (Snapshot snapshot : record.positions) {
+            if ((long) now - snapshot.tick <= windowTicks) {
+                oldest = snapshot;
+                break;
+            }
+        }
         if (oldest != null) {
             for (int i = 0; i < oldest.who.length; i++) {
                 Entity entity = oldest.who[i];
@@ -185,10 +205,19 @@ public final class Souls {
                 entity.setPosition(oldest.xyz[i * 3], oldest.xyz[i * 3 + 1], oldest.xyz[i * 3 + 2]);
                 moved++;
             }
+            // Spent: a second rewind must not replay these and drag everything
+            // back a second time.
+            record.positions.removeIf(snapshot -> (long) now - snapshot.tick <= windowTicks);
         }
 
         int revived = 0;
+        List<Death> raising = new ArrayList<>();
         for (Death death : record.deaths) {
+            if ((long) now - death.tick <= windowTicks) {
+                raising.add(death);
+            }
+        }
+        for (Death death : raising) {
             Entity back = death.type.create(world, SpawnReason.EVENT);
             if (back == null) {
                 continue;
@@ -200,6 +229,7 @@ public final class Souls {
             world.spawnEntity(back);
             revived++;
         }
+        record.deaths.removeAll(raising);
         return new int[] {moved, revived};
     }
 }

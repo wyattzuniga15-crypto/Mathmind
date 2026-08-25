@@ -15,5 +15,8 @@
   "item.orbital.bottled_chunk": "Bottled Chunk",
   "item.orbital.portal_gun": "Portal Gun",
   "item.orbital.chronarch_seal": "Chronarch Seal",
-  "item.orbital.chronarch_heart": "Chronarch's Heart"
+  "item.orbital.chronarch_heart": "Chronarch's Heart",
+  "item.orbital.deep_rewind_clock": "Deep Rewind Clock",
+  "item.orbital.long_rewind_clock": "Long Rewind Clock",
+  "item.orbital.genesis_clock": "Genesis Clock"
 }

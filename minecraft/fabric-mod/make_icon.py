@@ -367,6 +367,35 @@ HEART = [
     [h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_, h_],
 ]
 
+# The four rewind clocks: the same dial, deepening in colour with reach, so a
+# glance at the hotbar says how far each one goes. Reading them as a family
+# matters more than four unrelated pictures would.
+DEEP_REWIND = recolour(CLOCK, {
+    P: (198, 214, 250, 255),   # face
+    g: (72, 96, 152, 255),     # rim
+    C: (150, 178, 240, 255),
+    c: (222, 234, 255, 255),
+    d: (22, 34, 78, 255),      # hands
+})
+
+LONG_REWIND = recolour(CLOCK, {
+    P: (206, 190, 246, 255),
+    g: (96, 66, 156, 255),
+    C: (176, 148, 240, 255),
+    c: (232, 222, 255, 255),
+    d: (38, 18, 74, 255),
+})
+
+# Genesis reaches as far as anything is kept, so it is the odd one: near-black
+# stone with a white dial, the only one that does not read as a colour.
+GENESIS = recolour(CLOCK, {
+    P: (238, 236, 244, 255),
+    g: (34, 32, 42, 255),
+    C: (250, 248, 255, 255),
+    c: (255, 255, 255, 255),
+    d: (12, 10, 18, 255),
+})
+
 
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
@@ -380,7 +409,10 @@ if __name__ == "__main__":
                           ("bottled_chunk", BOTTLE),
                           ("portal_gun", GUN),
                           ("chronarch_seal", SEAL),
-                          ("chronarch_heart", HEART)):
+                          ("chronarch_heart", HEART),
+                          ("deep_rewind_clock", DEEP_REWIND),
+                          ("long_rewind_clock", LONG_REWIND),
+                          ("genesis_clock", GENESIS)):
         out = art / f"{name}.png"
         assert all(len(row) == 16 for row in pixels), f"{name} is not 16 wide"
         assert len(pixels) == 16, f"{name} is not 16 tall"

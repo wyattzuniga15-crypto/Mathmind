@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["NHN", "HCH", "NHN"],
+  "key": {
+    "N": { "item": "minecraft:nether_star" },
+    "H": { "item": "minecraft:heart_of_the_sea" },
+    "C": { "item": "minecraft:clock" }
+  },
+  "result": { "id": "orbital:genesis_clock", "count": 1 }
+}
