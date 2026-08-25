@@ -6,6 +6,8 @@ public class Blocks {
     public static final Block WATER = new Block();
     public static final Block LAVA = new Block();
     public static final Block FARMLAND = new Block();
+    public static final Block PACKED_MUD = new Block();
+    public static final Block COARSE_DIRT = new Block();
     public static final Block POTATOES = new Block();
     public static final Block CRYING_OBSIDIAN = new Block();
     public static final Block BEACON = new Block();

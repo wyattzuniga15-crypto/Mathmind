@@ -251,16 +251,24 @@ that method's shape ever moves, the hook quietly does nothing rather than
 refusing to load the mod, the clock keeps its reach over everything this mod
 clears directly, and the rest of the arsenal is unaffected.
 
-**Potato Bomb** — 300 charges over a **70-block circle**, and then the crater
-gets planted. Once the last shell has gone off, the whole floor is tilled and
-sown with potatoes, so the thing that just flattened the hillside also feeds
-you. The only weapon here that gives something back.
+**Potato Bomb** — drops an enormous potato on the world from ninety blocks up.
 
-The planting waits on the blast rather than running alongside it. Shells go off
-when they land, and the last of them can still be falling several seconds after
-the first detonates — sowing any earlier would plant a field and then blow it
-up. It also walks *down* to find the floor rather than planting at the height it
-was aimed at, because after a blast the ground is nowhere near where it started.
+The potato is real: **about a thousand blocks** in a lumpy ellipsoid, seventeen
+long and eleven thick, each spawned as a falling block. They hold their shape
+the whole way down for a reason worth knowing — every falling block in
+Minecraft accelerates identically, so a cluster released together stays a
+cluster. No rigid-body machinery is needed and none exists to borrow; the
+physics does it for free. A plain ellipsoid would read as an egg, so the
+surface is wobbled just enough to come out lopsided.
+
+Where it lands it leaves a crater **eighty blocks across and twenty-two deep**,
+and then the crater floor is tilled and sown. The thing that just flattened the
+hillside still feeds you.
+
+The planting walks *down* to find the floor rather than sowing at the height it
+was aimed at, because after an impact the ground is nowhere near where it
+started. The whole crater goes through the journal, so the clocks can put it
+back.
 
 **Time Stop Clock** — the world stops dead for **fifteen seconds** and you keep
 moving. Mobs stand still mid-stride, arrows hang in the air, lit TNT stops
