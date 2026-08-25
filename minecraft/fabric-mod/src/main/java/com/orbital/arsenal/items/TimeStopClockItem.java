@@ -1,5 +1,6 @@
 package com.orbital.arsenal.items;
 
+import com.orbital.arsenal.ModItems;
 import com.orbital.arsenal.time.TimeControl;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -24,7 +25,7 @@ import net.minecraft.world.World;
  */
 public class TimeStopClockItem extends Item {
     private static final int SECONDS = 15;
-    private static final int COOLDOWN = 400;
+    private static final int COOLDOWN = ModItems.CLOCK_COOLDOWN;
 
     public TimeStopClockItem(Settings settings) {
         super(settings);

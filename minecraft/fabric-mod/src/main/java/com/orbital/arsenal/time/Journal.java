@@ -8,6 +8,7 @@ import java.util.Map;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 
 /**
  * A rolling record of what the world used to look like.
@@ -183,16 +184,31 @@ public final class Journal {
             return 0;
         }
 
+        // The extent of what gets put back, gathered as it goes. Anything
+        // standing inside it when the restore finishes has been buried and
+        // needs lifting out before it suffocates.
+        int[] bounds = {Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE,
+                        Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
+
         Scheduler.repeat(() -> {
             int budget = RESTORE_PER_TICK;
             while (budget > 0) {
                 Frame frame = replay.peekFirst();
                 if (frame == null) {
+                    Unbury.sweep(world, new Box(
+                            bounds[0] - 1, bounds[1] - 1, bounds[2] - 1,
+                            bounds[3] + 2, bounds[4] + 3, bounds[5] + 2));
                     return false;
                 }
                 while (frame.size > 0 && budget > 0) {
                     frame.size--;
                     BlockPos at = BlockPos.fromLong(frame.pos[frame.size]);
+                    bounds[0] = Math.min(bounds[0], at.getX());
+                    bounds[1] = Math.min(bounds[1], at.getY());
+                    bounds[2] = Math.min(bounds[2], at.getZ());
+                    bounds[3] = Math.max(bounds[3], at.getX());
+                    bounds[4] = Math.max(bounds[4], at.getY());
+                    bounds[5] = Math.max(bounds[5], at.getZ());
                     suppressed = true;
                     // Flag 2 again: neighbour updates across a restore this
                     // size cost more than the restore, and re-settling sand

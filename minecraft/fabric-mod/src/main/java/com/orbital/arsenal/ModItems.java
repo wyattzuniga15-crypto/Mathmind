@@ -55,6 +55,9 @@ public final class ModItems {
      * the first time an item is added and then lies in the startup log, which
      * is the one place it needs to be trustworthy.
      */
+    /** Every clock waits the same five seconds. */
+    public static final int CLOCK_COOLDOWN = 100;
+
     private static int registered = 0;
 
     private ModItems() {}
@@ -89,16 +92,17 @@ public final class ModItems {
         PORTAL_GUN = register("portal_gun", PortalGunItem::new);
         CHRONARCH_SEAL = register("chronarch_seal", ChronarchSealItem::new);
         CHRONARCH_HEART = register("chronarch_heart", ChronarchHeartItem::new);
-        // Same item, four reaches. Cooldowns climb with them: undoing ten
-        // minutes should be a decision, not a habit.
+        // Five seconds each, however far they reach — asked for outright.
+        // The deeper ones are no longer rationed by their cooldown, so the
+        // record's own limits are all that hold them back now.
         REWIND_CLOCK = register("rewind_clock",
-                settings -> new RewindClockItem(settings, Journal.ONE_MINUTE, "1 minute", 200));
+                settings -> new RewindClockItem(settings, Journal.ONE_MINUTE, "1 minute", CLOCK_COOLDOWN));
         DEEP_REWIND_CLOCK = register("deep_rewind_clock",
-                settings -> new RewindClockItem(settings, Journal.FIVE_MINUTES, "5 minutes", 600));
+                settings -> new RewindClockItem(settings, Journal.FIVE_MINUTES, "5 minutes", CLOCK_COOLDOWN));
         LONG_REWIND_CLOCK = register("long_rewind_clock",
-                settings -> new RewindClockItem(settings, Journal.TEN_MINUTES, "10 minutes", 1200));
+                settings -> new RewindClockItem(settings, Journal.TEN_MINUTES, "10 minutes", CLOCK_COOLDOWN));
         GENESIS_CLOCK = register("genesis_clock",
-                settings -> new RewindClockItem(settings, Journal.EVERYTHING, "everything", 2400));
+                settings -> new RewindClockItem(settings, Journal.EVERYTHING, "everything", CLOCK_COOLDOWN));
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);

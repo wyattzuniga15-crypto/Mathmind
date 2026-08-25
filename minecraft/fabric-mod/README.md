@@ -168,8 +168,9 @@ clock can still reach them afterwards. One journal rather than four, because
 four would each have to watch every block change in the world and would file
 the same change four times over.
 
-Cooldowns climb with reach — 10 seconds, 30, a minute, two — so undoing ten
-minutes is a decision rather than a habit.
+Every clock in the mod waits the same **five seconds**, whatever it does or how
+far it reaches. Nothing is rationed by its cooldown any more, so what holds the
+deep clocks back is the record's own limits rather than the wait.
 
 Three limits, all of them reachable in normal use of this mod:
 
@@ -178,6 +179,14 @@ They cost very different amounts to record — a position sample is every entity
 in the world several times a second, while a death is one small record and
 deaths are rare. So the deep clocks will raise anything that died in the last
 hour, but only the shallower ones can put survivors back where they stood.
+
+**Anything a rewind buries is lifted out.** Putting blocks back puts them back
+around whatever was standing in the hole, and Minecraft's answer to being inside
+a block is to suffocate you — so undoing a crater used to kill the very mobs the
+rewind had just resurrected. Once a restore finishes, everything in the area it
+touched is checked and anything now inside solid rock is raised to the first
+clear space above. Water and lava are left alone: those are not suffocation, and
+hauling a fish out of restored water would be its own small disaster.
 
 **Mobs come back, but as new animals.** Everything that died inside the window
 is put back on its feet where it fell, keeping its name, and every surviving

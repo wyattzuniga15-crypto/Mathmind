@@ -1,5 +1,6 @@
 package com.orbital.arsenal.items;
 
+import com.orbital.arsenal.ModItems;
 import com.orbital.arsenal.time.TimeControl;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -29,7 +30,7 @@ public class FastForwardClockItem extends Item {
     private static final int SECONDS = 15;
     /** Five times the normal twenty ticks a second. */
     private static final float RATE = 100.0f;
-    private static final int COOLDOWN = 400;
+    private static final int COOLDOWN = ModItems.CLOCK_COOLDOWN;
 
     public FastForwardClockItem(Settings settings) {
         super(settings);

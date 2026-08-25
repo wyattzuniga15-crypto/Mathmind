@@ -1,5 +1,6 @@
 package com.orbital.arsenal.items;
 
+import com.orbital.arsenal.ModItems;
 import com.orbital.arsenal.time.TimeControl;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -26,7 +27,7 @@ public class SlowTimeClockItem extends Item {
     private static final int SECONDS = 20;
     /** A quarter of the normal twenty ticks a second. */
     private static final float RATE = 5.0f;
-    private static final int COOLDOWN = 300;
+    private static final int COOLDOWN = ModItems.CLOCK_COOLDOWN;
 
     public SlowTimeClockItem(Settings settings) {
         super(settings);
