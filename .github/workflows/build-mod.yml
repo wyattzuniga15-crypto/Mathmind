@@ -58,14 +58,17 @@ jobs:
           echo "Targeting Minecraft $MC"
 
           BASE=https://maven.fabricmc.net
+          # `|| true` on each: without it, a lookup that matches nothing fails
+          # the pipeline under pipefail and kills the step mid-assignment, with
+          # no clue which of the four it was. The explicit check below names it.
           LOOM=$(versions "$BASE/fabric-loom/fabric-loom.gradle.plugin/maven-metadata.xml" \
-                 | grep -v SNAPSHOT | tail -1)
+                 | grep -v SNAPSHOT | tail -1 || true)
           API=$(versions "$BASE/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml" \
-                 | grep -- "+${MC}\$" | tail -1)
+                 | grep -- "+${MC}\$" | tail -1 || true)
           YARN=$(versions "$BASE/net/fabricmc/yarn/maven-metadata.xml" \
-                 | grep "^${MC}+" | tail -1)
+                 | grep "^${MC}+" | tail -1 || true)
           LOADER=$(versions "$BASE/net/fabricmc/fabric-loader/maven-metadata.xml" \
-                 | grep -E '^[0-9.]+$' | tail -1)
+                 | grep -E '^[0-9.]+$' | tail -1 || true)
 
           echo "loom=$LOOM  api=$API  yarn=$YARN  loader=$LOADER"
 
@@ -80,16 +83,25 @@ jobs:
           done
 
           # The Anthropic SDK lives on Maven Central rather than Fabric's
-          # repository, but the reasoning is the same: ask what is published
-          # instead of committing a guess that goes stale.
+          # repository, and unlike the four above it is not load-bearing for
+          # the build: gradle.properties already pins a version known to
+          # resolve. So this looks for something newer and keeps the pin if it
+          # cannot find one, rather than failing.
+          #
+          # It used to fail, and did — Maven Central returned nothing once and
+          # took the whole build with it, because under `set -o pipefail` a
+          # grep that matches nothing fails the pipeline and errexit does the
+          # rest. An optional dependency's version lookup should never be able
+          # to stop a mod compiling.
           SDK=$(versions "https://repo1.maven.org/maven2/com/anthropic/anthropic-java/maven-metadata.xml" \
-                | grep -E '^[0-9.]+$' | tail -1)
-          echo "anthropic-java=$SDK"
-          if [ -z "$SDK" ]; then
-            echo "::error::could not resolve an anthropic-java version"
-            exit 1
+                | grep -E '^[0-9.]+$' | tail -1 || true)
+          if [ -n "$SDK" ]; then
+            echo "anthropic-java=$SDK (from maven)"
+            sed -i "s|^anthropic_version=.*|anthropic_version=$SDK|" gradle.properties
+          else
+            echo "::warning::could not reach Maven Central for anthropic-java;" \
+                 "keeping the pinned $(grep '^anthropic_version=' gradle.properties)"
           fi
-          sed -i "s|^anthropic_version=.*|anthropic_version=$SDK|" gradle.properties
 
           sed -i "s|^loom_version=.*|loom_version=$LOOM|" gradle.properties
           sed -i "s|^fabric_version=.*|fabric_version=$API|" gradle.properties
