@@ -16,35 +16,25 @@ import net.minecraft.util.math.Box;
  * Every block change is filed with the state that was there before it, grouped
  * by the tick it happened on. Replaying those backwards puts the world back.
  *
- * Recording runs all the time, for every change in the world whoever made it —
- * a creeper, a fire, a pickaxe, another mod. It is affordable because a normal
- * world simply does not change much: a few hundred blocks a second at the
- * outside, against a cap sized for the twenty-two million a black hole makes.
- * The cost of an idle world is a map lookup and an array append per change.
+ * **Changes are stored as runs, not as blocks.** That is the difference
+ * between undoing a black hole and undoing a fifth of one. These weapons clear
+ * in contiguous rows — the nuke and the black hole both walk a whole line of
+ * z at a time — so a row of two hundred stone becoming air is one entry here
+ * rather than two hundred. A run costs about half again what a single block
+ * did, and the big weapons produce runs hundreds long, so the record now holds
+ * an entire black hole where before it could keep only the tail of one.
  *
- * Note what that means, since it is the whole point and also the sharp edge:
- * the clock undoes the last thirty seconds of *everything*. Blocks you placed
- * in that window are un-placed too. It is an undo, not a repair tool.
- *
- * Two limits are worth stating plainly, because both are reachable in normal
- * use of this mod:
+ * A run only forms when consecutive changes are adjacent and had the same
+ * block before them, which is exactly what bulk clearing looks like and is
+ * never what a player mining looks like. Nothing is lost when runs do not
+ * form; the record simply falls back to one entry per block.
  *
  * One record serves every clock. Each asks for a different reach — a minute,
- * five, ten, or everything still held — and takes only the frames inside it,
- * leaving older ones for the deeper clocks. That is why there is one journal
- * rather than four: four would each have to see every block change in the
- * world, and the same change would be filed four times over.
+ * five, ten, or everything still held — and takes only the runs inside it,
+ * leaving older ones for the deeper clocks.
  *
- * Two limits, both reachable:
- *
- * Nothing older than an hour is kept, whichever clock is asking. Even the
- * deepest cannot reach past that.
- *
- * The real constraint is the four million change cap, about ninety megabytes.
- * The black hole alone makes twenty-two million, so its oldest changes are
- * evicted while it is still digging and an undo afterwards restores only the
- * last part of it. The cap exists because the alternative is running the game
- * out of memory, which is a worse answer than an incomplete undo.
+ * Two limits remain: nothing older than an hour is kept, and the record caps
+ * at three million runs, which is where memory rather than time runs out.
  */
 public final class Journal {
     /** The reaches the clocks ask for, in ticks. */
@@ -54,10 +44,16 @@ public final class Journal {
     /** Everything still held — which the hour cap below bounds in practice. */
     public static final int EVERYTHING = Integer.MAX_VALUE;
 
-    /** Nothing older than this is kept, whichever clock asks. */
-    private static final int MAX_WINDOW = 72_000;      // one hour
-    private static final int MAX_ENTRIES = 4_000_000;  // roughly 90 MB
+    private static final int MAX_WINDOW = 72_000;    // one hour
+    /** Runs, not blocks. At the compression the big weapons get, this is a lot of world. */
+    private static final int MAX_RUNS = 3_000_000;
     private static final int RESTORE_PER_TICK = 40_000;
+    /** A run's length is a short, so it cannot exceed this. */
+    private static final int MAX_RUN = Short.MAX_VALUE;
+
+    private static final byte AXIS_X = 0;
+    private static final byte AXIS_Y = 1;
+    private static final byte AXIS_Z = 2;
 
     /**
      * Set while this class is writing a block itself, so the mixin that watches
@@ -65,32 +61,90 @@ public final class Journal {
      */
     public static boolean suppressed = false;
 
-    /** One tick's worth of changes, in the order they happened. */
+    /** One tick's worth of changes, as runs, in the order they happened. */
     private static final class Frame {
         final int tick;
-        long[] pos = new long[128];
-        BlockState[] was = new BlockState[128];
-        int size;
+        int[] x = new int[64];
+        int[] y = new int[64];
+        int[] z = new int[64];
+        BlockState[] was = new BlockState[64];
+        short[] length = new short[64];
+        byte[] axis = new byte[64];
+        int size;      // runs
+        int blocks;    // blocks across those runs
 
         Frame(int tick) {
             this.tick = tick;
         }
 
-        void add(long p, BlockState state) {
-            if (size == pos.length) {
-                pos = Arrays.copyOf(pos, size * 2);
-                was = Arrays.copyOf(was, size * 2);
+        void start(int px, int py, int pz, BlockState state) {
+            if (size == x.length) {
+                int bigger = size * 2;
+                x = Arrays.copyOf(x, bigger);
+                y = Arrays.copyOf(y, bigger);
+                z = Arrays.copyOf(z, bigger);
+                was = Arrays.copyOf(was, bigger);
+                length = Arrays.copyOf(length, bigger);
+                axis = Arrays.copyOf(axis, bigger);
             }
-            pos[size] = p;
+            x[size] = px;
+            y[size] = py;
+            z[size] = pz;
             was[size] = state;
+            length[size] = 1;
+            axis[size] = AXIS_Z;
             size++;
+            blocks++;
+        }
+
+        /**
+         * Extend the last run if this change carries straight on from it.
+         *
+         * BlockStates are interned, so identity is the right comparison and a
+         * cheap one — this runs on every block change in the game.
+         */
+        boolean extend(int px, int py, int pz, BlockState state) {
+            int last = size - 1;
+            if (last < 0 || was[last] != state || length[last] >= MAX_RUN) {
+                return false;
+            }
+            int len = length[last];
+            int ex = x[last];
+            int ey = y[last];
+            int ez = z[last];
+            byte along = axis[last];
+
+            if (len == 1) {
+                // A run of one has no direction yet, so any neighbour sets it.
+                if (px == ex + 1 && py == ey && pz == ez) {
+                    axis[last] = AXIS_X;
+                } else if (py == ey + 1 && px == ex && pz == ez) {
+                    axis[last] = AXIS_Y;
+                } else if (pz == ez + 1 && px == ex && py == ey) {
+                    axis[last] = AXIS_Z;
+                } else {
+                    return false;
+                }
+            } else {
+                boolean follows = switch (along) {
+                    case AXIS_X -> px == ex + len && py == ey && pz == ez;
+                    case AXIS_Y -> py == ey + len && px == ex && pz == ez;
+                    default -> pz == ez + len && px == ex && py == ey;
+                };
+                if (!follows) {
+                    return false;
+                }
+            }
+            length[last]++;
+            blocks++;
+            return true;
         }
     }
 
     private static final class Log {
         final ArrayDeque<Frame> frames = new ArrayDeque<>();
         Frame current;
-        int entries;
+        int runs;
     }
 
     // Per world: the Nether and the Overworld cannot share a record, since a
@@ -111,9 +165,14 @@ public final class Journal {
             log.current = new Frame(now);
             log.frames.addLast(log.current);
         }
-        log.current.add(pos.asLong(), was);
-        log.entries++;
-        trim(log);
+        int px = pos.getX();
+        int py = pos.getY();
+        int pz = pos.getZ();
+        if (!log.current.extend(px, py, pz, was)) {
+            log.current.start(px, py, pz, was);
+            log.runs++;
+            trim(log);
+        }
     }
 
     /** Clear a block and file it, in one step, so nothing can do one without the other. */
@@ -127,16 +186,16 @@ public final class Journal {
     private static void trim(Log log) {
         while (!log.frames.isEmpty()) {
             Frame oldest = log.frames.peekFirst();
-            if (now - oldest.tick <= MAX_WINDOW && log.entries <= MAX_ENTRIES) {
+            if (now - oldest.tick <= MAX_WINDOW && log.runs <= MAX_RUNS) {
                 return;
             }
             log.frames.pollFirst();
-            log.entries -= oldest.size;
+            log.runs -= oldest.size;
             if (log.current == oldest) {
                 log.current = null;
             }
         }
-        log.entries = 0;
+        log.runs = 0;
     }
 
     public static void tick() {
@@ -148,7 +207,7 @@ public final class Journal {
 
     /**
      * Put the world back as it stood `windowTicks` ago, and report how many
-     * changes that took. Returns 0 if nothing inside that reach was recorded.
+     * blocks that took. Returns 0 if nothing inside that reach was recorded.
      *
      * Only frames inside the window are taken. Everything older stays, so
      * undoing the last minute leaves the previous nine intact and a deeper
@@ -160,7 +219,7 @@ public final class Journal {
      */
     public static int rewind(ServerWorld world, int windowTicks) {
         Log log = LOGS.get(world);
-        if (log == null || log.entries == 0) {
+        if (log == null || log.frames.isEmpty()) {
             return 0;
         }
 
@@ -174,10 +233,9 @@ public final class Journal {
                 break;
             }
             log.frames.pollLast();
-            log.entries -= newest.size;
-            total += newest.size;
-            // Newest first, so taking from the front replays in the right order.
-            replay.addLast(newest);
+            log.runs -= newest.size;
+            total += newest.blocks;
+            replay.addLast(newest);   // newest first
         }
         log.current = null;
         if (total == 0) {
@@ -185,10 +243,10 @@ public final class Journal {
         }
 
         // The extent of what gets put back, gathered as it goes. Anything
-        // standing inside it when the restore finishes has been buried and
-        // needs lifting out before it suffocates.
+        // standing inside it when the restore finishes has been buried.
         int[] bounds = {Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE,
                         Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
+        BlockPos.Mutable at = new BlockPos.Mutable();
 
         Scheduler.repeat(() -> {
             int budget = RESTORE_PER_TICK;
@@ -201,21 +259,36 @@ public final class Journal {
                     return false;
                 }
                 while (frame.size > 0 && budget > 0) {
-                    frame.size--;
-                    BlockPos at = BlockPos.fromLong(frame.pos[frame.size]);
-                    bounds[0] = Math.min(bounds[0], at.getX());
-                    bounds[1] = Math.min(bounds[1], at.getY());
-                    bounds[2] = Math.min(bounds[2], at.getZ());
-                    bounds[3] = Math.max(bounds[3], at.getX());
-                    bounds[4] = Math.max(bounds[4], at.getY());
-                    bounds[5] = Math.max(bounds[5], at.getZ());
+                    int run = frame.size - 1;
+                    int len = frame.length[run];
+                    // Take the run from its far end back, so a position touched
+                    // twice inside one tick still ends on its earliest state.
+                    int step = len - 1;
+                    int px = frame.x[run] + (frame.axis[run] == AXIS_X ? step : 0);
+                    int py = frame.y[run] + (frame.axis[run] == AXIS_Y ? step : 0);
+                    int pz = frame.z[run] + (frame.axis[run] == AXIS_Z ? step : 0);
+                    at.set(px, py, pz);
+
+                    bounds[0] = Math.min(bounds[0], px);
+                    bounds[1] = Math.min(bounds[1], py);
+                    bounds[2] = Math.min(bounds[2], pz);
+                    bounds[3] = Math.max(bounds[3], px);
+                    bounds[4] = Math.max(bounds[4], py);
+                    bounds[5] = Math.max(bounds[5], pz);
+
                     suppressed = true;
                     // Flag 2 again: neighbour updates across a restore this
                     // size cost more than the restore, and re-settling sand
                     // and water that were mid-fall is not wanted anyway.
-                    world.setBlockState(at, frame.was[frame.size], 2);
+                    world.setBlockState(at.toImmutable(), frame.was[run], 2);
                     suppressed = false;
                     budget--;
+
+                    if (--len == 0) {
+                        frame.size--;
+                    } else {
+                        frame.length[run] = (short) len;
+                    }
                 }
                 if (frame.size == 0) {
                     replay.pollFirst();

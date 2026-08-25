@@ -147,6 +147,18 @@ def main():
             check(declared is None,
                   f"stubs/{rel} declares '{member}', which Yarn 1.21.11 does not have")
 
+    # --- the journal's run-length encoding round-trips ---
+    #
+    # The subtlest logic in the mod: a run that extends when it should not, or
+    # a replay that walks one from the wrong end, corrupts the world quietly.
+    test = ROOT / "test_journal_runs.py"
+    if test.exists():
+        result = subprocess.run([sys.executable, str(test)], capture_output=True, text=True)
+        checks += 1
+        print(result.stdout.rstrip())
+        if result.returncode != 0:
+            problems.append("journal run-length round-trip failed")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:

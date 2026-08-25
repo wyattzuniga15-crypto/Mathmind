@@ -210,11 +210,26 @@ reaches — not a return to the world as it generated. Genuinely regenerating
 terrain would mean re-running world generation over every chunk, which
 Minecraft gives a mod no safe way to do while a world is open.
 
-**Very large events overrun it.** The record caps at four million changes,
-which is about ninety megabytes. The black hole alone makes twenty-two million, so its
-oldest changes are evicted while it is still digging and an undo afterwards
-restores only the last part of it — and no deeper clock helps, because the
-frames are gone rather than merely out of reach. The cap is there because the alternative is
+**Changes are stored as runs, not as blocks**, which is what makes undoing a
+black hole possible at all. These weapons clear in contiguous rows — the nuke
+and the black hole both walk a whole line of z at a time — so a row of two
+hundred stone becoming air is *one* entry rather than two hundred. Against
+terrain that measures about **99x**: a black hole's 11.6 million cleared blocks
+become 117,000 runs, around 3 MB.
+
+Before that, the record held blocks one by one and capped at four million, so a
+black hole overran it about threefold and an undo afterwards restored roughly a
+third of the crater. That is now the whole thing.
+
+A run only forms when consecutive changes are adjacent and had the same block
+before them — exactly what bulk clearing looks like, and never what a player
+mining looks like. Nothing is lost when runs do not form; the record simply
+falls back to one entry per block.
+
+**Very large events can still overrun it.** The cap is three million runs, which at that compression is a great deal of world. What overruns it now would
+have to be sustained clearing far past anything one weapon does — but if it
+happens, the oldest runs are evicted while it is still going, and no deeper
+clock helps, because those frames are gone rather than merely out of reach. The cap is there because the alternative is
 running the game out of memory, which is a worse answer than an incomplete
 undo. The nuke, at 1.27 million, fits comfortably.
 
