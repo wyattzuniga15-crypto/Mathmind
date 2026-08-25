@@ -66,7 +66,7 @@ const TouchUI = {
           const dx = t.clientX - c.x, dy = t.clientY - c.y;
           c.moved += Math.abs(dx) + Math.abs(dy);
           c.x = t.clientX; c.y = t.clientY;
-          const p = game.player, sens = 0.0042;
+          const p = game.player, sens = 0.0075 * game.sens;
           p.yaw -= dx * sens;
           p.pitch = clamp(p.pitch - dy * sens, -Math.PI / 2 + 0.01, Math.PI / 2 - 0.01);
           if (this.holdActive) Input.aimRay = game.screenRay(c.x, c.y);

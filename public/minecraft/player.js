@@ -401,7 +401,7 @@ const Input = {
       // embedded pages): drag with any mouse button held to look around.
       if (!this.locked && !(game.lockFallback && (e.buttons & 7))) return;
       const p = game.player;
-      const sens = 0.0024;
+      const sens = 0.0038 * Game.sens;   // faster by default, tunable in the pause menu
       p.yaw -= e.movementX * sens;
       p.pitch = clamp(p.pitch - e.movementY * sens, -Math.PI / 2 + 0.01, Math.PI / 2 - 0.01);
     });

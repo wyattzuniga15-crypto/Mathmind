@@ -32,7 +32,7 @@ and the matching button resumes it. You can switch mode mid-game from the pause 
 | Middle click | Pick targeted block from inventory |
 | F3 | Debug overlay |
 | M | Toggle music |
-| Esc | Pause |
+| Esc | Pause (look sensitivity slider lives here) |
 | Double-tap Space | Fly (creative) — Space up, Shift down |
 
 On a phone or tablet the game switches to touch controls: a floating joystick to move

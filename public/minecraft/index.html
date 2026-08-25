@@ -120,6 +120,11 @@
   .ctab.on { background:#c6c6c6; color:#000; }
   #cpal { max-height:210px; overflow-y:auto; }
 
+  #sensrow { display:flex; align-items:center; gap:10px; margin:10px 0 4px;
+             color:#fff; font-size:15px; text-shadow:1px 1px #000; }
+  #senslider { width:210px; accent-color:#7ec74f; touch-action:auto; }
+  #sensval { min-width:44px; font-weight:700; color:#bef97a; }
+
   /* ---------- credits ---------- */
   #credits { background:#05030acc; z-index:38; overflow:hidden; }
   #credits h2 { color:#ffd75e; font-size:40px; text-shadow:3px 3px #000; margin-bottom:6px; text-align:center; }
@@ -160,6 +165,12 @@
   }
   @media (max-width:760px), (max-height:520px) {
     #invpanel { transform:scale(0.72); }
+    #pause, #credits { justify-content:flex-start; overflow-y:auto; padding:10px 0 18px; }
+    #pause h2, #credits h2 { font-size:24px; margin-bottom:10px; }
+    #pause .mcbtn, #credits .mcbtn { font-size:16px; padding:9px 0; width:250px; margin:4px; }
+    #ctrlhelp { font-size:12px; line-height:1.6; margin-top:12px; }
+    #credits .sub { font-size:14px; margin-bottom:10px; }
+    #creditstats, #creditroll { font-size:12px; line-height:1.6; margin-bottom:12px; }
   }
 
   #loading { background:#222; z-index:45; color:#fff; }
@@ -241,9 +252,14 @@
 <div id="pause" class="screen hidden">
   <h2>Game Paused</h2>
   <button class="mcbtn" id="btnresume">Back to Game</button>
+  <div id="sensrow">
+    <label for="senslider">Look sensitivity</label>
+    <input id="senslider" type="range" min="0.3" max="3" step="0.1" value="1">
+    <span id="sensval">1.0×</span>
+  </div>
   <button class="mcbtn" id="btnmode">Switch to Creative</button>
   <button class="mcbtn" id="btnquit">Save &amp; Quit to Title</button>
-  <div style="color:#ddd;font-size:14px;line-height:1.9;margin-top:22px;text-shadow:1px 1px #000;text-align:center">
+  <div id="ctrlhelp" style="color:#ddd;font-size:14px;line-height:1.9;margin-top:22px;text-shadow:1px 1px #000;text-align:center">
     <b>WASD</b> move · <b>Space</b> jump/swim · <b>Ctrl</b> sprint · <b>Shift</b> sneak<br>
     <b>Left click</b> mine / attack · <b>Right click</b> place / use / eat · <b>Hold right</b> draw bow<br>
     <b>E</b> inventory · <b>1–9</b> / <b>wheel</b> hotbar · <b>Q</b> drop item · <b>F3</b> debug<br>

@@ -2,6 +2,7 @@
 // ---------------------------------------------------------------- game orchestration
 
 const SAVE_KEY = 'blockcraft_save_v1';
+const SENS_KEY = 'blockcraft_sens';
 const DAY_LENGTH = 600; // seconds per full day
 
 // localStorage can throw in sandboxed embeds — fall back to in-memory saves
@@ -16,6 +17,7 @@ const Game = {
   world: null, player: null, inv: null,
   mobs: [], drops: [], arrows: [], xporbs: [], tnts: [], fireballs: [], crystals: [],
   worlds: {}, dim: 'overworld', dragon: null, creative: false, dimEnts: {},
+  sens: 1,          // look-sensitivity multiplier, set from the pause menu
   particles: new Particles(),
   target: null,
   dayTime: 0.3, day: 1,
@@ -50,6 +52,19 @@ const Game = {
       if (!locked && this.state === 'playing' && !Input.uiOpen &&
           performance.now() - (this._uiT || 0) > 600) this.pause();
     };
+    const savedSens = parseFloat(Store.get(SENS_KEY));
+    if (savedSens > 0) this.sens = clamp(savedSens, 0.3, 3);
+    const slider = document.getElementById('senslider');
+    const showSens = () => {
+      slider.value = this.sens;
+      document.getElementById('sensval').textContent = this.sens.toFixed(1) + '×';
+    };
+    slider.addEventListener('input', () => {
+      this.sens = clamp(parseFloat(slider.value) || 1, 0.3, 3);
+      Store.set(SENS_KEY, String(this.sens));
+      showSens();
+    });
+    showSens();
     this.drawTitleBg();
     const hasSave = !!Store.get(SAVE_KEY);
     document.getElementById('worldinfo').textContent = hasSave ? 'Saved world found — Play resumes it' : '';
@@ -60,6 +75,11 @@ const Game = {
       } catch (e) {}
     }
     if (this.touchMode) {
+      document.getElementById('ctrlhelp').innerHTML =
+        '<b>Left thumb</b> joystick to move · push to the edge to sprint<br>' +
+        '<b>Drag</b> anywhere to look · <b>Tap</b> to place, use or attack<br>' +
+        '<b>Hold</b> to mine · to eat · to draw the bow<br>' +
+        'Buttons: jump, sneak, 🎒 inventory, ❚❚ pause · tap a hotbar slot to select';
       const note = document.createElement('div');
       note.style.cssText = 'position:relative;color:#cfe9c0;font-size:14px;margin-top:14px;text-shadow:1px 1px #000;text-align:center;line-height:1.6';
       note.innerHTML = 'Touch controls: joystick to move · drag to look ·<br>tap to place/attack · hold to mine';
