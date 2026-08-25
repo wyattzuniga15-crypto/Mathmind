@@ -354,7 +354,7 @@ class World {
     if (!c) return 1;
     const hm = c.hmax[(z & 15) * CHUNK + (x & 15)];
     if (y >= hm) return 1;
-    return Math.max(0.03, 1 - (hm - y) * 0.18);
+    return Math.max(0.18, 1 - (hm - y) * 0.10);
   }
 
   // ---------------- raycast (DDA) ----------------
@@ -446,14 +446,82 @@ const LPAD = 14, LW = CHUNK + LPAD * 2;
 const EMIT = new Uint8Array(256);        // block id -> light emission level (0-15)
 EMIT[B.torch] = 14; EMIT[B.lava] = 15; EMIT[B.furnace_lit] = 13;
 const _lightBuf = new Uint8Array(LW * LW * WORLD_H);
+const _skyBuf = new Uint8Array(LW * LW * WORLD_H);
 const BFS_DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+
+// Daylight reaching each cell. Columns open to the sky are full brightness, and
+// that light then spreads sideways into overhangs and cave mouths one level per
+// block — so a tunnel entrance stays bright and only fades as you go deeper,
+// instead of every roofed cell dropping straight to black.
+let _skyTop = WORLD_H;      // everything above this is open daylight
+
+// the 3x3 chunk neighbourhood, indexed arithmetically so the light passes
+// never touch the chunk map in their inner loops
+function neighborGrid(world, cx0, cz0) {
+  const grid = [];
+  for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++)
+    grid.push(world.chunks.get(CKEY(cx0 + dx, cz0 + dz)) || null);
+  return grid;
+}
+
+function computeSkyLight(world, cx0, cz0, grid, blockAt) {
+  const x0 = cx0 * CHUNK - LPAD, z0 = cz0 * CHUNK - LPAD;
+  // dimensions with no sky of their own skip the whole pass
+  if (world.dim !== 'overworld') { _skyTop = 0; return; }
+  const q = [];
+  let maxO = 0;
+  const opens = new Int16Array(LW * LW);
+  for (let px = 0; px < LW; px++) for (let pz = 0; pz < LW; pz++) {
+    const wx = x0 + px, wz = z0 + pz;
+    const gx = (wx >> 4) - cx0 + 1, gz = (wz >> 4) - cz0 + 1;
+    const ch = (gx < 0 || gx > 2 || gz < 0 || gz > 2) ? null : grid[gz * 3 + gx];
+    // unloaded neighbours count as open sky, which errs bright at the rim
+    const o = ch ? ch.hmax[(wz & 15) * CHUNK + (wx & 15)] + 1 : 0;
+    opens[pz * LW + px] = o;
+    if (o > maxO) maxO = o;
+  }
+  _skyTop = Math.min(WORLD_H, maxO + 2);
+  _skyBuf.fill(0, 0, _skyTop * LW * LW);
+  for (let px = 0; px < LW; px++) for (let pz = 0; pz < LW; pz++) {
+    const o = opens[pz * LW + px];
+    for (let y = o; y < _skyTop; y++) _skyBuf[(y * LW + pz) * LW + px] = 15;
+  }
+  // seed where daylight touches enclosed space
+  for (let y = 0; y < _skyTop; y++) for (let pz = 1; pz < LW - 1; pz++) {
+    const row = (y * LW + pz) * LW;
+    for (let px = 1; px < LW - 1; px++) {
+      const idx = row + px;
+      if (_skyBuf[idx] !== 15) continue;
+      if (_skyBuf[idx - 1] === 15 && _skyBuf[idx + 1] === 15 &&
+          _skyBuf[idx - LW] === 15 && _skyBuf[idx + LW] === 15 &&
+          (y === 0 || _skyBuf[idx - LW * LW] === 15)) continue;
+      q.push(idx);
+    }
+  }
+  let qi = 0;
+  while (qi < q.length) {
+    const idx = q[qi++];
+    const lvl = _skyBuf[idx];
+    if (lvl <= 1) continue;
+    const px = idx % LW, t = (idx / LW) | 0, pz = t % LW, y = (t / LW) | 0;
+    for (const d of BFS_DIRS) {
+      const nx = px + d[0], ny = y + d[1], nz = pz + d[2];
+      if (nx < 1 || nx >= LW - 1 || nz < 1 || nz >= LW - 1 || ny < 0 || ny >= _skyTop) continue;
+      const nidx = (ny * LW + nz) * LW + nx;
+      const nl = lvl - 1;
+      if (_skyBuf[nidx] >= nl) continue;
+      const id = blockAt(x0 + nx, ny, z0 + nz);
+      if (id && Blocks[id].opaque) continue;
+      _skyBuf[nidx] = nl;
+      q.push(nidx);
+    }
+  }
+}
 
 function computeBlockLight(world, cx0, cz0) {
   _lightBuf.fill(0);
   const x0 = cx0 * CHUNK, z0 = cz0 * CHUNK;
-  const grid = [];
-  for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++)
-    grid.push(world.chunks.get(CKEY(cx0 + dx, cz0 + dz)) || null);
+  const grid = neighborGrid(world, cx0, cz0);
   const blockAt = (wx, y, wz) => {
     if (y < 0 || y >= WORLD_H) return 0;
     const gx = (wx >> 4) - cx0 + 1, gz = (wz >> 4) - cz0 + 1;
@@ -461,6 +529,7 @@ function computeBlockLight(world, cx0, cz0) {
     const ch = grid[gz * 3 + gx];
     return ch ? ch.blocks[(y * CHUNK + (wz & 15)) * CHUNK + (wx & 15)] : 0;
   };
+  computeSkyLight(world, cx0, cz0, grid, blockAt);
   const q = [];
   for (let g = 0; g < 9; g++) {
     const ch = grid[g];
@@ -525,8 +594,14 @@ function meshChunk(world, c) {
     return world.getBlock(x0 + x, y, z0 + z);
   };
   const opaqueAt = (x, y, z) => { const id = get(x, y, z); return id !== 0 && Blocks[id].opaque; };
-  const skyOf = (x, y, z) => world.skyAt(x0 + x, y, z0 + z);
   computeBlockLight(world, c.cx, c.cz);
+  const constSky = world.dim !== 'overworld' ? world.skyAt(0, 0, 0) : 0;
+  const skyOf = (lx, y, lz) => {
+    if (constSky) return constSky;
+    if (y >= _skyTop) return 1;
+    if (y < 0) y = 0;
+    return _skyBuf[(y * LW + lz + LPAD) * LW + lx + LPAD] / 15;
+  };
   const blOf = (lx, y, lz) => {
     if (y < 0) y = 0; else if (y >= WORLD_H) y = WORLD_H - 1;
     return _lightBuf[(y * LW + lz + LPAD) * LW + lx + LPAD] / 15;
@@ -663,7 +738,7 @@ function vertexAO(get, x, y, z, f, corner) {
   const cc = solidAt(get, ox + t1[0] * s1 + t2[0] * s2, oy + t1[1] * s1 + t2[1] * s2, oz + t1[2] * s1 + t2[2] * s2);
   let occ = 0;
   if (a && b2) occ = 3; else occ = (a ? 1 : 0) + (b2 ? 1 : 0) + (cc ? 1 : 0);
-  return 1 - occ * 0.18;
+  return 1 - occ * 0.12;
 }
 function axisIndex(t) { return t[0] ? 0 : t[1] ? 1 : 2; }
 function solidAt(get, x, y, z) { const id = get(x, y, z); return id !== 0 && Blocks[id].opaque; }
@@ -679,7 +754,7 @@ function emitSolidFace(arr, get, lx, y, lz, f, fi, ti, baseL, bl, inset) {
       if (f.d[0]) px -= f.d[0] * inset;
       if (f.d[2]) pz -= f.d[2] * inset;
     }
-    vtx.push([px, py, pz, u, v, Math.max(0.03, baseL * ao), bl * ao]);
+    vtx.push([px, py, pz, u, v, Math.max(0.06, baseL * ao), bl * ao]);
   }
   pushQuad(arr, vtx);
 }

@@ -50,7 +50,7 @@ const Renderer = {
     void main() {
       vec4 tex = texture(uTex, vUV);
       if (tex.a < 0.26) discard;
-      float sky = vLight * mix(0.14, 1.0, uAmbient);
+      float sky = vLight * mix(0.20, 1.0, uAmbient);   // moonlight floor, so night is dim not blind
       float pt = 0.0;
       for (int i = 0; i < 32; i++) {
         if (i >= uNumLights) break;
@@ -59,7 +59,7 @@ const Renderer = {
         pt = max(pt, uLights[i].w * clamp(1.0 - d / 12.0, 0.0, 1.0));
       }
       float bl = max(vBlock, pt);          // baked block light or dynamic light
-      float light = clamp(max(sky, bl * 0.97), 0.055, 1.25);
+      float light = clamp(max(sky, bl * 0.97), 0.11, 1.25);
       vec3 col = tex.rgb * light;
       // warm tint from torch/lava light
       col += vec3(0.20, 0.10, 0.0) * bl * tex.rgb;

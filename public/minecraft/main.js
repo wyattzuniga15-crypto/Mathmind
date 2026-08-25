@@ -855,11 +855,15 @@ const Game = {
     for (const c of this.world.chunks.values())
       if (c.dirty && c.populated) dirty.push(c);
     dirty.sort((a, b2) => ((a.cx - cx0) ** 2 + (a.cz - cz0) ** 2) - ((b2.cx - cx0) ** 2 + (b2.cz - cz0) ** 2));
-    let budget = 2;
+    // spend a fixed slice of the frame on meshing rather than a fixed number of
+    // chunks, so a heavy chunk can't blow the frame budget
+    const t0 = performance.now();
+    let done = 0;
     for (const c of dirty) {
-      if (budget-- <= 0) break;
       c.dirty = false;
       Renderer.uploadChunk(c, meshChunk(this.world, c));
+      if (++done >= 1 && performance.now() - t0 > 6) break;
+      if (done >= 4) break;
     }
   },
 
