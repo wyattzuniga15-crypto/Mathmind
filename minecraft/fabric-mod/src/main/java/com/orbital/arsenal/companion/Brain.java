@@ -47,6 +47,11 @@ public final class Brain {
 
     private Brain() {}
 
+    /** The live config, so a command can write a key into it. */
+    public static CompanionConfig config() {
+        return config;
+    }
+
     public static void configure(CompanionConfig loaded) {
         config = loaded;
     }

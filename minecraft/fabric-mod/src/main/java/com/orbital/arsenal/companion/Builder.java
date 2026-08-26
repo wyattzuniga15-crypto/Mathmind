@@ -2,6 +2,7 @@ package com.orbital.arsenal.companion;
 
 import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.time.Journal;
+import java.util.ArrayDeque;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -47,6 +48,28 @@ public final class Builder {
         boolean contains(int x, int y, int z);
     }
 
+    /**
+     * One queued fill.
+     *
+     * Jobs run strictly one after another rather than side by side, because
+     * order is meaning: a blueprint clears the ground, raises walls, then cuts
+     * the doorway out of them. Run those at the same time and the door is cut
+     * before there is a wall to cut it from. A single queue also caps the cost
+     * of a whole castle at the cost of one fill, however many pieces it is.
+     */
+    private static final class Job {
+        ServerWorld world;
+        BlockState state;
+        Shape shape;
+        int lowX, lowY, lowZ, highX, highY, highZ;
+        int x, y, z;
+        int placed;
+        Runnable then;
+    }
+
+    private static final ArrayDeque<Job> QUEUE = new ArrayDeque<>();
+    private static boolean draining = false;
+
     /** Look up a block by its plain id, or null if there is no such block. */
     public static BlockState block(String name) {
         if (name == null || name.isBlank()) {
@@ -66,9 +89,35 @@ public final class Builder {
         return found.getDefaultState();
     }
 
+    /** Queue a fill that announces itself to the player when it lands. */
+    public static long fill(ServerWorld world, ServerPlayerEntity tell, String what,
+                            BlockState state,
+                            int x0, int y0, int z0, int x1, int y1, int z1,
+                            Shape shape) {
+        Runnable report = tell == null || what == null ? null : () -> {};
+        return fill(world, state, x0, y0, z0, x1, y1, z1, shape,
+                report == null ? null : new Announce(tell, what));
+    }
+
+    /** Announces a finished job, carrying the count it was given at the end. */
+    private static final class Announce implements Runnable {
+        private final ServerPlayerEntity tell;
+        private final String what;
+        int placed;
+
+        Announce(ServerPlayerEntity tell, String what) {
+            this.tell = tell;
+            this.what = what;
+        }
+
+        @Override
+        public void run() {
+            tell.sendMessage(Text.literal("§a✔ " + what + " — " + placed + " blocks"), false);
+        }
+    }
+
     /**
-     * Fill every point of {@code shape} inside the given bounds with
-     * {@code state}, a few thousand blocks a tick.
+     * Queue a fill, running {@code then} once it finishes.
      *
      * Progressive on purpose, and not only to spare the server: a keep that
      * rises course by course is worth watching, and one that appears whole is
@@ -76,73 +125,95 @@ public final class Builder {
      *
      * @return the planned bounding volume, or -1 if it was refused as too big
      */
-    public static long fill(ServerWorld world, ServerPlayerEntity tell, String what,
-                            BlockState state,
+    public static long fill(ServerWorld world, BlockState state,
                             int x0, int y0, int z0, int x1, int y1, int z1,
-                            Shape shape) {
-        int lowX = Math.min(x0, x1), highX = Math.max(x0, x1);
+                            Shape shape, Runnable then) {
         // getBottomY() plus getHeight(), rather than the top-Y accessor: that
         // one has been renamed across versions and this pair has not. The
         // limits differ per dimension, so they have to be asked for, not
         // hardcoded — the Nether's ceiling is nowhere near the Overworld's.
         int floor = world.getBottomY() + 1;
         int ceiling = world.getBottomY() + world.getHeight() - 1;
-        int lowY = Math.max(floor, Math.min(y0, y1));
-        int highY = Math.min(ceiling, Math.max(y0, y1));
-        int lowZ = Math.min(z0, z1), highZ = Math.max(z0, z1);
-        if (highY < lowY) {
+        Job job = new Job();
+        job.world = world;
+        job.state = state;
+        job.shape = shape;
+        job.lowX = Math.min(x0, x1);
+        job.highX = Math.max(x0, x1);
+        job.lowY = Math.max(floor, Math.min(y0, y1));
+        job.highY = Math.min(ceiling, Math.max(y0, y1));
+        job.lowZ = Math.min(z0, z1);
+        job.highZ = Math.max(z0, z1);
+        job.then = then;
+        if (job.highY < job.lowY) {
             return -1;
         }
 
-        long volume = (long) (highX - lowX + 1) * (highY - lowY + 1) * (highZ - lowZ + 1);
+        long volume = (long) (job.highX - job.lowX + 1)
+                * (job.highY - job.lowY + 1)
+                * (job.highZ - job.lowZ + 1);
         if (volume > MAX_VOLUME) {
             return -1;
         }
 
-        int[] cx = {lowX};
-        int[] cy = {lowY};
-        int[] cz = {lowZ};
-        int[] placed = {0};
-        BlockPos.Mutable pos = new BlockPos.Mutable();
+        job.x = job.lowX;
+        job.y = job.lowY;
+        job.z = job.lowZ;
+        QUEUE.add(job);
+        drain();
+        return volume;
+    }
 
+    /** One tick task drives the whole queue, however long it gets. */
+    private static void drain() {
+        if (draining) {
+            return;
+        }
+        draining = true;
+        BlockPos.Mutable pos = new BlockPos.Mutable();
         Scheduler.repeat(() -> {
             int cells = CELLS_PER_TICK;
             int writes = PLACE_PER_TICK;
-            while (cells-- > 0 && writes > 0) {
-                if (cy[0] > highY) {
-                    done(tell, what, placed[0]);
+            while (cells > 0 && writes > 0) {
+                Job job = QUEUE.peek();
+                if (job == null) {
+                    draining = false;
                     return false;
                 }
-                if (shape.contains(cx[0], cy[0], cz[0])) {
-                    pos.set(cx[0], cy[0], cz[0]);
-                    BlockState was = world.getBlockState(pos);
+                if (job.y > job.highY) {
+                    QUEUE.poll();
+                    if (job.then instanceof Announce announce) {
+                        announce.placed = job.placed;
+                    }
+                    if (job.then != null) {
+                        job.then.run();
+                    }
+                    continue;
+                }
+                cells--;
+                if (job.shape.contains(job.x, job.y, job.z)) {
+                    pos.set(job.x, job.y, job.z);
+                    BlockState was = job.world.getBlockState(pos);
                     // Bedrock stays. Skipping a block already correct saves the
                     // write and, more usefully, keeps it out of the journal.
-                    if (!was.isOf(Blocks.BEDROCK) && was != state) {
+                    if (!was.isOf(Blocks.BEDROCK) && was != job.state) {
                         // Through the journal, so the rewind clocks can undo
                         // anything built exactly as they undo anything blown up.
-                        Journal.clear(world, pos.toImmutable(), was, state);
-                        placed[0]++;
+                        Journal.clear(job.world, pos.toImmutable(), was, job.state);
+                        job.placed++;
                         writes--;
                     }
                 }
-                if (++cz[0] > highZ) {
-                    cz[0] = lowZ;
-                    if (++cx[0] > highX) {
-                        cx[0] = lowX;
-                        cy[0]++;
+                if (++job.z > job.highZ) {
+                    job.z = job.lowZ;
+                    if (++job.x > job.highX) {
+                        job.x = job.lowX;
+                        job.y++;
                     }
                 }
             }
             return true;
         });
-        return volume;
-    }
-
-    private static void done(ServerPlayerEntity tell, String what, int placed) {
-        if (tell != null) {
-            tell.sendMessage(Text.literal("§a✔ " + what + " — " + placed + " blocks"), false);
-        }
     }
 
     // ---- the shapes themselves -------------------------------------------

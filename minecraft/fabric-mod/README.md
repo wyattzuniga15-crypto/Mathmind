@@ -460,14 +460,44 @@ a smaller Rewind Clock — the world keeps whatever happened. Health comes back
 with position, because a rewind that returns you to the clifftop still dying of
 the fall is no rescue at all.
 
+## Building without an account
+
+`/build castle` — and a castle goes up where you stand. No key, no signup, no
+config file. Also `house`, `tower`, `pyramid`, `dome`, `bridge`, `wall`; plain
+`/build` lists them.
+
+These run the same shape engine the companion uses, off arrangements written
+ahead of time instead of a model's. That is the whole point: a mod that does
+nothing until you have signed up for something is a mod most people never see
+working. The command is registered before the companion and outside its
+try-block, so it cannot be taken down by an SDK that fails to load.
+
+Each blueprint clears its footprint, raises the structure, then cuts the
+openings. That order is exactly why the builder runs one job at a time — cut a
+doorway concurrently with the wall it belongs to and you get a wall with no
+door, or a door filled in behind you.
+
+Two bugs worth recording, because both were the same mistake. The house laid a
+floor a block below the shell's own bottom face, so the doorway opened into
+that floor and was half blocked. And the "finished" marker was queued two
+hundred blocks overhead, which is above the build ceiling for anyone standing
+high — the fill was refused and the message simply never arrived. Both came
+from placing something at a coordinate without asking what was already there.
+
 ## The companion, and how it builds
 
 `/ai spawn` summons a companion bound to you. It talks in chat and it acts:
 follow, hold, come, travel to coordinates, dig, fight hostiles, hand you items,
 fire your orbital weapons — and build.
 
-It needs an Anthropic API key in `config/orbital-companion.json`. The key stays
-there. It is never compiled into the jar and never written to the log.
+It needs an Anthropic API key. `/ai key` shows the full path to the config file
+and what a key costs; `/ai key <paste>` writes one straight in. A key already in
+`ANTHROPIC_API_KEY` is picked up on its own and never touches a file in the game
+folder. The key is never compiled into the jar and never written to the log.
+
+Setting it by command puts it in the game's log, since Minecraft records
+commands — so the mod says so, once and plainly, rather than leaving you to find
+out after pasting a log into a forum thread.
 
 **Why it builds by shape rather than by block.** The obvious tool is one that
 takes a list of positions. It does not work. A modest castle is fifty thousand

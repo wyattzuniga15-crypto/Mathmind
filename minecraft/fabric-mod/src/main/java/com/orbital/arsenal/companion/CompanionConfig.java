@@ -47,6 +47,34 @@ public final class CompanionConfig {
         return apiKey == null ? "" : apiKey.trim();
     }
 
+    /** Where the file lives, so a message can point straight at it. */
+    public static Path file(Path configDir) {
+        return configDir.resolve(FILE);
+    }
+
+    /**
+     * Write a key into the config, keeping the other settings.
+     *
+     * @return true if it was saved
+     */
+    public boolean saveKey(Path configDir, String key) {
+        this.apiKey = key == null ? "" : key.trim();
+        JsonObject json = new JsonObject();
+        json.addProperty("apiKey", this.apiKey);
+        json.addProperty("model", model());
+        json.addProperty("maxTokens", maxTokens());
+        try {
+            Path target = file(configDir);
+            Files.createDirectories(target.getParent());
+            Files.writeString(target, GSON.toJson(json) + "\n");
+            return true;
+        } catch (IOException error) {
+            // Deliberately not logging the key, only the failure.
+            OrbitalArsenal.LOGGER.error("could not save the companion key", error);
+            return false;
+        }
+    }
+
     public boolean hasKey() {
         String key = apiKey();
         // A freshly written config carries the placeholder rather than a key,
@@ -76,6 +104,15 @@ public final class CompanionConfig {
             }
             if (json.has("apiKey")) {
                 config.apiKey = json.get("apiKey").getAsString();
+            }
+            if (!config.hasKey()) {
+                // Fall back to the standard environment variable. Anyone who
+                // already uses the API has it set, and it keeps the key out of
+                // a file inside the game folder entirely.
+                String fromEnv = System.getenv("ANTHROPIC_API_KEY");
+                if (fromEnv != null && !fromEnv.isBlank()) {
+                    config.apiKey = fromEnv;
+                }
             }
             if (json.has("model")) {
                 config.model = json.get("model").getAsString();

@@ -4,5 +4,6 @@ import com.mojang.brigadier.context.CommandContext;
 
 public final class StringArgumentType {
     public static StringArgumentType greedyString() { return null; }
+    public static StringArgumentType word() { return null; }
     public static String getString(CommandContext<?> context, String name) { return ""; }
 }

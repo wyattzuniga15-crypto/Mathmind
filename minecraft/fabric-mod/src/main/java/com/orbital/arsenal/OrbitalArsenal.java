@@ -24,6 +24,9 @@ public class OrbitalArsenal implements ModInitializer {
         // optional that runs earlier can take every weapon down with it.
         ModEntities.register();
         int registered = ModItems.register();
+        // Registered before the companion, and outside its try: /build needs
+        // no API key and no bundled SDK, so it must not share their fate.
+        BuildCommand.register();
         LOGGER.info("Orbital Arsenal loaded — {} items registered", registered);
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {

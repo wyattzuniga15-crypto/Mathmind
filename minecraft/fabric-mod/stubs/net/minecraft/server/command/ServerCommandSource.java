@@ -6,4 +6,5 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class ServerCommandSource {
     public ServerPlayerEntity getPlayer() { return null; }
     public MinecraftServer getServer() { return null; }
+    public net.minecraft.server.world.ServerWorld getWorld() { return null; }
 }
