@@ -43,7 +43,12 @@ final class ClaudeLink {
                 .addTool(Tools.Mine.class)
                 .addTool(Tools.AttackNearby.class)
                 .addTool(Tools.GiveItem.class)
-                .addTool(Tools.FireWeapon.class);
+                .addTool(Tools.FireWeapon.class)
+                .addTool(Tools.BuildBox.class)
+                .addTool(Tools.BuildSphere.class)
+                .addTool(Tools.BuildCylinder.class)
+                .addTool(Tools.BuildLine.class)
+                .addTool(Tools.ClearBox.class);
 
         for (String[] turn : history) {
             params.addUserMessage(turn[0]);

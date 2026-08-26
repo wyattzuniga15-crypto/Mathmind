@@ -460,6 +460,58 @@ a smaller Rewind Clock — the world keeps whatever happened. Health comes back
 with position, because a rewind that returns you to the clifftop still dying of
 the fall is no rescue at all.
 
+## The companion, and how it builds
+
+`/ai spawn` summons a companion bound to you. It talks in chat and it acts:
+follow, hold, come, travel to coordinates, dig, fight hostiles, hand you items,
+fire your orbital weapons — and build.
+
+It needs an Anthropic API key in `config/orbital-companion.json`. The key stays
+there. It is never compiled into the jar and never written to the log.
+
+**Why it builds by shape rather than by block.** The obvious tool is one that
+takes a list of positions. It does not work. A modest castle is fifty thousand
+blocks, which is more than fits in one reply, and any companion built that way
+can only make things the size of a shed. So no tool here takes a list. Each
+shape is a *rule* about which points are inside it, and the rule is what gets
+walked:
+
+| tool | what it makes |
+|---|---|
+| `BuildBox` | walls, floors, roofs, rooms, platforms — solid or a six-faced shell, with `repeat` and a step for stacking floors and battlements |
+| `BuildSphere` | balls and domes; `dome` builds only the upper half |
+| `BuildCylinder` | towers, chimneys, wells, columns — a tube you can stand in, or a solid pillar |
+| `BuildLine` | bridges, ridges, supports, diagonal edges, at any angle and thickness |
+| `ClearBox` | hollow out a room, cut doors and windows, flatten ground |
+
+A keep is walls, four corner towers, a gatehouse and battlements: about
+twenty-five calls instead of fifty thousand. That is a size a model can reason
+about, so it spends its attention on proportion instead of bookkeeping.
+
+Everything reduces to a bounding box plus an inside test, which is why there is
+exactly one placement loop. That loop carries two budgets, because the two
+costs are nothing alike — testing a cell is arithmetic, writing a block touches
+the world and tells every nearby client. A hollow sphere is mostly the first
+and a solid box mostly the second, and a single budget would either stall the
+server on solids or crawl on hollows.
+
+Builds go up a few thousand blocks a tick, walking Y outermost so they rise
+course by course. That is partly to spare the server and partly because a keep
+that rises is worth watching and one that appears whole is just a screenshot.
+
+**Every block goes through the journal**, so the rewind clocks undo a building
+exactly as they undo a crater. Bedrock is never replaced, and a block already
+correct is skipped — which saves the write and, more usefully, keeps it out of
+the record.
+
+Two things were settled by testing rather than by eye. A hollow shell is
+"inside the sphere but not inside a sphere one block smaller", not a distance
+band — the band leaves the shell thin at the poles and thick at the equator,
+while the difference measures two cells thick through both. And a beam is never
+thinner than sqrt(3)/2, because a block's centre can sit that far from a line
+through its corner: at half a block, two of four sample angles came out in
+pieces. A chunky bridge beats a bridge with holes in it.
+
 ## How it's put together
 
 ```
