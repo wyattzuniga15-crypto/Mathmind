@@ -206,6 +206,44 @@ jobs:
           done
           exit 0
 
+      # Whether a SoundEvents constant is a bare SoundEvent or a
+      # RegistryEntry.Reference is not guessable and not consistent:
+      # ENTITY_GENERIC_EXPLODE is a Reference, ENTITY_CAT_HISS is bare. Getting
+      # it wrong costs a whole build, and getting it wrong in the other
+      # direction costs another. So ask the jar: pull every SoundEvents
+      # constant the mod actually names out of the sources and print its real
+      # declared type. Runs on failure too, which is exactly when it is needed.
+      - name: Dump the true type of every sound the mod uses
+        if: always()
+        working-directory: minecraft/fabric-mod
+        run: |
+          set +e
+          jar=$(find ~/.gradle/caches/fabric-loom .gradle -name '*.jar' 2>/dev/null \
+                | grep -iE 'minecraft.*(named|mapped)' | head -1)
+          [ -z "$jar" ] && echo "no remapped jar yet" && exit 0
+          used=$(grep -rhoE 'SoundEvents\.[A-Z_0-9]+' src/main/java | sort -u | cut -d. -f2)
+          [ -z "$used" ] && echo "the mod names no sounds" && exit 0
+          javap -cp "$jar" net.minecraft.sound.SoundEvents > /tmp/sounds.txt 2>&1
+          echo "sound                             declared type"
+          echo "--------------------------------------------------------------"
+          for name in $used; do
+            line=$(grep -E "[ .]$name;" /tmp/sounds.txt | head -1)
+            if [ -z "$line" ]; then
+              echo "::error::SoundEvents.$name does not exist in this Minecraft"
+              printf '%-32s MISSING\n' "$name"
+              continue
+            fi
+            type=$(echo "$line" | sed -E 's/^ *public static final //; s/ .*//')
+            printf '%-32s %s\n' "$name" "$type"
+            case "$type" in
+              *RegistryEntry*) grep -q "SoundEvents\.$name\.value()" -r src/main/java \
+                  || echo "::error::SoundEvents.$name is a registry entry — it needs .value()" ;;
+              *) grep -q "SoundEvents\.$name\.value()" -r src/main/java \
+                  && echo "::error::SoundEvents.$name is a bare SoundEvent — drop the .value()" ;;
+            esac
+          done
+          exit 0
+
       - name: Show what was produced
         if: always()
         working-directory: minecraft/fabric-mod
