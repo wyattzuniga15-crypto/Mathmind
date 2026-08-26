@@ -270,6 +270,34 @@ was aimed at, because after an impact the ground is nowhere near where it
 started. The whole crater goes through the journal, so the clocks can put it
 back.
 
+**Cat Bazooka** — fires a cat.
+
+Not a cat-shaped projectile: an **actual cat**, five hundred and twenty-seven
+blocks of orange and white wool assembled in mid-air four blocks off the muzzle
+and thrown downrange as one body at 2.6 blocks a tick. It keeps its shape in
+flight for the same reason the potato does — every falling block accelerates
+identically, so a cluster released on one tick with one velocity stays a
+cluster.
+
+The cat is a function of position rather than a model file: a tail swept as a
+string of small spheres, four legs, an ellipsoid body white on the underside,
+a head with black eyes and a pink nose, and two ears tipped in black. The tests
+run detail-before-bulk — the eyes sit *inside* the head sphere and the black
+tips *inside* the ears, so each has to be asked about before the plain colour
+underneath swallows it.
+
+Where it lands it digs a crater **forty-four blocks across and twelve deep**,
+through the journal so the clocks can put it back. Then **a thousand live cats**
+come out of the hole in a sphere.
+
+A thousand random directions would clump — visible bald patches and dense
+knots. The burst uses a golden-angle spiral instead, evenly spaced in
+`cos(phi)` rather than in `phi`, which is what keeps the spacing even on the
+sphere itself instead of bunched at the poles. It reads as a shell, not a
+cloud. Fifty cats a tick, so a thousand mobs is twenty ticks of work rather
+than one visible freeze, and each wave clears itself after three minutes —
+otherwise the world simply never stops being cats.
+
 **Time Stop Clock** — the world stops dead for **fifteen seconds** and you keep
 moving. Mobs stand still mid-stride, arrows hang in the air, lit TNT stops
 counting down, fluids stop flowing and the sun stops climbing — and you walk

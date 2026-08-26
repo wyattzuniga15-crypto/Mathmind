@@ -397,9 +397,50 @@ GENESIS = recolour(CLOCK, {
 })
 
 
+# The Cat Bazooka: a launch tube seen from behind and to the left, with the
+# cat already nose-out at the muzzle. Sixteen pixels is not enough room for
+# both a whole cat and a whole weapon, so the tube is only implied — the back
+# blast at the bottom-left is what says "launcher" rather than "pet".
+_bo = (30, 26, 24, 255)     # outline, everything
+_bg = (74, 82, 70, 255)     # tube, shadowed
+_bG = (118, 128, 110, 255)  # tube, lit
+_bO = (232, 138, 46, 255)   # cat, orange
+_bW = (248, 244, 236, 255)  # cat, muzzle
+_bK = (24, 20, 18, 255)     # eyes and ear tips
+_bP = (240, 150, 168, 255)  # nose
+_bY = (255, 206, 92, 255)   # back blast
+
+_BAZOOKA_ART = [
+    "..........K...K.",
+    ".........KOK.KOK",
+    ".........OOOOOOO",
+    ".........OKOOOKO",
+    "........OOOOOOOO",
+    "........OOWWPWWO",
+    "........OOWWWWWO",
+    ".......ooOOOOOOo",
+    "......ogGGgo.oo.",
+    ".....ogGGgo.....",
+    "....ogGGgo......",
+    "...ogGGgo.......",
+    "..ogGGgo........",
+    ".oGGGgo.........",
+    "YoGGGoY.........",
+    ".YYoYY..........",
+]
+
+_BAZOOKA_KEY = {
+    ".": _t, "o": _bo, "g": _bg, "G": _bG,
+    "O": _bO, "W": _bW, "K": _bK, "P": _bP, "Y": _bY,
+}
+
+BAZOOKA = [[_BAZOOKA_KEY[c] for c in row] for row in _BAZOOKA_ART]
+
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
+                          ("cat_bazooka", BAZOOKA),
                           ("time_stop_clock", STOP_CLOCK),
                           ("slow_time_clock", SLOW_CLOCK),
                           ("echo_ghost", GHOST),

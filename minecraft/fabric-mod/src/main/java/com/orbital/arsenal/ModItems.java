@@ -1,5 +1,6 @@
 package com.orbital.arsenal;
 
+import com.orbital.arsenal.items.CatBazookaItem;
 import com.orbital.arsenal.items.BlackHoleItem;
 import com.orbital.arsenal.items.KamehamehaItem;
 import com.orbital.arsenal.items.OrbitalLaserItem;
@@ -35,6 +36,7 @@ public final class ModItems {
     public static Item BLACK_HOLE;
     public static Item ORBITAL_LASER;
     public static Item POTATO_BOMB;
+    public static Item CAT_BAZOOKA;
     public static Item TIME_STOP_CLOCK;
     public static Item SLOW_TIME_CLOCK;
     public static Item ECHO_GHOST;
@@ -82,6 +84,7 @@ public final class ModItems {
         BLACK_HOLE = register("black_hole", BlackHoleItem::new);
         ORBITAL_LASER = register("orbital_laser", OrbitalLaserItem::new);
         POTATO_BOMB = register("potato_bomb", PotatoBombItem::new);
+        CAT_BAZOOKA = register("cat_bazooka", CatBazookaItem::new);
         TIME_STOP_CLOCK = register("time_stop_clock", TimeStopClockItem::new);
         SLOW_TIME_CLOCK = register("slow_time_clock", SlowTimeClockItem::new);
         ECHO_GHOST = register("echo_ghost", EchoGhostItem::new);
@@ -111,6 +114,7 @@ public final class ModItems {
             entries.add(BLACK_HOLE);
             entries.add(ORBITAL_LASER);
             entries.add(POTATO_BOMB);
+            entries.add(CAT_BAZOOKA);
             entries.add(TIME_STOP_CLOCK);
             entries.add(SLOW_TIME_CLOCK);
             entries.add(ECHO_GHOST);
