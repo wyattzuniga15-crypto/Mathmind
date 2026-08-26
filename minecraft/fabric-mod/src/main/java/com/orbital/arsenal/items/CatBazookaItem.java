@@ -79,7 +79,7 @@ public class CatBazookaItem extends Item {
         user.sendMessage(Text.literal("§6🐈 CAT AWAY — " + cat.size() + " blocks of cat"), true);
         serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.MASTER, 4.0F, 0.8F);
-        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_CAT_HISS,
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_CAT_HISS.value(),
                 SoundCategory.MASTER, 4.0F, 0.6F);
 
         watch(serverWorld, user, cat);
@@ -233,7 +233,7 @@ public class CatBazookaItem extends Item {
     private void impact(ServerWorld world, PlayerEntity user, Vec3d at) {
         world.playSound(null, BlockPos.ofFloored(at), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.MASTER, 100.0F, 0.5F);
-        world.playSound(null, BlockPos.ofFloored(at), SoundEvents.ENTITY_CAT_PURREOW,
+        world.playSound(null, BlockPos.ofFloored(at), SoundEvents.ENTITY_CAT_PURREOW.value(),
                 SoundCategory.MASTER, 100.0F, 0.7F);
         world.spawnParticles(ParticleTypes.LARGE_SMOKE, true, true,
                 at.x, at.y + 3, at.z, 240, 9.0, 4.0, 9.0, 0.1);
