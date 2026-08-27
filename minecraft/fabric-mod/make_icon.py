@@ -519,12 +519,123 @@ SCULPTURES = {name: [[_SCULPT_KEY[c] for c in row] for row in rows]
               for name, rows in _SCULPT_ART.items()}
 
 
+# The five weapons. Each shows the thing, not a symbol: a rail with its
+# coil, a jar with a funnel in it, a beam emitter iced over, meteors over a
+# horizon, a bolt above a coil.
+_wI = (188, 194, 204, 255)   # steel
+_wW = (120, 128, 140, 255)   # shadowed steel
+_wC = (120, 226, 245, 255)   # charge / ice
+_wR = (214, 74, 48, 255)     # hot rock
+_wY = (255, 206, 96, 255)    # flame / bolt
+_wG = (196, 226, 236, 255)   # glass
+_wS = (150, 150, 158, 255)   # swirling dust
+
+_WEAPON_KEY = {".": _t, "I": _wI, "W": _wW, "C": _wC, "R": _wR,
+               "Y": _wY, "G": _wG, "S": _wS}
+
+_WEAPON_ART = {
+    "railgun": [
+        "................",
+        "..............CC",
+        ".............CC.",
+        "...IIIIIIIIICC..",
+        "..IWWWWWWWWWIC..",
+        ".IWCCCCCCCCCWI..",
+        "..IWWWWWWWWWI...",
+        "...IIIIIIIII....",
+        "..RI............",
+        ".RRI............",
+        "..R.............",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+    "tornado_jar": [
+        "................",
+        "....GGGGGG......",
+        "...G......G.....",
+        "...G.SSSS.G.....",
+        "...G.SSSS.G.....",
+        "...G..SS..G.....",
+        "...G..SS..G.....",
+        "...G.SSSS.G.....",
+        "...G.SSSS.G.....",
+        "...GSSSSSSG.....",
+        "...GSSSSSSG.....",
+        "...G......G.....",
+        "....GGGGGG......",
+        "................",
+        "................",
+        "................",
+    ],
+    "freeze_ray": [
+        "................",
+        ".............CC.",
+        "............CCC.",
+        "...IIIIIIIICC...",
+        "..ICCCCCCCCI....",
+        ".IICCCCCCCCII...",
+        "..ICCCCCCCCI....",
+        "...IIIIIIII.....",
+        "..II............",
+        ".II.............",
+        "..I.............",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+    "meteor_storm": [
+        "..R.............",
+        ".RY.......R.....",
+        "..R......RY.....",
+        "..........R.....",
+        ".....R..........",
+        "....RY....R.....",
+        ".....R...RY.....",
+        ".........R......",
+        "..R.............",
+        ".RY....R........",
+        "..R...RY........",
+        "......R.........",
+        "...RRRRRRRRRR...",
+        "..RYYYYYYYYYYR..",
+        ".RRRRRRRRRRRRRR.",
+        "................",
+    ],
+    "lightning_caller": [
+        ".......YY.......",
+        "......YY........",
+        ".....YY.........",
+        "....YYYY........",
+        "......YY........",
+        ".....YY.........",
+        "....YY..........",
+        "................",
+        ".....CCCC.......",
+        "....CCCCCC......",
+        "....CC..CC......",
+        "....CC..CC......",
+        "....CCCCCC......",
+        ".....CCCC.......",
+        "......CC........",
+        "................",
+    ],
+}
+
+WEAPONS = {name: [[_WEAPON_KEY[c] for c in row] for row in rows]
+           for name, rows in _WEAPON_ART.items()}
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
                           ("cat_bazooka", BAZOOKA),
                           ("growing_cat", GROWING_CAT),
                           *sorted(SCULPTURES.items()),
+                          *sorted(WEAPONS.items()),
                           ("time_stop_clock", STOP_CLOCK),
                           ("slow_time_clock", SLOW_CLOCK),
                           ("echo_ghost", GHOST),

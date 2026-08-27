@@ -1,6 +1,7 @@
 package net.minecraft.util.math;
 
 public class Vec3d {
+    public static final Vec3d ZERO = new Vec3d(0, 0, 0);
     public double x, y, z;
     public Vec3d(double x, double y, double z) {}
     public Vec3d add(double a, double b, double c) { return this; }

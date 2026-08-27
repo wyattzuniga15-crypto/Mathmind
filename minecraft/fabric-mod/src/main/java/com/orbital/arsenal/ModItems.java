@@ -1,6 +1,11 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.RailgunItem;
+import com.orbital.arsenal.items.TornadoItem;
+import com.orbital.arsenal.items.FreezeRayItem;
+import com.orbital.arsenal.items.MeteorStormItem;
+import com.orbital.arsenal.items.LightningCallerItem;
 import com.orbital.arsenal.items.GiantDuckItem;
 import com.orbital.arsenal.items.GiantAnvilItem;
 import com.orbital.arsenal.items.GrandPianoItem;
@@ -49,6 +54,11 @@ public final class ModItems {
     public static Item GRAND_PIANO;
     public static Item GIANT_DIAMOND;
     public static Item GIANT_CAKE;
+    public static Item RAILGUN;
+    public static Item TORNADO_JAR;
+    public static Item FREEZE_RAY;
+    public static Item METEOR_STORM;
+    public static Item LIGHTNING_CALLER;
     public static Item TIME_STOP_CLOCK;
     public static Item SLOW_TIME_CLOCK;
     public static Item ECHO_GHOST;
@@ -103,6 +113,11 @@ public final class ModItems {
         GRAND_PIANO = register("grand_piano", GrandPianoItem::new);
         GIANT_DIAMOND = register("giant_diamond", GiantDiamondItem::new);
         GIANT_CAKE = register("giant_cake", GiantCakeItem::new);
+        RAILGUN = register("railgun", RailgunItem::new);
+        TORNADO_JAR = register("tornado_jar", TornadoItem::new);
+        FREEZE_RAY = register("freeze_ray", FreezeRayItem::new);
+        METEOR_STORM = register("meteor_storm", MeteorStormItem::new);
+        LIGHTNING_CALLER = register("lightning_caller", LightningCallerItem::new);
         TIME_STOP_CLOCK = register("time_stop_clock", TimeStopClockItem::new);
         SLOW_TIME_CLOCK = register("slow_time_clock", SlowTimeClockItem::new);
         ECHO_GHOST = register("echo_ghost", EchoGhostItem::new);
@@ -139,6 +154,11 @@ public final class ModItems {
             entries.add(GRAND_PIANO);
             entries.add(GIANT_DIAMOND);
             entries.add(GIANT_CAKE);
+            entries.add(RAILGUN);
+            entries.add(TORNADO_JAR);
+            entries.add(FREEZE_RAY);
+            entries.add(METEOR_STORM);
+            entries.add(LIGHTNING_CALLER);
             entries.add(TIME_STOP_CLOCK);
             entries.add(SLOW_TIME_CLOCK);
             entries.add(ECHO_GHOST);

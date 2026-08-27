@@ -11,6 +11,8 @@ import net.minecraft.registry.entry.RegistryEntry;
 public class SoundEvents {
     public static final SoundEvent ENTITY_WITHER_SPAWN = new SoundEvent();
     public static final SoundEvent BLOCK_NOTE_BLOCK_BASS = new SoundEvent();
+    public static final SoundEvent BLOCK_GLASS_BREAK = new SoundEvent();
+    public static final SoundEvent ENTITY_LIGHTNING_BOLT_THUNDER = new SoundEvent();
     public static final SoundEvent ENTITY_EXPERIENCE_ORB_PICKUP = new SoundEvent();
     public static final SoundEvent ENTITY_WARDEN_SONIC_BOOM = new SoundEvent();
     public static final SoundEvent ENTITY_CAT_HISS = new SoundEvent();
