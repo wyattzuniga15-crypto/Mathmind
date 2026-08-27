@@ -159,6 +159,44 @@ def main():
         if result.returncode != 0:
             problems.append("journal run-length round-trip failed")
 
+    # --- every companion tool reaches every provider ---
+    #
+    # The Anthropic SDK reads the annotations on the Tools classes itself,
+    # while every other provider is served by the reflection registry in
+    # Schemas. Nothing in the compiler ties those two together, so a tool added
+    # to one and not the other simply goes missing for half the providers, in
+    # silence. And a tool or field with no description is worse than absent —
+    # the model sees it, cannot tell what it does, and calls it wrongly.
+    tools_src = (ROOT / "src/main/java/com/orbital/arsenal/companion/Tools.java")
+    schemas_src = (ROOT / "src/main/java/com/orbital/arsenal/companion/Schemas.java")
+    if tools_src.exists() and schemas_src.exists():
+        tools_text = tools_src.read_text()
+        schemas_text = schemas_src.read_text()
+        declared = re.findall(r"public static class (\w+) implements Supplier<String>", tools_text)
+        registered = re.findall(r"add\(Tools\.(\w+)\.class\)", schemas_text)
+        check(declared, "no companion tools found in Tools.java")
+        for name in declared:
+            check(name in registered,
+                  f"Tools.{name} is not registered in Schemas — it would be invisible "
+                  f"to every provider except Claude")
+            check(re.search(r"@JsonClassDescription\s*\((?:.|\n)*?\)\s*\n\s*public static class "
+                            + name + r"\b", tools_text),
+                  f"Tools.{name} has no @JsonClassDescription — the model cannot tell "
+                  f"what it is for")
+            body = re.search(r"public static class " + name
+                             + r" implements Supplier<String> \{(.*?)\n    \}\n",
+                             tools_text, re.S)
+            if body:
+                for field in re.finditer(
+                        r"(@JsonPropertyDescription\s*\((?:[^()]|\([^()]*\))*\)\s*)?"
+                        r"public (?!static)(\w[\w<>\[\]]*) (\w+) =", body.group(1)):
+                    check(field.group(1),
+                          f"Tools.{name}.{field.group(3)} has no @JsonPropertyDescription")
+        for name in registered:
+            check(name in declared,
+                  f"Schemas registers Tools.{name}, which does not exist")
+        print(f"  {len(declared)} companion tools reach every provider")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:

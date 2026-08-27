@@ -484,6 +484,41 @@ hundred blocks overhead, which is above the build ceiling for anyone standing
 high — the fill was refused and the message simply never arrived. Both came
 from placing something at a coordinate without asking what was already there.
 
+## Running the companion for free
+
+`/ai provider ollama` points the companion at a model on your own computer.
+No key, no account, no bill, and it works with the internet off. `/ai provider`
+on its own lists the presets: `claude`, `ollama`, `groq`, `openrouter`.
+
+The reason all four fit in one class is that they speak the same
+chat-completions shape — so a provider is a base URL and a model name, not a
+code path. `LocalLink` is plain HTTP and Gson, both already inside Minecraft,
+which means this path carries no bundled library at all and names no Anthropic
+type. It keeps working when the SDK is absent entirely — the failure that once
+stopped the whole mod loading.
+
+**The tools are defined once.** The Anthropic SDK reads the annotations on the
+`Tools` classes directly; every other provider wants the same information as a
+JSON blob in OpenAI's shape. Rather than hand-write those — thirteen tools,
+sixty-odd fields, stale the moment anyone adds a parameter — `Schemas` reads
+the very same annotations by reflection and emits the other format.
+
+Nothing in the compiler ties the two together, though, so `verify.py` does: a
+tool added to one and not the other would simply go missing for half the
+providers, in silence. That check is itself tested — dropping a tool from the
+registry makes the build fail by name.
+
+Two concessions to small models. Every parameter is marked required, because a
+model told a field is optional will omit the coordinates and build at the
+origin. And arguments are read through their text form and converted
+deliberately, since small models return `"12"` for a number and `8.0` where an
+integer belongs — asking for the exact type would throw on every one of those.
+
+**What to expect.** A 6 GB local model handles *"build a tower here"* and
+struggles with *"a castle on that hill with a moat and a taller east tower"*.
+There is a ten-round ceiling on the tool loop, because a small model can call
+the same tool forever and that is the player's own CPU being spent.
+
 ## The companion, and how it builds
 
 `/ai spawn` summons a companion bound to you. It talks in chat and it acts:

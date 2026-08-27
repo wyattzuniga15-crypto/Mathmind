@@ -26,6 +26,12 @@ public final class CompanionCommand {
                                 .executes(context -> spawn(context.getSource())))
                         .then(CommandManager.literal("dismiss")
                                 .executes(context -> dismiss(context.getSource())))
+                        .then(CommandManager.literal("provider")
+                                .executes(context -> whichProvider(context.getSource()))
+                                .then(CommandManager.argument("name", StringArgumentType.word())
+                                        .executes(context -> setProvider(
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "name")))))
                         .then(CommandManager.literal("key")
                                 .executes(context -> whereIsTheKey(context.getSource()))
                                 .then(CommandManager.argument("value", StringArgumentType.word())
@@ -60,7 +66,8 @@ public final class CompanionCommand {
                     "§eIt can follow you and fight, but it can't talk yet — that needs "
                             + "an API key. §f/ai key§e to set one up."), false);
             player.sendMessage(Text.literal(
-                    "§7No key needed for §f/build§7 — try §f/build castle§7."), false);
+                    "§7No key needed for §f/build§7 — try §f/build castle§7. Or run one free "
+                            + "on this computer: §f/ai provider ollama§7."), false);
         }
         return 1;
     }
@@ -73,6 +80,77 @@ public final class CompanionCommand {
         Companion.dismiss(player);
         Brain.forget(player);
         player.sendMessage(Text.literal("§7Companion dismissed."), false);
+        return 1;
+    }
+
+    /**
+     * The presets.
+     *
+     * All four speak the same chat-completions shape, so the only thing that
+     * actually differs between them is a URL and a model name — which is why
+     * switching is a config write rather than a code path.
+     */
+    private static final java.util.Map<String, String[]> PROVIDERS = java.util.Map.of(
+            "claude", new String[] {"", "", "Claude, through your API key"},
+            "ollama", new String[] {"http://localhost:11434/v1", "gemma4:e4b",
+                    "a model on this computer — free, no key, works offline"},
+            "groq", new String[] {"https://api.groq.com/openai/v1", "llama-3.3-70b-versatile",
+                    "Groq's free tier — needs a key from console.groq.com"},
+            "openrouter", new String[] {"https://openrouter.ai/api/v1",
+                    "meta-llama/llama-3.3-70b-instruct:free",
+                    "OpenRouter — needs a key from openrouter.ai"});
+
+    private static int whichProvider(ServerCommandSource source) {
+        ServerPlayerEntity player = source.getPlayer();
+        if (player == null) {
+            return 0;
+        }
+        CompanionConfig config = Brain.config();
+        player.sendMessage(Text.literal("§bNow using: §f"
+                + (config == null ? "nothing" : config.provider())), false);
+        for (java.util.Map.Entry<String, String[]> entry : PROVIDERS.entrySet()) {
+            player.sendMessage(Text.literal(
+                    "§f/ai provider " + entry.getKey() + " §7— " + entry.getValue()[2]), false);
+        }
+        return 1;
+    }
+
+    private static int setProvider(ServerCommandSource source, String name) {
+        ServerPlayerEntity player = source.getPlayer();
+        if (player == null) {
+            return 0;
+        }
+        String want = name == null ? "" : name.trim().toLowerCase();
+        String[] preset = PROVIDERS.get(want);
+        if (preset == null) {
+            player.sendMessage(Text.literal("§7No preset called §f" + want
+                    + "§7. Try: §f" + String.join("§7, §f", PROVIDERS.keySet())), false);
+            return 0;
+        }
+        CompanionConfig config = Brain.config();
+        if (config == null) {
+            player.sendMessage(Text.literal("§cThe companion never started."), false);
+            return 0;
+        }
+        if (!config.saveProvider(FabricLoader.getInstance().getConfigDir(),
+                want, preset[0], preset[1])) {
+            player.sendMessage(Text.literal("§cCouldn't write the config file."), false);
+            return 0;
+        }
+        player.sendMessage(Text.literal("§aNow using " + want + " — " + preset[2] + "."), false);
+        if (want.equals("ollama")) {
+            player.sendMessage(Text.literal(
+                    "§7Make sure Ollama is running and you have the model: "
+                            + "§follama pull " + preset[1]), false);
+            player.sendMessage(Text.literal(
+                    "§7A small local model is fine at §fbuild a tower here§7, and weak at "
+                            + "long instructions. Change §flocalModel§7 in the config for a "
+                            + "bigger one."), false);
+        } else if (!want.equals("claude") && !config.hasKey()) {
+            player.sendMessage(Text.literal(
+                    "§eThat one still needs a key — §f/ai key <paste>§e."), false);
+        }
+        player.sendMessage(Text.literal("§7Try it: §f/ai hello"), false);
         return 1;
     }
 
@@ -95,6 +173,8 @@ public final class CompanionCommand {
                 "§7Already have §fANTHROPIC_API_KEY§7 set? It is picked up on its own."), false);
         player.sendMessage(Text.literal(
                 "§aNone of this is needed for §f/build§a — that works right now."), false);
+        player.sendMessage(Text.literal(
+                "§aNor for §f/ai provider ollama§a — free, and no key at all."), false);
         return 1;
     }
 

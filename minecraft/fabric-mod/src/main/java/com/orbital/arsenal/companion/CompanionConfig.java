@@ -32,6 +32,10 @@ public final class CompanionConfig {
     private String apiKey = "";
     private String model = DEFAULT_MODEL;
     private int maxTokens = 1024;
+    /** "claude", or any OpenAI-compatible endpoint: ollama, groq, openrouter. */
+    private String provider = "claude";
+    private String baseUrl = "http://localhost:11434/v1";
+    private String localModel = "gemma4:e4b";
 
     private CompanionConfig() {}
 
@@ -41,6 +45,41 @@ public final class CompanionConfig {
 
     public int maxTokens() {
         return maxTokens > 0 ? maxTokens : 1024;
+    }
+
+    public String provider() {
+        return provider == null || provider.isBlank() ? "claude" : provider.trim().toLowerCase();
+    }
+
+    /** True when the companion should talk to something other than Claude. */
+    public boolean isLocal() {
+        return !provider().equals("claude");
+    }
+
+    public String baseUrl() {
+        return baseUrl == null || baseUrl.isBlank() ? "http://localhost:11434/v1" : baseUrl.trim();
+    }
+
+    public String localModel() {
+        return localModel == null || localModel.isBlank() ? "gemma4:e4b" : localModel.trim();
+    }
+
+    /**
+     * Whether the companion can talk at all.
+     *
+     * Ollama runs on the player's own machine and wants no key, so requiring
+     * one there would refuse a setup that works perfectly.
+     */
+    public boolean usable() {
+        return isLocal() || hasKey();
+    }
+
+    /** Point at a different provider and keep it that way. */
+    public boolean saveProvider(Path configDir, String name, String url, String modelName) {
+        this.provider = name;
+        this.baseUrl = url;
+        this.localModel = modelName;
+        return write(configDir);
     }
 
     public String apiKey() {
@@ -59,10 +98,18 @@ public final class CompanionConfig {
      */
     public boolean saveKey(Path configDir, String key) {
         this.apiKey = key == null ? "" : key.trim();
+        return write(configDir);
+    }
+
+    /** Write every setting back, so no command silently drops the others. */
+    private boolean write(Path configDir) {
         JsonObject json = new JsonObject();
         json.addProperty("apiKey", this.apiKey);
         json.addProperty("model", model());
         json.addProperty("maxTokens", maxTokens());
+        json.addProperty("provider", provider());
+        json.addProperty("baseUrl", baseUrl());
+        json.addProperty("localModel", localModel());
         try {
             Path target = file(configDir);
             Files.createDirectories(target.getParent());
@@ -120,6 +167,15 @@ public final class CompanionConfig {
             if (json.has("maxTokens")) {
                 config.maxTokens = json.get("maxTokens").getAsInt();
             }
+            if (json.has("provider")) {
+                config.provider = json.get("provider").getAsString();
+            }
+            if (json.has("baseUrl")) {
+                config.baseUrl = json.get("baseUrl").getAsString();
+            }
+            if (json.has("localModel")) {
+                config.localModel = json.get("localModel").getAsString();
+            }
         } catch (IOException | RuntimeException error) {
             // getAsString on a number, a truncated file, a bad path — all end
             // up here, and all mean the same thing to a player: no companion.
@@ -138,6 +194,13 @@ public final class CompanionConfig {
         json.addProperty("_model_note",
                 "claude-haiku-4-5 is cheap and quick. claude-opus-5 is sharper and costs more.");
         json.addProperty("maxTokens", 1024);
+        json.addProperty("provider", "claude");
+        json.addProperty("_provider_note",
+                "\"claude\" uses the key above. \"ollama\" talks to a model on this "
+                        + "computer instead — free, no key, works offline. Any other "
+                        + "OpenAI-compatible endpoint works too; set baseUrl and localModel.");
+        json.addProperty("baseUrl", "http://localhost:11434/v1");
+        json.addProperty("localModel", "gemma4:e4b");
         Files.createDirectories(file.getParent());
         Files.writeString(file, GSON.toJson(json) + "\n");
     }

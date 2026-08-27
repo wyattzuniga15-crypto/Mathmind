@@ -57,7 +57,7 @@ public final class Brain {
     }
 
     public static boolean ready() {
-        return config != null && config.hasKey();
+        return config != null && config.usable();
     }
 
     public static void forget(ServerPlayerEntity player) {
@@ -69,7 +69,8 @@ public final class Brain {
     public static void ask(ServerPlayerEntity player, MinecraftServer server, String message) {
         if (!ready()) {
             player.sendMessage(Text.literal(
-                    "§cNo API key set. Put one in config/orbital-companion.json and restart."), false);
+                    "§cThe companion can't talk yet — §f/ai key§c to set that up, or "
+                            + "§f/ai provider ollama§c to run one free on this computer."), false);
             return;
         }
         if (!BUSY.add(player)) {
@@ -105,9 +106,14 @@ public final class Brain {
         Conversation.begin(player, server);
         Deque<String[]> history = HISTORY.computeIfAbsent(player, key -> new ArrayDeque<>());
 
-        // The only call into SDK-touching code, and the caller wraps it.
-        String reply = ClaudeLink.ask(config, situation(player, server),
-                new ArrayList<>(history), message);
+        // ClaudeLink is named only inside this branch, so choosing another
+        // provider never loads it — and a bundled SDK that cannot resolve
+        // cannot break a companion that was not going to use it.
+        String reply = config.isLocal()
+                ? LocalLink.ask(config, situation(player, server),
+                        new ArrayList<>(history), message)
+                : ClaudeLink.ask(config, situation(player, server),
+                        new ArrayList<>(history), message);
         if (reply.isEmpty()) {
             reply = "(done)";
         }
