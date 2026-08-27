@@ -1,0 +1,1189 @@
+<title>Orbital Arsenal Field Manual</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground:#eaedf3; --surface:#ffffff; --sunk:#dfe3ec; --line:#c8cedb;
+  --ink:#191e27; --muted:#5d687d; --faint:#828ea3;
+  --accent:#d0521f; --signal:#1f7f9e; --warn:#a2740c;
+  /* The recipe tints are fixed material colours, the same in both
+     themes, so the ink on them is fixed too rather than tokenised
+     per theme — dark text on a gold swatch reads either way. */
+  --on-tint:#10141a;
+  --shadow:0 1px 2px rgba(25,30,39,.07), 0 6px 18px rgba(25,30,39,.06);
+  --step:clamp(.5rem,.4rem + .4vw,.85rem);
+}
+:root:not([data-theme="light"]) { color-scheme:light dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#12161d; --surface:#1a202a; --sunk:#0d1116; --line:#2b3442;
+    --ink:#dce2ec; --muted:#8b97ab; --faint:#6b7688;
+    --accent:#ee6830; --signal:#7ed8f4; --warn:#ffd66c;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#12161d; --surface:#1a202a; --sunk:#0d1116; --line:#2b3442;
+  --ink:#dce2ec; --muted:#8b97ab; --faint:#6b7688;
+  --accent:#ee6830; --signal:#7ed8f4; --warn:#ffd66c;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--ground); color:var(--ink);
+  font:400 16px/1.6 "IBM Plex Sans", system-ui, sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3 { font-family:"Chakra Petch", "IBM Plex Sans", system-ui, sans-serif; text-wrap:balance; margin:0; }
+code, .grid, .legend b, .tally, em { font-family:"IBM Plex Mono", ui-monospace, monospace; }
+a { color:inherit; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:3px; }
+
+/* ---- masthead ------------------------------------------------------- */
+.top { border-bottom:1px solid var(--line); background:var(--surface); }
+.top .in { max-width:1180px; margin:0 auto; padding:3.2rem 1.5rem 2.4rem; }
+.eyebrow {
+  font-family:"IBM Plex Mono", monospace; font-size:.72rem; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 .9rem;
+}
+h1 { font-size:clamp(2.1rem,1.3rem + 3.4vw,3.4rem); font-weight:700; letter-spacing:-.015em; line-height:1.05; }
+.lede { max-width:60ch; color:var(--muted); font-size:1.05rem; margin:.9rem 0 0; }
+.counts { display:flex; flex-wrap:wrap; gap:1.6rem; margin-top:1.8rem; }
+.counts div { display:flex; flex-direction:column; }
+.counts b { font-family:"Chakra Petch",sans-serif; font-size:1.9rem; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
+.counts span { font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-top:.35rem; }
+
+/* ---- start-here ----------------------------------------------------- */
+.start { max-width:1180px; margin:0 auto; padding:2.4rem 1.5rem 0; }
+.notes { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); }
+.note {
+  background:var(--surface); border:1px solid var(--line); border-radius:4px;
+  padding:1.1rem 1.2rem; box-shadow:var(--shadow);
+}
+.note h3 { font-size:.95rem; letter-spacing:.02em; margin-bottom:.4rem; }
+.note p { margin:0; font-size:.9rem; color:var(--muted); }
+.note code { background:var(--sunk); padding:.1em .35em; border-radius:3px; font-size:.85em; color:var(--ink); }
+
+/* ---- layout --------------------------------------------------------- */
+.body { max-width:1180px; margin:0 auto; padding:2.4rem 1.5rem 5rem; display:grid; gap:2.4rem; grid-template-columns:190px 1fr; align-items:start; }
+@media (max-width:820px) { .body { grid-template-columns:1fr; } nav { position:static !important; } }
+nav { position:sticky; top:1rem; display:flex; flex-direction:column; gap:.15rem; }
+nav a {
+  display:flex; justify-content:space-between; align-items:baseline; gap:.6rem;
+  padding:.42rem .6rem; border-radius:3px; text-decoration:none;
+  font-size:.88rem; color:var(--muted); border-left:2px solid transparent;
+}
+nav a:hover { background:var(--surface); color:var(--ink); border-left-color:var(--accent); }
+nav em { font-style:normal; font-size:.75rem; color:var(--faint); font-variant-numeric:tabular-nums; }
+.find { margin-bottom:1rem; }
+.find input {
+  width:100%; padding:.6rem .8rem; font:inherit; font-size:.9rem;
+  background:var(--surface); color:var(--ink);
+  border:1px solid var(--line); border-radius:3px;
+}
+.find input::placeholder { color:var(--faint); }
+
+/* ---- sections ------------------------------------------------------- */
+section { scroll-margin-top:1rem; margin-bottom:3rem; }
+.shead { display:flex; align-items:baseline; gap:.7rem; border-bottom:2px solid var(--accent); padding-bottom:.4rem; }
+.shead h2 { font-size:1.45rem; font-weight:600; letter-spacing:-.01em; }
+.tally { font-size:.78rem; color:var(--faint); font-variant-numeric:tabular-nums; }
+.stand { color:var(--muted); font-size:.92rem; margin:.7rem 0 1.2rem; max-width:64ch; }
+.items { display:grid; gap:.9rem; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); }
+
+/* ---- item card ------------------------------------------------------ */
+.item {
+  background:var(--surface); border:1px solid var(--line); border-radius:4px;
+  padding:.95rem 1rem 1rem; display:flex; flex-direction:column; gap:.6rem;
+  box-shadow:var(--shadow);
+}
+.item header { display:flex; gap:.7rem; align-items:center; }
+.icon {
+  width:32px; height:32px; flex:none; image-rendering:pixelated;
+  background:var(--sunk); border-radius:3px; padding:1px;
+}
+.item h3 { font-size:1rem; font-weight:600; letter-spacing:-.005em; }
+.item code { font-size:.7rem; color:var(--faint); }
+.what { margin:0; font-size:.87rem; color:var(--muted); flex:1; }
+.craft { display:flex; gap:.7rem; align-items:flex-start; border-top:1px solid var(--line); padding-top:.7rem; }
+.grid {
+  display:grid; grid-template-columns:repeat(3,18px); grid-auto-rows:18px;
+  gap:2px; flex:none; padding:3px; background:var(--sunk); border-radius:3px;
+}
+.cell { background:var(--ground); border-radius:2px; }
+.cell.on {
+  background:var(--tint); color:var(--on-tint); font-style:normal;
+  font-size:.62rem; font-weight:600; display:grid; place-items:center;
+  /* A hairline, because the palest tints — wool, bone, paper — sit on a
+     white card in light mode and disappear without one. */
+  box-shadow:inset 0 0 0 1px rgba(16,20,26,.18);
+}
+.legend { margin:0; font-size:.68rem; line-height:1.5; color:var(--faint); }
+.legend b { color:var(--muted); font-weight:600; }
+.norecipe { font-size:.75rem; color:var(--faint); border-top:1px solid var(--line); padding-top:.7rem; }
+
+/* ---- mobs ----------------------------------------------------------- */
+.mob {
+  display:flex; gap:.9rem; background:var(--surface); border:1px solid var(--line);
+  border-radius:4px; padding:1rem; box-shadow:var(--shadow);
+}
+.mob h3 { font-size:1.05rem; font-weight:600; }
+.mob p { margin:.3rem 0 0; font-size:.88rem; color:var(--muted); }
+.via { font-size:.78rem !important; color:var(--faint) !important; }
+.via b { color:var(--muted); font-weight:600; }
+.empty { display:none; color:var(--faint); font-size:.9rem; }
+.searching section:not(:has(.item:not([hidden]))) { display:none; }
+</style>
+
+<header class="top"><div class="in">
+  <p class="eyebrow">Orbital Arsenal · Fabric · Minecraft 1.21.11</p>
+  <h1>Everything in the mod, and how to use it</h1>
+  <p class="lede">One hundred and fifty items and eight creatures. Most of them
+  break the world; a fair number put it back. Every recipe below is the one the
+  mod actually ships — this page is generated from the mod's own files, so it
+  cannot drift from what is in the jar.</p>
+  <div class="counts">
+    <div><b>150</b><span>Items</span></div>
+    <div><b>8</b><span>Creatures</span></div>
+    <div><b>26</b><span>Sculptures</span></div>
+  </div>
+</div></header>
+
+<div class="start"><div class="notes">
+  <div class="note"><h3>Finding them</h3><p>They are all in one creative tab
+  called <b>Orbital Arsenal</b>. In survival, craft them — every recipe is below.</p></div>
+  <div class="note"><h3>Using them</h3><p>Hold the item and right-click. Most aim
+  where you are looking, up to about a hundred blocks. Nearly all have a cooldown,
+  so nothing can be spammed.</p></div>
+  <div class="note"><h3>Undoing them</h3><p>Every block this mod changes is
+  recorded. A <b>Rewind Clock</b> puts the last thirty seconds back; the longer
+  clocks go further, and the <b>Genesis Clock</b> goes back to the start.</p></div>
+  <div class="note"><h3>Building by command</h3><p><code>/build</code> lists what
+  it can raise — house, tower, castle, bridge, dome, pyramid, wall. It goes up
+  where you stand, and the clocks undo it.</p></div>
+  <div class="note"><h3>The companion</h3><p><code>/ai spawn</code> calls it,
+  <code>/ai &lt;message&gt;</code> talks to it. <code>/ai provider ollama</code>
+  points it at a model running on your own machine, so no key is needed.</p></div>
+  <div class="note"><h3>A warning</h3><p>Several of these permanently reshape
+  hundreds of blocks. Try them somewhere you do not mind losing, or keep a clock
+  in your other hand.</p></div>
+</div></div>
+
+<div class="body">
+  <nav aria-label="Sections">
+    <div class="find"><input id="find" type="search" placeholder="Filter items…"
+      aria-label="Filter items by name"></div>
+    <a href="#strikes"><span>Orbital strikes</span><em>10</em></a>
+<a href="#weapons"><span>Weapons</span><em>29</em></a>
+<a href="#sculptures"><span>Falling sculptures</span><em>26</em></a>
+<a href="#terrain"><span>Terraforming</span><em>19</em></a>
+<a href="#builders"><span>Builders</span><em>19</em></a>
+<a href="#gadgets"><span>Gadgets</span><em>19</em></a>
+<a href="#time"><span>Time</span><em>10</em></a>
+<a href="#creatures"><span>Creatures</span><em>12</em></a>
+<a href="#fun"><span>For fun</span><em>6</em></a>
+  </nav>
+  <main>
+    <section id="strikes">
+  <div class="shead"><h2>Orbital strikes</h2><span class="tally">10</span></div>
+  <p class="stand">Called down from the sky. Aim, use, and stand somewhere else.</p>
+  <div class="items"><article class="item" data-find="anvil rain anvil rain">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAR0lEQVR42mNgoAaISSr4j46JVU8dA3AKEmEImLPn0Ln/6BifZgx1FBtAM0Bq4FLfAHJiB2dgkRVoFBtAHzBt2pz/lGCKDQAAsR34eV3kgNgAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Anvil Rain</h3>
+  <code>orbital:anvil_rain</code></div></header>
+  <p class="what">Two hundred anvils, from a great height, on wherever you are pointing.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Anvil">A</i><i class="cell on" style="--tint:#aeb6c4" title="Anvil">A</i><i class="cell on" style="--tint:#aeb6c4" title="Anvil">A</i><i class="cell"></i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell"></i><i class="cell on" style="--tint:#aeb6c4" title="Anvil">A</i><i class="cell on" style="--tint:#aeb6c4" title="Anvil">A</i><i class="cell on" style="--tint:#aeb6c4" title="Anvil">A</i></div><p class="legend"><b>A</b> Anvil · <b>G</b> Gunpowder</p></div>
+</article>
+<article class="item" data-find="carpet bomb carpet bomb">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWElEQVR42mNgIAPsOXTuP0WKcRpAjOKYpIL/MMxArmKsmklSjAuQpHjogncZBv/JUgxig/D/azn/YWySFIPY6BiuB1kxMh9ZIU4DiFWMC1PuAqqEASWxAABatxudwyHedAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Carpet Bomb</h3>
+  <code>orbital:carpet_bomb</code></div></header>
+  <p class="what">A line of explosions walking away from you along your line of sight.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i></div><p class="legend"><b>I</b> Iron Block · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="lightning caller lightning caller">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAN0lEQVR42mNgwAP+n0v4D8IM5ICB10yRIUPY/1QDFY++/kfGFGkm2RB0DQNnAFXDgaKYoHmUAwDlH5Xlqz963gAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Lightning Caller</h3>
+  <code>orbital:lightning_caller</code></div></header>
+  <p class="what">A storm that walks with you, and hunts.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#6d7686" title="Lightning Rod">R</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i></div><p class="legend"><b>C</b> Copper Block · <b>R</b> Lightning Rod</p></div>
+</article>
+<article class="item" data-find="meteor crater meteor crater">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNgIBG8yzD4D8IM5ACSNU+bNuc/yZpBmtAx2ZpjkgowDCOoGaQJF8ZpCDGa8RqCywCQv8k2ABZw6IZgGEBIM1UMGZgwoElUEp2YyEqJ+PICPs0A/JR9dAKrQwkAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Meteor Crater</h3>
+  <code>orbital:meteor_crater</code></div></header>
+  <p class="what">An old crater, weathered in — rim, bowl, and a molten core.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i></div><p class="legend"><b>M</b> Magma Block · <b>S</b> Stone · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="meteor storm meteor storm">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARUlEQVR42mNggIJrXgb/GcgFIM3/zyX8J6SGgVwFxFhAlCtpo5hY51LkAorDgCjbR6q/sWkiBuMNB2IwhiHE2kyUS0gFAHmmmFUK6/3MAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Meteor Storm</h3>
+  <code>orbital:meteor_storm</code></div></header>
+  <p class="what">A bombardment that follows you for a minute.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i></div><p class="legend"><b>M</b> Magma Block · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="nuke suitcase nuke suitcase">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAU0lEQVR42mNgoBVIcDH4j4wHuQHoionFKAbEJBVg4P/XcrCKgzBeA0Aa0THRBiBrkpGSw2kIQQNAmmGYaAOwacZlCG1cQJUwoDgWyE4HFKVESgAAzrhwdOX90nIAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Nuke Suitcase</h3>
+  <code>orbital:nuke_suitcase</code></div></header>
+  <p class="what">A briefcase bomb. Ten seconds of counting, and then a very large hole.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i></div><p class="legend"><b>L</b> Leather · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="orbital laser orbital laser">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAgUlEQVR42mNgQAJSUnL/icEMuABI0srG5X9CSt7/nomzUTBIDCRHkgEwQLIBclEL/tuceP2/5/V/MAaxQWJEGYCsGe4CJEPwGoDNEJI0IxuCbgDRmpENgAGSDQABdAMYSAUUGQALRGQDQGL0MYBQOiBZM9GG4NNM0BD0lIfPAHRDAMb/cpD52v0BAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Orbital Laser</h3>
+  <code>orbital:orbital_laser</code></div></header>
+  <p class="what">A beam from orbit that keeps firing and follows wherever you look.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>D</b> Diamond · <b>G</b> Glass · <b>N</b> Nether Star · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="strike cannon orbital strike cannon">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVR42mNgwAKkpOT+o2MGYgFI8R0Nuf//82zgGMQnyhAUzZei/oMBiCbWELgBMM0wAOSTZgC5LqA4DGAGJKTk/e+ZOBuOQXyibbeyccFqAEicqDAAKQQ5G6QJhkF8kgxA1gzD9HEBLlcQrRndEBgmSTOyAcg0Wbajs4k2ADkLE8rSAASW79P3HfN3AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Orbital Strike Cannon</h3>
+  <code>orbital:strike_cannon</code></div></header>
+  <p class="what">A ring of TNT dropped from the sky, detonating on impact rather than on a timer.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i></div><p class="legend"><b>E</b> Ender Eye · <b>G</b> Gunpowder · <b>I</b> Iron Block · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="supply drop supply drop">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATklEQVR42mNgwAJ+/fr2Hx0zEAtwKSbaEIoMwOdcor0ysF5IcDH4D8LYYgEmB8IEDUA2KCap4D+6OE4DQIqJwbQzAN2pMA1Ee2HUAPIAAJ4v/hJuYVKSAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Supply Drop</h3>
+  <code>orbital:supply_drop</code></div></header>
+  <p class="what">Calls down a crate of useful things, wherever you are looking.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Chest">C</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i></div><p class="legend"><b>C</b> Chest · <b>Q</b> Quartz Block</p></div>
+</article>
+<article class="item" data-find="tactical nuke tactical nuke">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiUlEQVR42p2T3Q2AMAiEO0bjBI7uMrqNzxo0JIflDrUJL9D7yk9pTZzep8OsfTkm2Nc52LbcvhLmL2ZiB1CIBxGAYgQMEAy4KfEAYReU2PwSgD7LJsuQpl8BQxkerGpmU7myeIr9YjWV0AM2e+VLfx/+uqyEIX2EMHE2VrkHCvBqH1gTf21mJToBr49thIPEQUMAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Tactical Nuke</h3>
+  <code>orbital:tactical_nuke</code></div></header>
+  <p class="what">A five-second fuse, then a bowl 200 blocks across carved out of the ground.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Netherite Ingot">N</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#6d7686" title="Netherite Ingot">N</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">S</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#6d7686" title="Netherite Ingot">N</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#6d7686" title="Netherite Ingot">N</i></div><p class="legend"><b>N</b> Netherite Ingot · <b>S</b> Nether Star · <b>T</b> Tnt</p></div>
+</article></div>
+</section>
+<section id="weapons">
+  <div class="shead"><h2>Weapons</h2><span class="tally">29</span></div>
+  <p class="stand">Point and fire. These hurt things and everything they were standing on.</p>
+  <div class="items"><article class="item" data-find="acid spray acid spray">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAO0lEQVR42mNgGAUkg2mPEv7DMIpExYm8/8RgvAbEJBUQxLQ1gCIvgECCi8F/ZExSIBJrAF4wDAwYEAAAUbC5o0BlUD0AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Acid Spray</h3>
+  <code>orbital:acid_spray</code></div></header>
+  <p class="what">Eats through the ground in a spreading pool that keeps sinking.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>I</b> Iron Ingot · <b>S</b> Slime Ball</p></div>
+</article>
+<article class="item" data-find="black hole black hole">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAT0lEQVR42mNgGAUYYIXdiv8gbCUTg4Jh4gQ1/p9lA9bAxSGAgkFiIDkMg5A14tKMbgiKQcia/7/ZB8a4DIDJIxtCHQMo8gLFgUi1aBzBAACHC9xt5b6enwAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Black Hole</h3>
+  <code>orbital:black_hole</code></div></header>
+  <p class="what">A singularity that eats a sphere of the world.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i></div><p class="legend"><b>E</b> Ender Eye · <b>N</b> Nether Star · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="black hole grenade black hole grenade">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQ0lEQVR42mNgoBXYc+jcfximrwEmGh7/cWGKNBM0BJtiGSk54g1B14iOaWsAIc1UMYS+YUBWLFCcDqiSErEZxkBrAACeecIDIjIZBQAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Black Hole Grenade</h3>
+  <code>orbital:black_hole_grenade</code></div></header>
+  <p class="what">A pocket singularity. Drags everything nearby inward for eight seconds, then lets go.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i></div><p class="legend"><b>E</b> Ender Pearl · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="black ice black ice">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARUlEQVR42mNgGAWDANTd+PKfEswgIyX330TDgywM0gs3AGQasiQhPoYB5BiCYQCphmA1gBRDcBpArCF4DSA5FigygBIMAM4kLwpZnSx1AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Black Ice</h3>
+  <code>orbital:black_ice</code></div></header>
+  <p class="what">Freezes a wide sheet of ground so slick that nothing standing on it can stop.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i><i class="cell on" style="--tint:#6d7686" title="Coal Block">C</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">B</i></div><p class="legend"><b>B</b> Blue Ice · <b>C</b> Coal Block</p></div>
+</article>
+<article class="item" data-find="cat bazooka cat bazooka">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAeklEQVR42mNgIBJIiAj9x8cnqPlFl95/mCZ0PkEAUowLE20AzFYYhvEpsp0kA358eQPGH6atgLPJMgAZEzRATkriPwjjcj5IDq9mryC3/2UNeWAMYsM0wAwmSzNBMIQ1wzSSrPn/uZj/6AaA+CBxonMbSDHMIBibWL0ARUrwug5YZOQAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Cat Bazooka</h3>
+  <code>orbital:cat_bazooka</code></div></header>
+  <p class="what">Fires a cat.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#dcdfe6" title="Orange Wool">C</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#6d7686" title="Cod">F</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>C</b> Orange Wool · <b>F</b> Cod · <b>I</b> Iron Ingot · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="chain lightning chain lightning">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAJElEQVR42mNgIAL8v5bzH4QZyAFDVDNVDBhGhoxG42AxhKYAAKD9WwE/ySnfAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Chain Lightning</h3>
+  <code>orbital:chain_lightning</code></div></header>
+  <p class="what">A bolt that jumps from target to target, up to twelve times.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i><i class="cell on" style="--tint:#6d7686" title="Lightning Rod">L</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Ingot">C</i></div><p class="legend"><b>C</b> Copper Ingot · <b>L</b> Lightning Rod</p></div>
+</article>
+<article class="item" data-find="disintegrator disintegrator">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAO0lEQVR42mNgGAUkgy+zNv2HYRSJPYfO/ScG4zUgJqmAIKatARR5AQQSXAz+I2OSApFYA/CCYWDAgAAAxf/Oh+xHa9wAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Disintegrator</h3>
+  <code>orbital:disintegrator</code></div></header>
+  <p class="what">Dissolves a sphere of world into nothing at all. No crater lip, no debris — the blocks simply stop existing.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>E</b> Ender Eye · <b>I</b> Iron Ingot</p></div>
+</article>
+<article class="item" data-find="doppelganger doppelganger">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVR42mNgoCZYs2nffxgmRQ5DAbpCfHKDyACahAFMMT45vJoJGQA3hGIDiAkoggFJMJAIqRk8BhCbX6hvALkAAPZyboIxT4z3AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Doppelganger</h3>
+  <code>orbital:doppelganger</code></div></header>
+  <p class="what">Calls up a double of you that fights on your side.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#6d7686" title="Totem Of Undying">S</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>S</b> Totem Of Undying</p></div>
+</article>
+<article class="item" data-find="earthquake hammer earthquake hammer">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMElEQVR42mNgoBbYc+jcf1IwVgNikgqIwoPYAIrCABtIcDH4D8Jkx8yoAaMGEGsAAO+gyI0ytrBuAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Earthquake Hammer</h3>
+  <code>orbital:earthquake_hammer</code></div></header>
+  <p class="what">Slam the ground and a shockwave runs outward, throwing everything it passes.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>S</b> Stick</p></div>
+</article>
+<article class="item" data-find="fossilise fossiliser">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVR42mNgoAVoaGj5jw3T1wAZKTm4RhibvgYMXBjg0ky0ISBF06bNQcEkG0CxC2AYm0vo6wJcLiHaAHxig8cAADGuATUoJRPIAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Fossiliser</h3>
+  <code>orbital:fossilise</code></div></header>
+  <p class="what">Turns every living thing near you to stone. Permanently.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#dcdfe6" title="Bone">F</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i></div><p class="legend"><b>F</b> Bone · <b>S</b> Stone</p></div>
+</article>
+<article class="item" data-find="freeze ray freeze ray">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQElEQVR42mNgGAhQ8ejrfxCmSDNWA/YcOvMfH8ZrM7ICXBikBqdmYg3AawjZLiA2DIjSTFbUUKQZ2RCGUTAwAADfHcW4uC5a+gAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Freeze Ray</h3>
+  <code>orbital:freeze_ray</code></div></header>
+  <p class="what">Freezes everything in a wide sphere, then shatters it on the next shot.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>I</b> Iron Ingot · <b>P</b> Packed Ice</p></div>
+</article>
+<article class="item" data-find="glass cannon glass cannon">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZElEQVR42mNgwAPqbnz5z0AqAGmC4Zikgv/IfJI0YzMAryEwDb9+fYNjbHyshsBMR9eEjY3VJcgGICtGp4k2AKYJhpHFMQyA+Z1UjGEI2S6gehiQFQsUpwOqpESq5AWq5EZSAQCZZ9oRrhewJAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Glass Cannon</h3>
+  <code>orbital:glass_cannon</code></div></header>
+  <p class="what">Turns everything in a wide sphere to glass. It stays standing, and one hit brings the lot down.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#f0c356" title="Blaze Rod">B</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>B</b> Blaze Rod · <b>G</b> Glass</p></div>
+</article>
+<article class="item" data-find="gravity gun gravity gun">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAP0lEQVR42mNgGLRgzaZ9/9ExSZrDYrIwMFGGwDT3fNiHgQkagk8zVQwh2RtkhQFVYgHdAIrSwBDSjGwAw5ACAAhgwhATne1mAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Gravity Gun</h3>
+  <code>orbital:gravity_gun</code></div></header>
+  <p class="what">Rips something loose, holds it in front of you, and throws it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>E</b> Ender Pearl · <b>I</b> Iron Ingot</p></div>
+</article>
+<article class="item" data-find="ice spikes ice spikes">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMklEQVR42mNgGAVkg7obX/7T1wB0DbQ3AFkBiA3D2PjUMQCfE0k2gJCGQWgAqRqoagAAxf0Ncp4JxuIAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Ice Spikes</h3>
+  <code>orbital:ice_spikes</code></div></header>
+  <p class="what">Drives a ring of ice spears up out of the ground around you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Snowball">S</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i></div><p class="legend"><b>P</b> Packed Ice · <b>S</b> Snowball</p></div>
+</article>
+<article class="item" data-find="kamehameha kamehameha">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaElEQVR42mNgwAMkwk78B2EGcgHJBiArBrH1pn0DY3RxvLYha0THyGpwGgJTnHftPwrG5hoMgKz52FdUjGwIXtuRNcMAuiEorkD3N8wAdIDuCnhYUGwAxV6gWiBSHI1US0hkJ+UBy40A4ZaUZOXl82UAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Kamehameha</h3>
+  <code>orbital:kamehameha</code></div></header>
+  <p class="what">Charge through KA-ME-HA-ME-HAAA, then a beam that bores straight through whatever it meets.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Glowstone Dust">G</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#f0c356" title="Glowstone Dust">G</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Heart Of The Sea">H</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#f0c356" title="Glowstone Dust">G</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#f0c356" title="Glowstone Dust">G</i></div><p class="legend"><b>D</b> Diamond · <b>G</b> Glowstone Dust · <b>H</b> Heart Of The Sea</p></div>
+</article>
+<article class="item" data-find="landmine landmine">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAASklEQVR42mNgGL7gXYbBfximrwExSQX/QRjZAJgY0ZpheM+hc//RxYjSDNKIjgkagk8zuiHUN4AYzVQxhD5hQHYsUJwOcBlCSDMAx804d5Dz8YUAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Landmine</h3>
+  <code>orbital:landmine</code></div></header>
+  <p class="what">Buries a charge where you stand. It waits for something to walk over it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>I</b> Iron Ingot · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="midas touch midas touch">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAR0lEQVR42mNgwAP+X8v5z0AqAGnChUnW/OOcF2mGIGtEx7Q3AJ9mqhhC3zAgOxbwuYLkRIVuAMkpkmgDcAUWPq+ghMnQNwAA7mrgF7CBp9AAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Midas Touch</h3>
+  <code>orbital:midas_touch</code></div></header>
+  <p class="what">Everything within twenty blocks becomes solid gold. Including, unfortunately, the trees.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Golden Apple">A</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>A</b> Golden Apple · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="napalm launcher napalm launcher">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVR42mNgGAUkg3cZBv9hGEUiJqngPzF4OBsAAgkuBv+RMUmBSKwBeMEwMGBAAAA/BKjftFMvUgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Napalm Launcher</h3>
+  <code>orbital:napalm_launcher</code></div></header>
+  <p class="what">Sets a wide circle of ground alight, and leaves it burning.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>B</b> Blaze Powder · <b>I</b> Iron Ingot</p></div>
+</article>
+<article class="item" data-find="potato bomb potato bomb">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAoUlEQVR42mNgIAH8b9H4//9a1H8GcgBII8wAEE2S5iP7VsFtJksz0YpNlIT+I2OQZhibKM2bGjz+X1iQAsYgNgj3JJiAMV5D0DXH2CnBDSBoCEgQJOnmEUAUxjAEZkBFTRsYwxRi44NoDJcgOx/Z2SAM8wrMC1i9gi3w0MMA3RAMA0CC6BqI0oxuCLpBeJ2OKxGha4JpJCoxYUuNRGskFwAA2HUS6NQ39XwAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Potato Bomb</h3>
+  <code>orbital:potato_bomb</code></div></header>
+  <p class="what">Drops an enormous potato on the world from ninety blocks up.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Potato">P</i><i class="cell on" style="--tint:#6d7686" title="Potato">P</i><i class="cell on" style="--tint:#6d7686" title="Potato">P</i><i class="cell on" style="--tint:#6d7686" title="Potato">P</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#6d7686" title="Potato">P</i><i class="cell on" style="--tint:#6d7686" title="Potato">P</i><i class="cell on" style="--tint:#6d7686" title="Potato">P</i><i class="cell on" style="--tint:#6d7686" title="Potato">P</i></div><p class="legend"><b>P</b> Potato · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="quicksand quicksand">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAU0lEQVR42mNgwANePLn2n4FcANIMwxRpppohg9iAR5fm/ceG0Q3ApQ7FgAQXAzhGNwBZDqcB6IZgw3hdQMgQgl7AZwhRYYDLEHxq8BpADB4GBgAA0n86qHuu0xYAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Quicksand</h3>
+  <code>orbital:quicksand</code></div></header>
+  <p class="what">Turns the ground to sand that swallows whatever is standing on it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#8d919b" title="Gravel">G</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i></div><p class="legend"><b>G</b> Gravel · <b>S</b> Sand</p></div>
+</article>
+<article class="item" data-find="railgun railgun">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAASUlEQVR42mNgGChQ8ejrfxCmruY9h878J4Txaq5o6CGIYYZg1ww1HS+GGkKRC3AGDjFhgFPzNS8D/ArwAZBmigyAGcIwCgYGAABRBcXDhpFMrAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Railgun</h3>
+  <code>orbital:railgun</code></div></header>
+  <p class="what">Bores a perfectly straight shaft along your line of sight.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#8d919b" title="Redstone Block">R</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>R</b> Redstone Block</p></div>
+</article>
+<article class="item" data-find="shotgun blast shotgun">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAANklEQVR42mNgGAUkgz2Hzv2HYRSJBBeD/8RgvAbEJBUQxLQ1gCIvYDOEpEAk1gC8YBgYMCAAAP/Yrw9D6E6DAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Shotgun</h3>
+  <code>orbital:shotgun_blast</code></div></header>
+  <p class="what">A close-range cone that shreds everything in front of you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i></div><p class="legend"><b>G</b> Gunpowder · <b>I</b> Iron Ingot · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="shrink ray shrink ray">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARElEQVR42mNgGChwbtqv/yCMIrhm077/hDBezWExWQQxSB1OzTCT8WGYIRh+IsUFOAOG2DDAq5msKKFIM7IhDKNgiAIAnfazQusTxToAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Shrink Ray</h3>
+  <code>orbital:shrink_ray</code></div></header>
+  <p class="what">Resizes whatever you point at. Click to shrink, sneak-click to grow.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>I</b> Iron Ingot</p></div>
+</article>
+<article class="item" data-find="snowball gun snowball gun">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVR42mNgGAUDAz78+PMfQ3DPoXP/icEgzTBMsgHImjEMoYsLQBhnGIBAgovBf2RMcuiOGkAeAAB+XddxCGSIiAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Snowball Gun</h3>
+  <code>orbital:snowball_gun</code></div></header>
+  <p class="what">A stream of snowballs, for as long as you can stand it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8fcfe8" title="Snow Block">S</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>I</b> Iron Ingot · <b>S</b> Snow Block</p></div>
+</article>
+<article class="item" data-find="sonic cannon sonic cannon">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYElEQVR42mNgQAO/fn37jwtjU4uhkQEPQFcDZxNlAz6L0E0l5AUMpxPjDbzOx+dkfC6FM/YcOgfGyGwYJtoAmBMJGQDTCGdTzQUUGUBRLFCcDqiSEinOCxTlRkIBR8glAGkWu1tmF21RAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Sonic Cannon</h3>
+  <code>orbital:sonic_cannon</code></div></header>
+  <p class="what">Throws everything in a wide arc away from you, hard. Harms nothing; moves everything.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>N</b> Note Block</p></div>
+</article>
+<article class="item" data-find="stampede stampede">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNgGJTg169v/9Ex0ZpfPLn2nyoGyEjJkWcAzAsUG0AsZpg2bc5/ZAwzBOQCZIzTAFwAmwHYDKTcAFxewOZcklxAdCBSbAAuLyAbQkiMoCtoagAAKeR/6xJGt+0AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Stampede</h3>
+  <code>orbital:stampede</code></div></header>
+  <p class="what">Two hundred cows, arriving at speed, from that direction.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Beef">B</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i></div><p class="legend"><b>B</b> Beef · <b>L</b> Leather</p></div>
+</article>
+<article class="item" data-find="swarm missiles swarm missiles">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAALUlEQVR42mNgoCZ4l2Hwn1wxyg3Yc+jcfxgmVWzUgEFjAChuYZhUsUFiwNAFAKkvIqqGeuGYAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Swarm Missiles</h3>
+  <code>orbital:swarm_missiles</code></div></header>
+  <p class="what">Twenty missiles that pick their own targets and chase them down.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i></div><p class="legend"><b>F</b> Firework Rocket · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="tornado jar tornado in a jar">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVR42mNgoDY48ujNf2yYaM3kyGEomjZt3n9kTH8DkA0hywsUGzCwYYCuGYbpZwBFCYnipDw0AQBQmMtBwXS4lgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Tornado in a Jar</h3>
+  <code>orbital:tornado_jar</code></div></header>
+  <p class="what">A vortex that wanders off on its own and tears up whatever it crosses.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>F</b> Feather · <b>G</b> Glass</p></div>
+</article>
+<article class="item" data-find="vaporise vaporiser">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNgoAX48OPPf2LEcGqGYXxiBDXjw7Rzwa9f3/4j+xfGh4kh87FqhmFi+Dg1E4up6wL0MCCWTx1Qd+PLf3z4/7UcvJjBrevOf3z4XYYBXjwMDAAAdHXQEwsshXoAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Vaporiser</h3>
+  <code>orbital:vaporise</code></div></header>
+  <p class="what">Boils away every drop of water and pool of lava within forty blocks.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#6d7686" title="Sponge">S</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i></div><p class="legend"><b>B</b> Blaze Powder · <b>S</b> Sponge</p></div>
+</article></div>
+</section>
+<section id="sculptures">
+  <div class="shead"><h2>Falling sculptures</h2><span class="tally">26</span></div>
+  <p class="stand">A solid object twenty to forty blocks across, dropped from a hundred up. It holds its shape the whole way down and leaves a crater.</p>
+  <div class="items"><article class="item" data-find="giant anchor giant anchor">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARElEQVR42mNgwAOOnLj0H4QZSAEwTbgw7Q2g2Asj3QB0DYT4WA0g5AKcBuBSTIwYYdOJVUMVA/ApICpWcCkiKUpJyUgAJmjQhzwPyvcAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Anchor</h3>
+  <code>orbital:giant_anchor</code></div></header>
+  <p class="what">A ship&#x27;s anchor, arriving point first. It will not be moved again.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#6d7686" title="Chain">C</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>C</b> Chain · <b>I</b> Iron Block</p></div>
+</article>
+<article class="item" data-find="giant anvil giant anvil">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVR42mNgGDTgyIkL/0nBFGnGahDdDSA7LCgKUIpjhD4GUBQGFMUAxdE48AaQCwBz2r5X8jn5SQAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Giant Anvil</h3>
+  <code>orbital:giant_anvil</code></div></header>
+  <p class="what">Drops a colossal anvil. It is very heavy, and the hole says so.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="giant bell giant bell">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAP0lEQVR42mNgwAN60mz+gzADuWCIG/DjnNd/ZEyRZpINocgAXJqJNmSIG0BIM0FDKDKAWM04DaHIAFI1IxsCAMf9Va6hBX07AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Bell</h3>
+  <code>orbital:giant_bell</code></div></header>
+  <p class="what">A bell, which rings once, very loudly.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#6d7686" title="Bell">B</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i></div><p class="legend"><b>B</b> Bell · <b>G</b> Gold Block</p></div>
+</article>
+<article class="item" data-find="giant boot giant boot">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAALElEQVR42mNgQAJSEjL/cWEGYsCoAUPeAHyaB4cBBA0cBgY0RFj9JwVTzQAAshDNsacLGb8AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Boot</h3>
+  <code>orbital:giant_boot</code></div></header>
+  <p class="what">A colossal boot, which lands the way a boot lands.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather Boots">B</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i></div><p class="legend"><b>B</b> Leather Boots · <b>L</b> Leather</p></div>
+</article>
+<article class="item" data-find="giant cake giant cake">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUUlEQVR42mNgoCX4fyLq/8Aa8OvXtwEyAKQRGybagEebkv5jw0QbcMTK7j82TLbTifYKLqcT7RVcTifKK8Q6H6c3iHU+Tm9QbACx/ic6SokFALvdMFrtU4xjAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Cake</h3>
+  <code>orbital:giant_cake</code></div></header>
+  <p class="what">A three-tier birthday cake, with a candle, delivered from orbit.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="Cake">C</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i></div><p class="legend"><b>C</b> Cake · <b>W</b> White Concrete</p></div>
+</article>
+<article class="item" data-find="giant chicken giant chicken">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNgIBKcMLH4D8IM5IBfv779B2GYISA2WQYgY4oNAOEPk3T+E9SIywCQZrgBuGzAhwk6j6BGYvxIEwPwxgBFmqliACGDyErCDJQAWGIhmOIG1AAABUiUnb8lYfIAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Chicken</h3>
+  <code>orbital:giant_chicken</code></div></header>
+  <p class="what">Drops an enormous chicken. It does not survive the landing.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i></div><p class="legend"><b>E</b> Egg · <b>W</b> White Wool</p></div>
+</article>
+<article class="item" data-find="giant crown giant crown">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPElEQVR42mNgGHBQ8ejOf2SMTQ6veooN+HHO6z8yRlaMTwwuR3UDkDXg4tPHAGLEcBpACh41ADWNDAwAALUl5kpG8kRaAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Crown</h3>
+  <code>orbital:giant_crown</code></div></header>
+  <p class="what">A king&#x27;s crown, twenty blocks across, dropped from orbit.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#6d7686" title="Emerald">E</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Block">G</i></div><p class="legend"><b>E</b> Emerald · <b>G</b> Gold Block</p></div>
+</article>
+<article class="item" data-find="giant diamond giant diamond">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAASElEQVR42mNgoCXIuXfjPwhTpJksQ9A1k2QILs1EGYKu+N6fX2BMlCG4NBNlCCHNBA2h2ACKvUCVQKRKNFIlIVElKVMlMxELAJlnbzDuqEiFAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Diamond</h3>
+  <code>orbital:giant_diamond</code></div></header>
+  <p class="what">A cut gem the size of a house, dropped point-first.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#3f4552" title="Tnt">T</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i></div><p class="legend"><b>D</b> Diamond · <b>T</b> Tnt</p></div>
+</article>
+<article class="item" data-find="giant dice giant dice">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAO0lEQVR42mP49evbf0owA90MkJKQQcEjyQCYYrIMwKaB6FhAtxGXIdRzAS4b8WkmygCiU+LAGzBguREAF+5e4t4H5QkAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Dice</h3>
+  <code>orbital:giant_dice</code></div></header>
+  <p class="what">A die seventeen blocks on a side, pips and all.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">W</i></div><p class="legend"><b>B</b> Black Concrete · <b>W</b> White Concrete</p></div>
+</article>
+<article class="item" data-find="giant donut giant doughnut">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVR42mNgwAIaIqz+Y8MMxABcmgkaQkgjQYMoMoBUzSiGkKsZbggxziTLAKKjlmYGUOwFusTEIEqJVMlM5GZnAM06hIz4YSwWAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Doughnut</h3>
+  <code>orbital:giant_donut</code></div></header>
+  <p class="what">A doughnut. A torus, if you want to be formal about it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Cookie">C</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i></div><p class="legend"><b>C</b> Cookie · <b>S</b> Sugar</p></div>
+</article>
+<article class="item" data-find="giant duck giant duck">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAV0lEQVR42mNgoBX4dUHvPzKmSDPJhoAUS4hJwTXC2BTZDsMfejTAmCwDYJpxGkDIdoqcjtcgUjRjGESuZrghFBtAsRfg4fDr239SMPaYoEQzsYZQPdcCAJ8BxU/WhdwHAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Duck</h3>
+  <code>orbital:giant_duck</code></div></header>
+  <p class="what">Drops an enormous rubber duck, which leaves it a pond to sit in.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i><i class="cell on" style="--tint:#6d7686" title="Yellow Concrete">Y</i></div><p class="legend"><b>S</b> Slime Ball · <b>Y</b> Yellow Concrete</p></div>
+</article>
+<article class="item" data-find="giant gramophone giant gramophone">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQElEQVR42mNgoAX4cc7rP7F44Ayg2AtkaSY78CgKfZKj8MiJS/9BmOw0MAQN6Emz+Y+OQQZgEyfaAFyYNgZQCgCQPRVbvCCu9wAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Giant Gramophone</h3>
+  <code>orbital:giant_gramophone</code></div></header>
+  <p class="what">A gramophone the size of a barn, horn first.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Music Disc 13">D</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>D</b> Music Disc 13 · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="giant guitar giant guitar">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMklEQVR42mNgGAWUgzlVIf9hGBufJAPQMcUGHDt1CS/2MFH6T5EBIExdL5AViKOAcgAAMqSbd1PWY/UAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Guitar</h3>
+  <code>orbital:giant_guitar</code></div></header>
+  <p class="what">Drops a guitar the size of a barn. It is not in tune.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i><i class="cell on" style="--tint:#6d7686" title="Note Block">S</i><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i><i class="cell on" style="--tint:#a97b4a" title="Spruce Planks">N</i></div><p class="legend"><b>N</b> Spruce Planks · <b>S</b> Note Block</p></div>
+</article>
+<article class="item" data-find="giant hammer giant hammer">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAKElEQVR42mNgQAJHTlz6TwxmwAVGDUAFPWk2/5ExA6lg1IBRA+hqAAAeXgf2cubYsAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Giant Hammer</h3>
+  <code>orbital:giant_hammer</code></div></header>
+  <p class="what">A war hammer the size of a house, head first.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Anvil">A</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>A</b> Anvil · <b>I</b> Iron Block</p></div>
+</article>
+<article class="item" data-find="giant hourglass giant hourglass">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQElEQVR42mNgQAI9aTb/icEMuMC5F+/+E4MZ8AGKNFPFAHyGMBALKDYAmyEMpIIhbsDAxsLApkSKMxMoq5JqAACeNYdO2wNfTgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Giant Hourglass</h3>
+  <code>orbital:giant_hourglass</code></div></header>
+  <p class="what">An hourglass thirty blocks tall, with the sand still in it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>G</b> Glass · <b>S</b> Sand</p></div>
+</article>
+<article class="item" data-find="giant ice cream giant ice cream">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAX0lEQVR42mNgwAN60mz+M5ALGiKs/sMwRZqpYsCXWZvAmCxDYJpJNgBZI1kG/Pr17T8Ik2UATDMyJtoAbJphmCIXkGzAiwf7UDBJBoAAugFkJSaQRrJSIrorBtYAQmoA5rDV6z2Wr7sAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Ice Cream</h3>
+  <code>orbital:giant_ice_cream</code></div></header>
+  <p class="what">Drops a three-scoop ice cream, cherry and all. It lands cone first.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Snowball">S</i><i class="cell on" style="--tint:#8fcfe8" title="Snowball">S</i><i class="cell on" style="--tint:#8fcfe8" title="Snowball">S</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell"></i><i class="cell on" style="--tint:#79a355" title="Wheat">C</i><i class="cell"></i></div><p class="legend"><b>C</b> Wheat · <b>S</b> Snowball · <b>W</b> White Wool</p></div>
+</article>
+<article class="item" data-find="giant key giant key">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAANUlEQVR42mNgwAJ+nPP6jw0zEAsoMgCbBpIMGXgDqBKI6AYxkAtGDcCMjYE3gGRDqG4ANjUAhEfP/a8kchsAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Key</h3>
+  <code>orbital:giant_key</code></div></header>
+  <p class="what">Drops an enormous golden key. It opens nothing.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell"></i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell"></i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="giant lighthouse giant lighthouse">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUElEQVR42mNgwAOkJGT+gzADOeDci3f/YQaQZQjIAGRMkmZkm8lyBcUGgMAJE4v/yJjkMPj169t/ZExfA9CdT7I30G0n2RUUG0CxF0ZYGAAASqfjASY9ZWMAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Lighthouse</h3>
+  <code>orbital:giant_lighthouse</code></div></header>
+  <p class="what">Drops a lighthouse, lit, thirty-six blocks tall.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">C</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">C</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">C</i></div><p class="legend"><b>C</b> White Concrete · <b>G</b> Glass · <b>S</b> Sea Lantern</p></div>
+</article>
+<article class="item" data-find="giant mushroom giant mushroom">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAANklEQVR42mNgoDY4YWLxHx+mSDNOQ4jViNMgigwgVzPckF+/vv2nBFNuADZAkuJRAwarAaQAAEuBqcSpCdptAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Mushroom</h3>
+  <code>orbital:giant_mushroom</code></div></header>
+  <p class="what">A mushroom twenty-three blocks across.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i><i class="cell on" style="--tint:#6d7686" title="Mushroom Stem">M</i><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i><i class="cell on" style="--tint:#6d7686" title="Red Mushroom">R</i></div><p class="legend"><b>M</b> Mushroom Stem · <b>R</b> Red Mushroom</p></div>
+</article>
+<article class="item" data-find="giant rocket giant rocket">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNgoCU4YWLxH4QHxgCYZrIN+fXr239kPGrAyDMAlHDQDSApMcFSH0wj2QaQnZxJMQAAcGbNxVYrxiMAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Rocket</h3>
+  <code>orbital:giant_rocket</code></div></header>
+  <p class="what">A rocket, arriving the wrong way up.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>F</b> Firework Rocket · <b>I</b> Iron Ingot</p></div>
+</article>
+<article class="item" data-find="giant skull giant skull">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAM0lEQVR42mNgQAIvnlz7TwxmwAaI1YzVEFI1YxhCkQHkaoYbMsINGCTRSJWUOGCGDA4DAPr5CMRnzDxpAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Skull</h3>
+  <code>orbital:giant_skull</code></div></header>
+  <p class="what">A skull ten blocks across, grinning.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i><i class="cell on" style="--tint:#6d7686" title="Skeleton Skull">S</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Block">B</i></div><p class="legend"><b>B</b> Bone Block · <b>S</b> Skeleton Skull</p></div>
+</article>
+<article class="item" data-find="giant sword giant sword">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAANElEQVR42mNgoCU4cuLSfxAeogbANJNtyKgBg8GAH+e8KDcAGZOVmHrSbP6DMNlJmS4GAABLt5jLNQUdGgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Giant Sword</h3>
+  <code>orbital:giant_sword</code></div></header>
+  <p class="what">A sword driven into the ground point first.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#79d8d0" title="Diamond Sword">D</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>D</b> Diamond Sword · <b>I</b> Iron Block</p></div>
+</article>
+<article class="item" data-find="giant teapot giant teapot">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAP0lEQVR42mNgGNTg169v/0F4pBoA00yUIegK0TWjG4JiIC7FxGAMf5JlCLrTiLUZxQCKXUBRGBCKPpKic0AAAJGkks/vJ4TPAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Teapot</h3>
+  <code>orbital:giant_teapot</code></div></header>
+  <p class="what">The Utah teapot, at last rendered in dirt and ruin.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Cauldron">C</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i></div><p class="legend"><b>C</b> Cauldron · <b>Q</b> Quartz</p></div>
+</article>
+<article class="item" data-find="giant trophy giant trophy">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAP0lEQVR42mNgQAI/znn9JwYz4AIUGUCsZpyGjHQDSNWMYQjFBhATrQykAvoa0JNm8x8bRjYAmzxBAwjhwWEAAH1E65Z6UlM4AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Giant Trophy</h3>
+  <code>orbital:giant_trophy</code></div></header>
+  <p class="what">A winner&#x27;s cup, for when subtlety is not required.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Emerald Block">E</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>E</b> Emerald Block · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="giant windmill giant windmill">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhklEQVR42mNgQAO/vrz5D8LEiqOAnjSb/yCMrhjGB2GQPF7NyAacMLEAY3QDMAzBpgDZAJghuFyIYgBMIbJmGEbWjDM8kA359esbHMM0MxADkDUiYwZiAVkGoIcDVkNw+R9bIGIzAGcgYo1GHAZgjUasCQmHF7AmJKxJGY8BZMUA0VFJdwMAP0Qhab0uSX4AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Giant Windmill</h3>
+  <code>orbital:giant_windmill</code></div></header>
+  <p class="what">Drops a windmill, sails and all. The sails do not turn.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">C</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">C</i><i class="cell on" style="--tint:#a97b4a" title="Oak Log">L</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">C</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#6d7686" title="White Concrete">C</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i></div><p class="legend"><b>C</b> White Concrete · <b>L</b> Oak Log · <b>W</b> White Wool</p></div>
+</article>
+<article class="item" data-find="grand piano grand piano">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAP0lEQVR42mNgGHRAQkzqPz5MkWa8hhCrGashpGpGMYRczRQbQJHzqRd4MAN+/fr2n1ia+gYgG0RMKh3EBpALADpywxlk7CNLAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Grand Piano</h3>
+  <code>orbital:grand_piano</code></div></header>
+  <p class="what">The oldest joke there is: a grand piano, from a great height.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i><i class="cell on" style="--tint:#6d7686" title="Black Concrete">B</i></div><p class="legend"><b>B</b> Black Concrete · <b>N</b> Note Block</p></div>
+</article></div>
+</section>
+<section id="terrain">
+  <div class="shead"><h2>Terraforming</h2><span class="tally">19</span></div>
+  <p class="stand">Reshaping the ground itself — hills, canyons, lakes, ice.</p>
+  <div class="items"><article class="item" data-find="canyon carver canyon carver">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAKUlEQVR42mNgGAUM06bN+Y8NE61ucBpAincHoQGkxtogM4CcxDfwBgAATAAsBE/JLKwAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Canyon Carver</h3>
+  <code>orbital:canyon_carver</code></div></header>
+  <p class="what">Cuts a winding canyon across the landscape, the way you are facing.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#79d8d0" title="Diamond Pickaxe">P</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>P</b> Diamond Pickaxe · <b>S</b> Stone</p></div>
+</article>
+<article class="item" data-find="crystal growth crystal growth">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAANUlEQVR42mNgGAWDGKxIuPb/y6xN/0E0PvlBZAC6BmL5w8GAmKSC/yCMrIAUPtwAcjHFBgAA76ci8ztH4SIAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Crystal Growth</h3>
+  <code>orbital:crystal_growth</code></div></header>
+  <p class="what">Grows a thicket of glowing crystal spires out of the ground.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Meal">B</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>B</b> Bone Meal</p></div>
+</article>
+<article class="item" data-find="excavator excavator">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAM0lEQVR42mNgGAUMCSv8/lOCKTdg2rQ5/0E4JqmAJAzTR30DZKTk8GL6GYAeW6MG0NAAAOfkaJgWb+FEAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Excavator</h3>
+  <code>orbital:excavator</code></div></header>
+  <p class="what">Digs a clean rectangular pit in front of you, thirty across and twenty deep.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Shovel">S</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>S</b> Iron Shovel</p></div>
+</article>
+<article class="item" data-find="farm plot farm plot">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVR42mNgGHBwY1fEf0ow5QYgu4Ic9nAwIM5J5z8lmKEsxOQ/JZhyF4x6gXIvAAAkyMB4FrXrUgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Farm Plot</h3>
+  <code>orbital:farm_plot</code></div></header>
+  <p class="what">Levels a field, tills it, plants it with wheat and puts the water in.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#79a355" title="Wheat Seeds">W</i><i class="cell on" style="--tint:#79a355" title="Wheat Seeds">W</i><i class="cell on" style="--tint:#79a355" title="Wheat Seeds">W</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">H</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell"></i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell"></i></div><p class="legend"><b>H</b> Water Bucket · <b>I</b> Iron Ingot · <b>S</b> Stick · <b>W</b> Wheat Seeds</p></div>
+</article>
+<article class="item" data-find="forest grower forest grower">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMElEQVR42mNgGF4gYYXff7LEQALkYsoNoEQzdVxAFQNgoCzEBCPEiRUbNYBaBpADAHmu3AaSM2MVAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Forest Grower</h3>
+  <code>orbital:forest_grower</code></div></header>
+  <p class="what">Grows a whole forest where you are looking, tree by tree.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Meal">B</i><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i><i class="cell on" style="--tint:#79a355" title="Oak Sapling">S</i></div><p class="legend"><b>B</b> Bone Meal · <b>S</b> Oak Sapling</p></div>
+</article>
+<article class="item" data-find="foundation foundation">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAK0lEQVR42mNgGAXDATQ0tPynBFNuQExSwX9KMNiAadPmwDGpfOoYMMK9AADn7GEA6+0eJwAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Foundation</h3>
+  <code>orbital:foundation</code></div></header>
+  <p class="what">Flattens the ground around you to one level and paves it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i><i class="cell on" style="--tint:#6d7686" title="Bricks">B</i><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Smooth Stone">S</i></div><p class="legend"><b>B</b> Bricks · <b>S</b> Smooth Stone</p></div>
+</article>
+<article class="item" data-find="ice age ice age">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMklEQVR42mNgoBb48OPPf3LFKDcAJIiMSREbJF4Y4gA9ZEnFlBtQd+PLf0rwqAFf/gMAnaTgiE/FGbUAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Ice Age</h3>
+  <code>orbital:ice_age</code></div></header>
+  <p class="what">Freezes everything in sight: snow on the ground, ice on the water.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Snow Block">S</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i></div><p class="legend"><b>P</b> Packed Ice · <b>S</b> Snow Block</p></div>
+</article>
+<article class="item" data-find="lake maker lake maker">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARklEQVR42mNgGDRg2rQ5/0GYLHUgAauGa2CMzxCc6pAlYJLYMLoanKYTwjhdSYwhBMMJnyHEBDJOQ4jWTGrMUCVtjAIKAQC4M7QdFdiq3QAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Lake Maker</h3>
+  <code>orbital:lake_maker</code></div></header>
+  <p class="what">Digs a lake and fills it, with a sand beach around the rim.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i><i class="cell on" style="--tint:#aeb6c4" title="Water Bucket">B</i></div><p class="legend"><b>B</b> Water Bucket · <b>P</b> Prismarine</p></div>
+</article>
+<article class="item" data-find="landscaper landscaper">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUUlEQVR42mNgGAUkgYQVfv8p0gzDBBXhkisLMcFtALIN6IpgmmEYqyHIikg2AF0BsiJschiG4DIAhvEagEsBTBEuObghhBQRNIBczTA88AYAAI8zFX6aNPy5AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Landscaper</h3>
+  <code>orbital:landscaper</code></div></header>
+  <p class="what">Smooths the ground around you into rolling hills instead of whatever was there.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Hoe">H</i><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i><i class="cell on" style="--tint:#79a355" title="Grass Block">G</i></div><p class="legend"><b>G</b> Grass Block · <b>H</b> Iron Hoe</p></div>
+</article>
+<article class="item" data-find="mineshaft mineshaft">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQUlEQVR42mOYNm3Of0owA4j4fy2HfANAAGQAA5EgJqngPwijGEAKGBgD0DVhhMHgNACfpkFsALGaBpkB5GiiqgEAi/G/+8Am9NoAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Mineshaft</h3>
+  <code>orbital:mineshaft</code></div></header>
+  <p class="what">Cuts a lit spiral staircase from your feet down to bedrock.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell"></i><i class="cell on" style="--tint:#aeb6c4" title="Iron Pickaxe">P</i><i class="cell"></i><i class="cell"></i><i class="cell on" style="--tint:#aeb6c4" title="Iron Pickaxe">P</i><i class="cell"></i></div><p class="legend"><b>I</b> Iron Ingot · <b>P</b> Iron Pickaxe</p></div>
+</article>
+<article class="item" data-find="mountain maker mountain maker">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVR42mNgGAWDHHz48ec/CFOkmSxDpk2b8x8bpkgzUYYQ0ozXEGI1YzWEVM0ohpCrGW4IxQZQCgAiR/sRUA0H8wAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Mountain Maker</h3>
+  <code>orbital:mountain_maker</code></div></header>
+  <p class="what">Raises a mountain where you are looking, course by course.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#6d7686" title="Piston">P</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i></div><p class="legend"><b>P</b> Piston · <b>S</b> Stone</p></div>
+</article>
+<article class="item" data-find="overgrowth overgrowth">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAU0lEQVR42mNgoBZIWOH3nywxkAC5eOANABsy8F5ADsycphAUjEsMZ1SiK8aFcRowbdocuKKGhhYwxsUfxAbAFOIyAKQGbxigG4COCRpADGagJgAAVcqFdVaNcaUAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Overgrowth</h3>
+  <code>orbital:overgrowth</code></div></header>
+  <p class="what">Buries everything nearby under moss and leaves, as if it had been left alone for a century.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Vine">V</i><i class="cell on" style="--tint:#6d7686" title="Vine">V</i><i class="cell on" style="--tint:#6d7686" title="Vine">V</i><i class="cell on" style="--tint:#6d7686" title="Vine">V</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Meal">B</i><i class="cell on" style="--tint:#6d7686" title="Vine">V</i><i class="cell on" style="--tint:#6d7686" title="Vine">V</i><i class="cell on" style="--tint:#6d7686" title="Vine">V</i><i class="cell on" style="--tint:#6d7686" title="Vine">V</i></div><p class="legend"><b>B</b> Bone Meal · <b>V</b> Vine</p></div>
+</article>
+<article class="item" data-find="repair repair tool">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMklEQVR42mNgGAWDACSs8PtPCabcgGnT5vxHxjFJBXgxunoMAxoaWvBiggaMumAAXAAAstuScBuFiPkAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Repair Tool</h3>
+  <code>orbital:repair</code></div></header>
+  <p class="what">Fills in every hole around you, back to solid ground.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#6d7686" title="Emerald">E</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i></div><p class="legend"><b>E</b> Emerald · <b>S</b> Stone</p></div>
+</article>
+<article class="item" data-find="sky island sky island maker">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATklEQVR42mNgoDZ48ezOf3yYoOaKE3l4MU5DiNGM1xBCTifolZ4sr/+kYKzeoEgzsYYQFZUUacZlCFmJiiLNgwMcufbmPwhTpJkiQ4gBABda+3fLdBPOAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Sky Island Maker</h3>
+  <code>orbital:sky_island</code></div></header>
+  <p class="what">Lifts a disc of ground into the sky, trees and buildings intact.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Phantom Membrane">F</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i></div><p class="legend"><b>F</b> Phantom Membrane · <b>Q</b> Quartz Block</p></div>
+</article>
+<article class="item" data-find="skylight skylight">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVR42mNoOPLhPyn4/7UcFD4DqZphmGQDkDUjG0K5C6ZNm/MfHTPgAFjVUmxATFLBf3SMywCsake9MOoFangBANzUArPvU29pAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Skylight</h3>
+  <code>orbital:skylight</code></div></header>
+  <p class="what">Bores a shaft straight up from where you stand, out to open sky.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>G</b> Glass · <b>T</b> Torch</p></div>
+</article>
+<article class="item" data-find="terraformer terraformer">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOUlEQVR42mNgoBXoyfL6j4wp0kwVQxhoDqZNm/OfFEx9A959+fWfFEx9A/zs7P6TgqlvwMDHwtAFANiXLDJ4fmiIAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Terraformer</h3>
+  <code>orbital:terraformer</code></div></header>
+  <p class="what">Repaints the land into another climate. Click to cycle: desert, snow, Nether.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i><i class="cell on" style="--tint:#dcc98c" title="Sand">S</i></div><p class="legend"><b>D</b> Diamond · <b>S</b> Sand</p></div>
+</article>
+<article class="item" data-find="time of day sun dial">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR42mNgwAN+nPP6zzCggCwXgDThwiRr/n8thzRDkDWiY9oZABPEpxmbITgNo78XqBoLFKeDYZIXSAUAXPoJmHJGeiQAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Sun Dial</h3>
+  <code>orbital:time_of_day</code></div></header>
+  <p class="what">Cycles the time: dawn, noon, dusk, midnight.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>C</b> Clock · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="volcano seed volcano seed">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATklEQVR42mNgGNRg2rQ5/0GYbM3Y2ESDewla/5ExyZr97OxQMNGGIGtAxjBxog3AhSnSTNAQigwgVjNOQygygFTNGIZQZAC5molOF4QAAEHy3Ms0e0v9AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Volcano Seed</h3>
+  <code>orbital:volcano_seed</code></div></header>
+  <p class="what">Plant it, and a volcano grows out of the ground — then erupts.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i><i class="cell on" style="--tint:#d2543c" title="Magma Block">M</i><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i><i class="cell on" style="--tint:#d2543c" title="Netherrack">N</i></div><p class="legend"><b>M</b> Magma Block · <b>N</b> Netherrack</p></div>
+</article>
+<article class="item" data-find="weather control weather control">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNgoBX49evbf7I1omOKNJNkECED8BpErGa8LqHYELq5gKx0QJRGt647/0lhjxpAJQAAhK8/UNlZNeoAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Weather Control</h3>
+  <code>orbital:weather_control</code></div></header>
+  <p class="what">Cycles the weather: clear, then rain, then a thunderstorm.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#6d7686" title="Trident">T</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>G</b> Glass · <b>T</b> Trident</p></div>
+</article></div>
+</section>
+<section id="builders">
+  <div class="shead"><h2>Builders</h2><span class="tally">19</span></div>
+  <p class="stand">They put things up rather than take them down.</p>
+  <div class="items"><article class="item" data-find="auto miner auto miner">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAJ0lEQVR42mNgoBXYc+jcf2Q8asDIMyAmqeA/NjySDEA3iOwMRRcDAIG3qqe/ufUAAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Auto Miner</h3>
+  <code>orbital:auto_miner</code></div></header>
+  <p class="what">Bores a three-wide shaft straight down to bedrock and leaves a ladder in it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#79d8d0" title="Diamond Pickaxe">P</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>I</b> Iron Block · <b>P</b> Diamond Pickaxe</p></div>
+</article>
+<article class="item" data-find="beacon marker beacon marker">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOUlEQVR42mNgwAF+/fr2v+7GFzAGsRlIBaMGjBowhA2ISSr4D8PoBiDL4TWg4tEdvJj2BhCDkfUAAAM4GfhoMe6EAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Beacon Marker</h3>
+  <code>orbital:beacon_marker</code></div></header>
+  <p class="what">Plants a pillar of light you can see from a very long way off.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#5b9bd4" title="Lapis Block">L</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i><i class="cell on" style="--tint:#6d7686" title="Sea Lantern">S</i></div><p class="legend"><b>L</b> Lapis Block · <b>S</b> Sea Lantern</p></div>
+</article>
+<article class="item" data-find="block printer block printer">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAALElEQVR42mNgGDRgz6Fz/0nBtDMgJqkALx4CBgxcIA48SHAx+E8KHo4GkAsAfKBRbOm84XwAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Block Printer</h3>
+  <code>orbital:block_printer</code></div></header>
+  <p class="what">Lays a floor of stone under you as you walk, thirty seconds&#x27; worth.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#6d7686" title="Dispenser">D</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i></div><p class="legend"><b>D</b> Dispenser · <b>S</b> Stone Bricks</p></div>
+</article>
+<article class="item" data-find="bouncy ground bouncy ground">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAO0lEQVR42mNgoCWoOJH3n2yN6Jh+BmDTTBVD6BsGFMXCtEcJ/0EYH5u6BuALdWIw2ACY6aTi4WQAJRgASO55zYCNfBQAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Bouncy Ground</h3>
+  <code>orbital:bouncy_ground</code></div></header>
+  <p class="what">Turns the ground around you to slime for a minute. Everything bounces.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">B</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Ball">S</i></div><p class="legend"><b>B</b> Slime Block · <b>S</b> Slime Ball</p></div>
+</article>
+<article class="item" data-find="bridge builder bridge builder">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAALUlEQVR42mNgGAWUg7IQk/+UYLgh6IYSzafYBQNvwDAA06bN+Y+MSVY/4AYAAASpyd11n1neAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Bridge Builder</h3>
+  <code>orbital:bridge_builder</code></div></header>
+  <p class="what">Throws a railed bridge across whatever gap is in front of you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#6d7686" title="Scaffolding">S</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i></div><p class="legend"><b>P</b> Oak Planks · <b>S</b> Scaffolding</p></div>
+</article>
+<article class="item" data-find="cabin cabin">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAVklEQVR42mNgoBaISSr4TwqmyBCKXEKRdygKE4oClijFZSEm/0nBGAYkuBj8JwVjdUHdjS9wjG4juhz1DQA5C1kRupPR5QgGIroBBAORYgOoEgvkuAAAp0BCooRAy6YAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Cabin</h3>
+  <code>orbital:cabin</code></div></header>
+  <p class="what">Builds a one-room log cabin around you, window, torch and all.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#a97b4a" title="Oak Log">L</i><i class="cell on" style="--tint:#a97b4a" title="Oak Log">L</i><i class="cell on" style="--tint:#a97b4a" title="Oak Log">L</i><i class="cell on" style="--tint:#a97b4a" title="Oak Log">L</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#a97b4a" title="Oak Log">L</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i><i class="cell on" style="--tint:#a97b4a" title="Oak Planks">P</i></div><p class="legend"><b>L</b> Oak Log · <b>P</b> Oak Planks · <b>T</b> Torch</p></div>
+</article>
+<article class="item" data-find="cloner cloner">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVR42mNgGAVg0NDQ8h8XNtHwwIlRDJg2bQ4GhhnwZdYmMCbbABhGN4hkA9ANIskAbN4gywXIBlE3ECmKxhEOABNXA6hsE0vEAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Cloner</h3>
+  <code>orbital:cloner</code></div></header>
+  <p class="what">Copies a chunk of the world in front of you and stamps it down beside itself.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Chest">E</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz">Q</i></div><p class="legend"><b>E</b> Ender Chest · <b>Q</b> Quartz</p></div>
+</article>
+<article class="item" data-find="dungeon maker dungeon maker">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATElEQVR42mNgoBWISSr4j4yHuwHTps35j47RDcCmBq8BxGAMA0A2/b+Wg2E7DMPkcBoAUgDD2DTDMO1cgEsjrgAdhAZQHI1kG0AJAAAKQovyBu9P3wAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Dungeon Maker</h3>
+  <code>orbital:dungeon_maker</code></div></header>
+  <p class="what">Buries a lit stone dungeon under you, with a shaft down into it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i></div><p class="legend"><b>G</b> Glowstone · <b>S</b> Stone Bricks</p></div>
+</article>
+<article class="item" data-find="elevator elevator">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVR42mNgGNTg/7Wc/yA8cAZQxflku4JiA6jqfJJdQbEBZIFfv779JwUPRwPIBQBP3wnAB2RscgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Elevator</h3>
+  <code>orbital:elevator</code></div></header>
+  <p class="what">Raises a platform under you, forty blocks up, and rides it with you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Piston">P</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i></div><p class="legend"><b>P</b> Piston · <b>Q</b> Quartz Block</p></div>
+</article>
+<article class="item" data-find="glass dome glass dome">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAXUlEQVR42mNgGNSg7saX/yRrIIRJ0vjr1zfCBqFrgGmCsdExhiHomgkZgGEINsWEDEA2hAGbBmJdhNeAmKQCOMbnooExAJlPuQHTps35jw0jGwDCuNThNIBYTLEBAI7elR0ijiMXAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Glass Dome</h3>
+  <code>orbital:glass_dome</code></div></header>
+  <p class="what">Puts a glass dome over you. Weather stops at the door.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>E</b> Ender Pearl · <b>G</b> Glass</p></div>
+</article>
+<article class="item" data-find="hologram hologram">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNgoBWoeHTnPyFMOwMImY7XAIJOw2UAKU6mrQHEOHnUABxRTawBeBMQxcmXosxDLgAAn0A9j4BtwosAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Hologram</h3>
+  <code>orbital:hologram</code></div></header>
+  <p class="what">Draws a glowing wireframe box in the air, so you can see a build before you make it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i><i class="cell on" style="--tint:#6d7686" title="End Rod">E</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Pane">G</i></div><p class="legend"><b>E</b> End Rod · <b>G</b> Glass Pane</p></div>
+</article>
+<article class="item" data-find="maze maker maze maker">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAKklEQVR42mNgoAaYNm3OfxBGZhPLp44BlLh4kHhhNAwGUxiQigeRAZQAAJRDech5k2JbAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Maze Maker</h3>
+  <code>orbital:maze_maker</code></div></header>
+  <p class="what">Builds a real maze around you — walls on a grid, with gaps you have to find.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#6d7686" title="Map">M</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i></div><p class="legend"><b>M</b> Map · <b>S</b> Stone Bricks</p></div>
+</article>
+<article class="item" data-find="portal frame portal frame">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATUlEQVR42mNggAIZKbn/IGygZIcTI6thQAdUM2Cazwm8mCgDViRcw4rpb8CvX9/INwCkGYZJNgBZM7Ih9HMBVcJgcEQj2QZQlJTpnhsBU6uirL4J8nIAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Portal Frame</h3>
+  <code>orbital:portal_frame</code></div></header>
+  <p class="what">Builds an obsidian frame in front of you and lights it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8d919b" title="Flint And Steel">F</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i></div><p class="legend"><b>F</b> Flint And Steel · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="pyramid pyramid">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUklEQVR42mNgoCV48eTafxAmS/OjS/P+I2OKNJNkCMzZuDBZNhPlEmI1YzWEkLPxeodUmzFcQrEB5Dof7g2aeSEmqQAFk+wFdANI9gLRLqA0DAAcnmTnZ2nsJgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Pyramid</h3>
+  <code>orbital:pyramid</code></div></header>
+  <p class="what">Builds a sandstone pyramid, hollow, with a chamber inside it.</p>
+  <div class="craft"><div class="grid"><i class="cell"></i><i class="cell"></i><i class="cell on" style="--tint:#8d919b" title="Sandstone">S</i><i class="cell"></i><i class="cell on" style="--tint:#8d919b" title="Sandstone">S</i><i class="cell on" style="--tint:#8d919b" title="Sandstone">S</i><i class="cell on" style="--tint:#8d919b" title="Sandstone">S</i><i class="cell on" style="--tint:#8d919b" title="Sandstone">S</i><i class="cell on" style="--tint:#8d919b" title="Sandstone">S</i></div><p class="legend"><b>S</b> Sandstone</p></div>
+</article>
+<article class="item" data-find="rail layer rail layer">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVR42mNoOPLhPyWYYdSAwWDAtGlz/sPwrAQ7MEYWIyRPuQFlISb/YRimAFmMkDzlBox6gXIXAAA0arLHqyHnnAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Rail Layer</h3>
+  <code>orbital:rail_layer</code></div></header>
+  <p class="what">Lays a level rail line straight out along your line of sight, cuttings and all.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Rail">R</i><i class="cell on" style="--tint:#aeb6c4" title="Rail">R</i><i class="cell on" style="--tint:#aeb6c4" title="Rail">R</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>G</b> Gold Ingot · <b>I</b> Iron Ingot · <b>R</b> Rail</p></div>
+</article>
+<article class="item" data-find="road builder road builder">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAALUlEQVR42mNgGAWjAAhikgr+U4IZpk2b858STB0D/l/LQcGkiFHHgIEPA0owABYSZUj51T7KAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Road Builder</h3>
+  <code>orbital:road_builder</code></div></header>
+  <p class="what">Lays a paved road ahead of you, levelling whatever is in the way.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#aeb6c4" title="Rail">R</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i></div><p class="legend"><b>R</b> Rail · <b>S</b> Stone Bricks</p></div>
+</article>
+<article class="item" data-find="torch bomb torch bomb">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYUlEQVR42mNgoAb4fy3nPwiTrZ5iA8pCTP6DMLEGYKjHZQAul9HWABkpuf8wDBOH8Ql6GVlzTFIBhgHIhmAFyJrJNgCmmWQD0J0Pw8jiJBtCkmZ0A3Bh2hpAyBCScykxmgA7nr6V0iP9MgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Torch Bomb</h3>
+  <code>orbital:torch_bomb</code></div></header>
+  <p class="what">Scatters two hundred torches over the ground and walls around you. No more dark corners.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i><i class="cell on" style="--tint:#f0c356" title="Torch">T</i></div><p class="legend"><b>G</b> Gunpowder · <b>T</b> Torch</p></div>
+</article>
+<article class="item" data-find="tower builder tower builder">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAALElEQVR42mNgoDaISSr4jw8PAQNAYNq0Of+xYaLDgSoGECNGWwNGw2BEhQEA6DK5ibfSSIgAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Tower Builder</h3>
+  <code>orbital:tower_builder</code></div></header>
+  <p class="what">Raises a lit tower with a spiral stair inside, sixty blocks up.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#6d7686" title="Ladder">L</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i><i class="cell on" style="--tint:#8d919b" title="Stone Bricks">S</i></div><p class="legend"><b>L</b> Ladder · <b>S</b> Stone Bricks</p></div>
+</article>
+<article class="item" data-find="trampoline trampoline">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATElEQVR42mNgwAN+/fr2H4QZyAEwzWQZgq6ZJENwaSbZJRR5YdQAMgyoOJH3nxyMYsC0Rwkk4UFkQExSwX8YJtbvyHpQDCA2hpD1AADBLny64EiUCAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Trampoline</h3>
+  <code>orbital:trampoline</code></div></header>
+  <p class="what">Lays a slime pad that throws anything landing on it thirty blocks up.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i><i class="cell on" style="--tint:#6d7686" title="Slime Block">S</i></div><p class="legend"><b>S</b> Slime Block · <b>W</b> White Wool</p></div>
+</article></div>
+</section>
+<section id="gadgets">
+  <div class="shead"><h2>Gadgets</h2><span class="tally">19</span></div>
+  <p class="stand">Getting about, finding things, and staying alive.</p>
+  <div class="items"><article class="item" data-find="bottled chunk bottled chunk">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAc0lEQVR42mNgwAFUdCz+wzADqQCkqSHCBI5JNoQqBkw7cm3fjQ8/7oBokgyAaUY2gGhDcGkmyhB0Z+PCWA1B15ywwus/MiZoCIYBHnr/kTHRBsAwxQZUVNX9R8YkG0AIU98AUgwhmBZwGURSzkTOyoQ0AgDQW23owd7nEwAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Bottled Chunk</h3>
+  <code>orbital:bottled_chunk</code></div></header>
+  <p class="what">Copy and paste the world.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8fcfe8" title="Glass Bottle">B</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i></div><p class="legend"><b>B</b> Glass Bottle · <b>E</b> Ender Pearl · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="decoy decoy">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR42mNgoBV48eTaf2RMsgEyUnJwzSA2/Q2g2AsgUBZi8h+ESVJMLKa+ARR7YdQABJg2bc5/fHjwGQAA7MW7FTqC3iIAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Decoy</h3>
+  <code>orbital:decoy</code></div></header>
+  <p class="what">Drops an armour stand wearing your name. Mobs are drawn to it instead of you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#6d7686" title="Player Head">P</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i></div><p class="legend"><b>P</b> Player Head · <b>S</b> Stick</p></div>
+</article>
+<article class="item" data-find="featherfall featherfall">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQElEQVR42mNgGHLgxZNr/8nS+OvXt//Tps35D6JBmCLNJBlAdc1EG0ATzUQZQDPNBA2gSDMIgDSTnTwHTjM1AACrG9y93H2yLgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Featherfall</h3>
+  <code>orbital:featherfall</code></div></header>
+  <p class="what">Everything nearby falls like a feather for a minute, including you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#6d7686" title="Phantom Membrane">P</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i></div><p class="legend"><b>F</b> Feather · <b>P</b> Phantom Membrane</p></div>
+</article>
+<article class="item" data-find="grappling hook grappling hook">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATklEQVR42mNgoAVYs2nff2RMlmZcfJI0k2wIxQZQ7AWqBCIMnDu24T8Ik60ZG5tkzSQbgk8hQUOIsQWvGmKdiVUdqQGFoZ6c6CI7itEBACM1frkxwUeiAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Grappling Hook</h3>
+  <code>orbital:grappling_hook</code></div></header>
+  <p class="what">Fires a line at whatever you are looking at and reels you to it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcdfe6" title="String">S</i><i class="cell on" style="--tint:#dcdfe6" title="String">S</i><i class="cell on" style="--tint:#dcdfe6" title="String">S</i><i class="cell on" style="--tint:#dcdfe6" title="String">S</i><i class="cell on" style="--tint:#6d7686" title="Tripwire Hook">H</i><i class="cell on" style="--tint:#dcdfe6" title="String">S</i><i class="cell on" style="--tint:#dcdfe6" title="String">S</i><i class="cell on" style="--tint:#dcdfe6" title="String">S</i><i class="cell on" style="--tint:#dcdfe6" title="String">S</i></div><p class="legend"><b>H</b> Tripwire Hook · <b>S</b> String</p></div>
+</article>
+<article class="item" data-find="gravity flip gravity flip">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPUlEQVR42mNgoCWY9GjTfxCmSDNZhqBrJskQZMW42PQJA6oYQBaYNm3Of3yY9gYMnpRIlbgnOyFRlJRJBQAQfqPvEiADxAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Gravity Flip</h3>
+  <code>orbital:gravity_flip</code></div></header>
+  <p class="what">Turns gravity off over a wide area for twenty seconds.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Shulker Shell">S</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i></div><p class="legend"><b>E</b> Ender Pearl · <b>S</b> Shulker Shell</p></div>
+</article>
+<article class="item" data-find="homing compass homing compass">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNgwAN+nPP6z0AqAGnChUnW/OvXN+INQdYEw+8yDFD4OA3BphmbATgNQTcAppFsA2CaiTIAl/NxuYBkQ8j2An0NINYQohMTWSmRKnmBKrmRVAAAGvQDGJYNH2EAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Homing Compass</h3>
+  <code>orbital:homing_compass</code></div></header>
+  <p class="what">Points the way back to where you last used it, and tells you how far.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Compass">C</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>C</b> Compass · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="item magnet magnet">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOUlEQVR42mNgoCV4l2HwnyxNuDBFmgkaQoxmnIYQYwteNcT6c9QAWhqw59C5/zCMzwCc6gbeAEoAACzh8K8ngP1dAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Magnet</h3>
+  <code>orbital:item_magnet</code></div></header>
+  <p class="what">Pulls every loose item and mob within forty blocks toward you for ten seconds.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8d919b" title="Redstone">R</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>I</b> Iron Ingot · <b>R</b> Redstone</p></div>
+</article>
+<article class="item" data-find="jetpack jetpack">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARklEQVR42mNgoBVYs2nff2RMkWaSDaHIAFyaiTZkGBhA1VjAxccL/p+K+g/CxIpT1wCQgnd5JjgNwCVHPQNAAKSIHDmyAQC7O/WZCDX8NAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Jetpack</h3>
+  <code>orbital:jetpack</code></div></header>
+  <p class="what">Thirty seconds of flight, on a toggle.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#f0c356" title="Blaze Rod">B</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>B</b> Blaze Rod · <b>I</b> Iron Ingot</p></div>
+</article>
+<article class="item" data-find="ore finder ore finder">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAT0lEQVR42mNgwAN+nPP6z0AqAGnChSnSTNAQbIrqbnz5j08eqwEwjegYXQ11DUB2HjbNMIzXGwPrBarEArHpgGqGEJ2scRlKcf6grwH4AACLVmx94nbJMgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Ore Finder</h3>
+  <code>orbital:ore_finder</code></div></header>
+  <p class="what">Lights up every ore within forty blocks for fifteen seconds, through solid rock.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="ore sense ore sense">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAqklEQVR42mNgQAIKchr/sWEGYgBIYVhEyv+SshYwjcwmaAiy5rwPz8CYJENgBoAwigF38iAYKofVEGxOh2MkA3C6BNn2DduOoGAMA3EZADIdpOHEh/89yBhmyK8TbmCM1wUwA2BhgM0AkEVkGUDQC8gGoHsBPXBxhgG2QER2wQs/P8JRiY6RDSHKAJgiXIbgTZEgCWwGIBtCVJ5A9w5MDGYI0TkTW1bGZgAAgxWLIVzwqd4AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Ore Sense</h3>
+  <code>orbital:ore_sense</code></div></header>
+  <p class="what">A pulse that shows you every ore around you, through solid stone.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8fcfe8" title="Spyglass">S</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>G</b> Glass · <b>S</b> Spyglass</p></div>
+</article>
+<article class="item" data-find="portal gun portal gun">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAoUlEQVR42mNgwAE0tIz+I2MGUgBIw4tXH/7DAIhNtCEwzR4L/v/f8wiCQWyiDEHXDKKR2QQNQTYAhMOiMsAYxifaABCGaYZhmDhRBvyfogHGMM0wPmkGXJsG1whjkxSQcI2kaIYZsGHLAbifYRgkRlJaQDaEJM0wA0CBB9IIwiA2SbbDQh/ZAKIMQdYM8wbM+UQZAlMIU4ScE9Hl8BpCihwAOuQ8GuVEPkQAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Portal Gun</h3>
+  <code>orbital:portal_gun</code></div></header>
+  <p class="what">The Aperture Science Handheld Portal Device, more or less.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">P</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i><i class="cell on" style="--tint:#8d919b" title="Redstone Block">R</i><i class="cell on" style="--tint:#6d7686" title="Quartz Block">Q</i></div><p class="legend"><b>E</b> Ender Eye · <b>I</b> Iron Ingot · <b>P</b> Ender Pearl · <b>Q</b> Quartz Block · <b>R</b> Redstone Block</p></div>
+</article>
+<article class="item" data-find="recall recall stone">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYElEQVR42mNgoCUw0fD4T5YmXJgkzf+v5cAxUYbAFKxIuAbGyAbAxHAagq4ZlwE4DcFlwK9f30gzANlWkGYYxhYeWG3HphndEKyuoMgFVA0DsmOB4nRAlZRIlbxATm4EAJS7eH8irjWcAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Recall Stone</h3>
+  <code>orbital:recall</code></div></header>
+  <p class="what">Sneak and use to mark where you stand. Use to come back to it.</p>
+  <div class="craft"><div class="grid"><i class="cell"></i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell"></i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell"></i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell"></i></div><p class="legend"><b>A</b> Amethyst Shard · <b>E</b> Ender Pearl</p></div>
+</article>
+<article class="item" data-find="speed boots speed boots">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAALUlEQVR42mNgGAXUB3sOnfuPjvFq+H8t5z8yJtkAil0w6gXivECSoQNvAKkAAF1x/QwcNXplAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Speed Boots</h3>
+  <code>orbital:speed_boots</code></div></header>
+  <p class="what">Thirty seconds of running much faster than you should.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i><i class="cell on" style="--tint:#6d7686" title="Leather">L</i></div><p class="legend"><b>L</b> Leather · <b>S</b> Sugar</p></div>
+</article>
+<article class="item" data-find="swap swap">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNgGFTgy6xN/2GYJgYQNBzZAHyYdgYQ60WGwQsqHt35D8IUG0AI094AQoZT7L3BFXMAQPLBmR5MhesAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Swap</h3>
+  <code>orbital:swap</code></div></header>
+  <p class="what">Trades places with whatever you are looking at.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell"></i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell"></i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell"></i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell"></i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>E</b> Ender Pearl</p></div>
+</article>
+<article class="item" data-find="teleport staff teleport staff">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVR42mNgwANMNDz+M5ADQBrRMVmav8zaRLohyJphmGgDsGmmiiFkeYHsMKA4FtANSnAxIE8zCIA0jxowFAwAABEUgH1UoR+0AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Teleport Staff</h3>
+  <code>orbital:teleport_staff</code></div></header>
+  <p class="what">Puts you wherever you are looking, up to two hundred blocks away.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Pearl">E</i></div><p class="legend"><b>E</b> Ender Pearl · <b>S</b> Stick</p></div>
+</article>
+<article class="item" data-find="updraft updraft">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOElEQVR42mNgGPqg7saX/5Rgyg3A5gpSxODg169v/0GYHLFRAwbcgIoTef8pwQzTps35Twmm2AAAG9y4hnBE6eYAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Updraft</h3>
+  <code>orbital:updraft</code></div></header>
+  <p class="what">A column of rising air. Step in and go up; step out and do not.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell"></i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell"></i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell"></i></div><p class="legend"><b>F</b> Feather · <b>G</b> Glass</p></div>
+</article>
+<article class="item" data-find="vein miner vein miner">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYUlEQVR42mNgoAbYc+jcf2yYJANikgpQMMkGEOOCuhtf8Bua4GLwH4SxyYE0//r17T9ZhsA0wzBFhhDUTMgQosMDX5iQ5Bp0Q9DDg6yER3J4YAsHsjVTZDNJaYHqLsAV/wBWFdLpHp5xPAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Vein Miner</h3>
+  <code>orbital:vein_miner</code></div></header>
+  <p class="what">Point at an ore and the whole vein goes, however far it runs.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell on" style="--tint:#79d8d0" title="Diamond">D</i><i class="cell"></i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell"></i><i class="cell"></i><i class="cell on" style="--tint:#a97b4a" title="Stick">S</i><i class="cell"></i></div><p class="legend"><b>D</b> Diamond · <b>S</b> Stick</p></div>
+</article>
+<article class="item" data-find="wall phase wall phaser">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAL0lEQVR42mNgGBRgz6Fz/8nBcANikgr+k4PxGoDuStoaQJMwoK8XRsOACgYMKAAA4gdW5O3uul8AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Wall Phaser</h3>
+  <code>orbital:wall_phase</code></div></header>
+  <p class="what">Bores a person-sized passage straight through whatever is in front of you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Ingot">I</i></div><p class="legend"><b>G</b> Glass · <b>I</b> Iron Ingot</p></div>
+</article>
+<article class="item" data-find="water walking water walking boots">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAL0lEQVR42mNgGH4gwcXgPzoeNWBYGECSofQ3wK3rzn8YrrvxhSQM0oNiADmYYgMALPb+DBr9NkAAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Water Walking Boots</h3>
+  <code>orbital:water_walking</code></div></header>
+  <p class="what">Freezes the water under your feet as you cross it. Thaws behind you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#6d7686" title="Leather Boots">L</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i><i class="cell on" style="--tint:#8fcfe8" title="Packed Ice">P</i></div><p class="legend"><b>L</b> Leather Boots · <b>P</b> Packed Ice</p></div>
+</article></div>
+</section>
+<section id="time">
+  <div class="shead"><h2>Time</h2><span class="tally">10</span></div>
+  <p class="stand">The clocks undo what happened. Everything the mod changes is recorded, so a rewind puts it all back.</p>
+  <div class="items"><article class="item" data-find="deep rewind clock deep rewind clock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNgQALTNn34D8JSUnJYMQMuANJ079V/uEKPhBlYMU6DYLbCFB679gsrRjYIq2Z0DSBxXAahGEKRAbg04zMAxRCqGoAebWJKfpS5AB+mngGEApKiaCTaAGRDSE6J6IaQlRdwGUR0bqQEAAA4Uh2cSCBYpgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Deep Rewind Clock</h3>
+  <code>orbital:deep_rewind_clock</code></div></header>
+  <p class="what">The last five minutes, undone.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>C</b> Clock · <b>E</b> Ender Eye</p></div>
+</article>
+<article class="item" data-find="echo beacon echo beacon">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAn0lEQVR42mNgwAGsXtz5f+7/LzAGsRlIBRQbADOELM1hdg156AbAxIjS3JCyYRW6ASAxogwBKVwz5cYdHTmP/zADQGyQGMxgol0AC0SSXIDsX2QDiNIMcioyhhmALo5Tc07UNBQMMwBdHKshMAO8rHLgGBaIyGJ4DYAp0lNyw4ph8hgGoNtOyAAMV8Bsx6URm0EYBhCrGYaxeoMUDNMHAFS5HNoXj3N6AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Echo Beacon</h3>
+  <code>orbital:echo_beacon</code></div></header>
+  <p class="what">Switch it on and a new echo joins you every minute, unattended.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#6d7686" title="Echo Shard">E</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i></div><p class="legend"><b>E</b> Echo Shard · <b>G</b> Glass · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="echo ghost echo ghost">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42mNgwAJ05Dz+o2MGYgFI8ZopN+6gY6IMgWm+duLLfxAm2RBkA0h2BS6nE20IzACrF3f+gzBMAzqf9gaQ5QWQYEPKhlXEGABSh2EIzABChsDU4DUA3SB0cZwGhNk15GFTjI5B6nAaQMgQmBqcAQlTgGwQshhOzeiGoBuInEOJylDo2RqfegDBV3dnKxEgVwAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Echo Ghost</h3>
+  <code>orbital:echo_ghost</code></div></header>
+  <p class="what">One press, one ghost. Press again for another, and so on.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcc98c" title="Soul Sand">S</i><i class="cell on" style="--tint:#6d7686" title="Phantom Membrane">P</i><i class="cell on" style="--tint:#dcc98c" title="Soul Sand">S</i><i class="cell on" style="--tint:#6d7686" title="Phantom Membrane">P</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#6d7686" title="Phantom Membrane">P</i><i class="cell on" style="--tint:#dcc98c" title="Soul Sand">S</i><i class="cell on" style="--tint:#6d7686" title="Phantom Membrane">P</i><i class="cell on" style="--tint:#dcc98c" title="Soul Sand">S</i></div><p class="legend"><b>E</b> Ender Eye · <b>P</b> Phantom Membrane · <b>S</b> Soul Sand</p></div>
+</article>
+<article class="item" data-find="fast forward clock fast forward clock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbklEQVR42mNgQAL/NwT8B2EpKTmsmAEXAGt8cwSu8EiMBFaM0yCYrTCF/69Nw4qRDcKqGV0DSByXQSiGUGQALs34DEAxhKoGoEdbnhILZS7Ah6lnAKGApCgaiTYA2RCSUyK6IWTlBVwGEZ0bKQEAxokJ+IGvmD4AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Fast Forward Clock</h3>
+  <code>orbital:fast_forward_clock</code></div></header>
+  <p class="what">The third clock, and the one that builds rather than waits.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#6d7686" title="Sugar">S</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i></div><p class="legend"><b>B</b> Blaze Powder · <b>C</b> Clock · <b>S</b> Sugar</p></div>
+</article>
+<article class="item" data-find="genesis clock genesis clock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbklEQVR42mNgQAK/fvz/D8JSUnJYMQMuANIEAjCFSgpaWDFOg2C2whS+e/MFK0Y2CKtmdA0gcVwGoRhCkQG4NOMzAMUQqhqAHm08XEKUuQAfpp4BhAKSomgk2gBkQ0hOieiGkJUXcBlEdG6kBAAA4EcYIUjUS7kAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Genesis Clock</h3>
+  <code>orbital:genesis_clock</code></div></header>
+  <p class="what">Everything, undone. The whole recording, back to the first block the mod ever moved.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i><i class="cell on" style="--tint:#79d8d0" title="Heart Of The Sea">H</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i><i class="cell on" style="--tint:#79d8d0" title="Heart Of The Sea">H</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#79d8d0" title="Heart Of The Sea">H</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i><i class="cell on" style="--tint:#79d8d0" title="Heart Of The Sea">H</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i></div><p class="legend"><b>C</b> Clock · <b>H</b> Heart Of The Sea · <b>N</b> Nether Star</p></div>
+</article>
+<article class="item" data-find="long rewind clock long rewind clock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNgQAIbpnz4D8JSUnJYMQMuANL04t5/uMIEpzlYMU6DYLbCFJ7b9w0rRjYIq2Z0DSBxXAahGEKRAbg04zMAxRCqGoAebWpCXpS5AB+mngGEApKiaCTaAGRDSE6J6IaQlRdwGUR0bqQEAAAWQhUqMbaVIAAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Long Rewind Clock</h3>
+  <code>orbital:long_rewind_clock</code></div></header>
+  <p class="what">The last ten minutes, undone.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i></div><p class="legend"><b>C</b> Clock · <b>E</b> Ender Eye · <b>N</b> Nether Star</p></div>
+</article>
+<article class="item" data-find="rewind clock rewind clock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAb0lEQVR42mNgQAI2J17/B2EpKTmsmAEXAGnqef0frvDeJhusGKdBMFthCl+8uIMVIxuEVTO6BpA4LoNQDKHIAFya8RmAYghVDUCPNg0NPcpcgA9TzwBCAUlRNBJtALIhJKdEdEPIygu4DCI6N1ICAKx9OXhMX5Q8AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Rewind Clock</h3>
+  <code>orbital:rewind_clock</code></div></header>
+  <p class="what">Puts the last minute back — every block this mod changed, and everything you built by hand along with it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>C</b> Clock · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="slow time clock slow motion clock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbklEQVR42mNgQAL/r1X8B2EpKTmsmAEXAGv8cgKucEOVDlaM0yCYrTCFvx4twIqRDcKqGV0DSByXQSiGUGQALs34DEAxhKoGoEdbjBkPZS7Ah6lnAKGApCgaiTYA2RCSUyK6IWTlBVwGEZ0bKQEA390W3wSAw4UAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Slow Motion Clock</h3>
+  <code>orbital:slow_time_clock</code></div></header>
+  <p class="what">Drops the world to a quarter speed while you carry on at your own.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Honey Block">H</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Honey Block">H</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Honey Block">H</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#6d7686" title="Honey Block">H</i></div><p class="legend"><b>C</b> Clock · <b>G</b> Gold Ingot · <b>H</b> Honey Block</p></div>
+</article>
+<article class="item" data-find="time bubble time bubble">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYElEQVR42mNgwAPqbnz5z0AqAGnChYnSjMz/9evbf6JdBJMEaYLhmKSC/8h8nIZg04zNAJyGDKwBsBBGVwgzABnDxDFiBZcLsGGSvEA/A4g1hOjERFZKpEpeoEpuJBUAAG0hslHrd6+jAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Time Bubble</h3>
+  <code>orbital:time_bubble</code></div></header>
+  <p class="what">Everything around you crawls for twenty seconds. You do not.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i><i class="cell on" style="--tint:#8fcfe8" title="Glass">G</i></div><p class="legend"><b>C</b> Clock · <b>G</b> Glass</p></div>
+</article>
+<article class="item" data-find="time stop clock time stop clock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNgQALT7vz6D8JSUnJYMQMuANJ049t/uMKcVRewYpwGwWyFKTz37g9WjGwQVs3oGkDiuAxCMYQiA3BpxmcAiiFUNQA92iRsEihzAT5MPQMIBSRF0Ui0AciGkJwS0Q0hKy/gMojo3EgJAADnqEUm2iPl6gAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Time Stop Clock</h3>
+  <code>orbital:time_stop_clock</code></div></header>
+  <p class="what">Stops the world dead. You keep moving.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">I</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">I</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">B</i><i class="cell on" style="--tint:#6d7686" title="Clock">C</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">I</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">B</i><i class="cell on" style="--tint:#8fcfe8" title="Blue Ice">I</i></div><p class="legend"><b>B</b> Amethyst Shard · <b>C</b> Clock · <b>I</b> Blue Ice</p></div>
+</article></div>
+</section>
+<section id="creatures">
+  <div class="shead"><h2>Creatures</h2><span class="tally">12</span></div>
+  <p class="stand">Eight mobs with models of their own. Each one has an item that calls it.</p>
+  <div class="items"><article class="item" data-find="chicken rain chicken rain">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAS0lEQVR42mNgoCb49evbf7LVgQRhmJBmDHXIgu8yDMCYkGYMdRS5gCphgMvZRKvD52+yDcDmX2JdSnTMMJAd4tROnaSF+NAxgBgAABfFptWSMypmAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Chicken Rain</h3>
+  <code>orbital:chicken_rain</code></div></header>
+  <p class="what">It rains chickens. Two hundred of them.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i><i class="cell on" style="--tint:#6d7686" title="Egg">E</i></div><p class="legend"><b>E</b> Egg · <b>F</b> Feather</p></div>
+</article>
+<article class="item" data-find="chronarch heart chronarch&#x27;s heart">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAnUlEQVR42mNgQAJyIhr/QZgBDeASx1CUEFT230rPC0UxiA0SA8nhNASmqEFj2v89PpfANMxWZDF0w7FqftHzC64BmxiGITCnwxT+f/QfrgGbGIZXYC6AKUbWjGwITByrC5C9AMMgW0EYWQxvOBBrANaYwOUKomwnxhCCmtETErIhMM14ExK6K2CGwDQTtB2XISRrxmYIyZpJyoHUAAC7c0GgJCcVlwAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Chronarch&#x27;s Heart</h3>
+  <code>orbital:chronarch_heart</code></div></header>
+  <p class="what">What the Chronarch was using on you, now yours: rewind *yourself*.</p>
+  <div class="norecipe">No recipe</div>
+</article>
+<article class="item" data-find="chronarch seal chronarch seal">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42mNgwAJkhLT+Y8MMhABMYY7btP+Tco6gYJAYXoPQNYLYN6b9B2N0cQxDkDUja/z/AoLRDcIwBMRB1gzShO4CmEEwQ+AGINuOrBnZzzA+zBAUVyArgNkAk/TSyQFjfGrgzofZDqKRNSMbgqwG7g2qGECxFygKRIqjkSoJieKkTJXMRG52BgCOpvLMA1EpOQAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Chronarch Seal</h3>
+  <code>orbital:chronarch_seal</code></div></header>
+  <p class="what">Wakes the Chronarch where you are looking. Consumed doing it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#6d7686" title="Nether Star">N</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Amethyst Shard">A</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i></div><p class="legend"><b>A</b> Amethyst Shard · <b>N</b> Nether Star · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="dragon egg orb dragon egg">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATUlEQVR42mNgGJ7AqszpPwwj80nWjI4p0kzQEGRF7zIMMDBBQ/BpRjeEaAP+X8shzgBcmmGYIkMo8gJZYUB2LGBLB+gaKU5MZOUJQmoAvoACnJGnjegAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Dragon Egg</h3>
+  <code>orbital:dragon_egg_orb</code></div></header>
+  <p class="what">Hatches a dragon. Six blocks of wingspan, fast, and it hits harder than anything else that flies.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i><i class="cell on" style="--tint:#8f6fd0" title="Obsidian">O</i></div><p class="legend"><b>B</b> Blaze Powder · <b>O</b> Obsidian</p></div>
+</article>
+<article class="item" data-find="golem heart golem heart">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARklEQVR42mNgGF6goaHlPzGYaAPqbnwhzwCQRnQck1RAugG/fn0j3QBkzTAME6OPC6gSBiDFIAzTCMMkRyPF6YBkA4YmAAA0gBHEAs6s7QAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Golem Heart</h3>
+  <code>orbital:golem_heart</code></div></header>
+  <p class="what">Wakes a stone golem. Slow, five hundred hit points, and it hits like the stone it is made of.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#79d8d0" title="Diamond Block">D</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i><i class="cell on" style="--tint:#8d919b" title="Stone">S</i></div><p class="legend"><b>D</b> Diamond Block · <b>S</b> Stone</p></div>
+</article>
+<article class="item" data-find="growing cat growing cat">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNggIL/jyr+MxAJcKqVEhEiaAheNSDJN5NMcCoAyRFlADZDYOJ4DYApIoQp0ozTEJiEzYkFODUhy9HOAGT8ZdYaMCbJC7++vYNjmAHIYgQDElkxNowvnWB1BdG2ExudRGcQfBpJyXi0BwBeZFDusps1RgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Growing Cat</h3>
+  <code>orbital:growing_cat</code></div></header>
+  <p class="what">Puts down a kitten that will not stop getting bigger.</p>
+  <div class="craft"><div class="grid"><i class="cell"></i><i class="cell on" style="--tint:#dcdfe6" title="Bone Meal">B</i><i class="cell"></i><i class="cell on" style="--tint:#dcdfe6" title="Bone Meal">B</i><i class="cell on" style="--tint:#6d7686" title="Cod">F</i><i class="cell on" style="--tint:#dcdfe6" title="Bone Meal">B</i><i class="cell"></i><i class="cell on" style="--tint:#dcdfe6" title="Bone Meal">B</i><i class="cell"></i></div><p class="legend"><b>B</b> Bone Meal · <b>F</b> Cod</p></div>
+</article>
+<article class="item" data-find="kraken pearl kraken pearl">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYElEQVR42mNgwAP8dBL+M5AKQJpwYZI1r0i4Rrwh6BrRMUFD8GlGN4SgATJScigaYXycBqDbjssAkgyhyAsUGUBWLOBLPNjSAYZB2CRJMuDBniNwAVLZDFhNJFV8QA0AADCMRZNmgr8FAAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Kraken Pearl</h3>
+  <code>orbital:kraken_pearl</code></div></header>
+  <p class="what">Calls up a kraken. Four hundred hit points and eight arms that reach further than they look.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#79d8d0" title="Prismarine Shard">P</i><i class="cell on" style="--tint:#3f4552" title="Ink Sac">I</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine Shard">P</i><i class="cell on" style="--tint:#3f4552" title="Ink Sac">I</i><i class="cell on" style="--tint:#79d8d0" title="Heart Of The Sea">H</i><i class="cell on" style="--tint:#3f4552" title="Ink Sac">I</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine Shard">P</i><i class="cell on" style="--tint:#3f4552" title="Ink Sac">I</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine Shard">P</i></div><p class="legend"><b>H</b> Heart Of The Sea · <b>I</b> Ink Sac · <b>P</b> Prismarine Shard</p></div>
+</article>
+<article class="item" data-find="pet rock pet rock">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAU0lEQVR42mNgGN6gpaXtP1macGGiNec0hZBuCLJmGCbJEHTN+Awh6AIZKTkwhomh8wkGHCEDiDIEGaN7iaTowxYuJMc/US4gxhCSEhNZKZGcvAAArugP9RUUjS0AAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Pet Rock</h3>
+  <code>orbital:pet_rock</code></div></header>
+  <p class="what">A rock that follows you everywhere. It is not good for anything.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i><i class="cell on" style="--tint:#8d919b" title="Mossy Cobblestone">M</i><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i><i class="cell on" style="--tint:#8d919b" title="Cobblestone">C</i></div><p class="legend"><b>C</b> Cobblestone · <b>M</b> Mossy Cobblestone</p></div>
+</article>
+<article class="item" data-find="phoenix ash phoenix ash">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNggIIf57z+M6ABYsVwShLiEzQEFxsveJGg8R8XJlnz/2s5xBuCrAkXxmkIMZrxGoLLgF+/vpFvAEgzDOM1gJBmqhgyMGFAk6gkOjGRlRLJzQsA6FbMCnBcB1wAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Phoenix Ash</h3>
+  <code>orbital:phoenix_ash</code></div></header>
+  <p class="what">Rekindles a phoenix. Fast, bright, and it does not stay on the ground.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#f0c356" title="Gold Ingot">G</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i><i class="cell on" style="--tint:#dcdfe6" title="Feather">F</i><i class="cell on" style="--tint:#f0c356" title="Blaze Powder">B</i></div><p class="legend"><b>B</b> Blaze Powder · <b>F</b> Feather · <b>G</b> Gold Ingot</p></div>
+</article>
+<article class="item" data-find="sky whale egg sky whale call">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPUlEQVR42mNgGPTAKqjhP1macGGSFBNlCKmaZaTkUA0hVTMMD4wLsIYF1Q24ducJUXgQGUBxSqRJXiAFAADSFFTq2tzgSQAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Sky Whale Call</h3>
+  <code>orbital:sky_whale_egg</code></div></header>
+  <p class="what">Calls down a sky whale. It is five blocks long, entirely peaceful, and will drift over your world for as long as you leave it alone.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#79d8d0" title="Heart Of The Sea">H</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i><i class="cell on" style="--tint:#79d8d0" title="Prismarine">P</i></div><p class="legend"><b>H</b> Heart Of The Sea · <b>P</b> Prismarine</p></div>
+</article>
+<article class="item" data-find="spider core spider core">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAANElEQVR42mNgGAXUBWFRKf+JwTg1w+h3GQZYMbIanJoJGUC0IficT7Zm2ruA1BgbTbcQAABqN44/VNX0hgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Spider Core</h3>
+  <code>orbital:spider_core</code></div></header>
+  <p class="what">Assembles a six-legged machine. It is the quickest thing in the mod and it will reach you.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#8f6fd0" title="Ender Eye">E</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i><i class="cell on" style="--tint:#aeb6c4" title="Iron Block">I</i></div><p class="legend"><b>E</b> Ender Eye · <b>I</b> Iron Block</p></div>
+</article>
+<article class="item" data-find="titan seal titan seal">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAN0lEQVR42mNgoBWYU+T0HxkPdwPQFROL8Rrw/1oOCqa/ARR7YeAMwGcgNrXUMYDYdEF2KqSpAQAKjU9qgKZfzgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Titan Seal</h3>
+  <code>orbital:titan_seal</code></div></header>
+  <p class="what">Summons a Titan: seven blocks of bronze humanoid with six hundred hit points and a very bad attitude.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#6d7686" title="Netherite Ingot">N</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i><i class="cell on" style="--tint:#5b9bd4" title="Copper Block">C</i></div><p class="legend"><b>C</b> Copper Block · <b>N</b> Netherite Ingot</p></div>
+</article></div>
+</section>
+<section id="fun">
+  <div class="shead"><h2>For fun</h2><span class="tally">6</span></div>
+  <p class="stand">No practical use whatsoever.</p>
+  <div class="items"><article class="item" data-find="boombox boombox">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAT0lEQVR42mNgoAXYc+jcf2yYfgaQBGKSCv5TgjEMADkVl2JscgzIkuiYGDkMA2Sk5HAagE2OAV0BDKPbiE2Oei6gShhQHAtUSwckGzDgAADF4rDQheeprgAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Boombox</h3>
+  <code>orbital:boombox</code></div></header>
+  <p class="what">Plays a tune, and lights up the ground in time with it.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Jukebox">J</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i><i class="cell on" style="--tint:#6d7686" title="Note Block">N</i></div><p class="legend"><b>J</b> Jukebox · <b>N</b> Note Block</p></div>
+</article>
+<article class="item" data-find="confetti cannon confetti cannon">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAXklEQVR42mNgoAe4Zmf3H4SpYkDdjS//QZhsw8g24Mc1n/8gTLbNyAZ8mbXpPwiTbRjZBqxIuPYfhInWsOfQuf8wjG4AStTGJBX8x4bRDcCZNsgxAAUMAwOIjQWaAADRrMrugCIE/wAAAABJRU5ErkJggg==" alt="" width="32" height="32"><div><h3>Confetti Cannon</h3>
+  <code>orbital:confetti_cannon</code></div></header>
+  <p class="what">Fires a great burst of confetti. Purely decorative, and that is the point.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i><i class="cell on" style="--tint:#dcdfe6" title="Paper">P</i></div><p class="legend"><b>G</b> Gunpowder · <b>P</b> Paper</p></div>
+</article>
+<article class="item" data-find="disco floor disco floor">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAR0lEQVR42mO4Zmf3Hxn/uOaDglckXEPBdTe+oGCGYWAAIQUVJ/JQ8LsMAxQ8HAwgpODLrE0o+Mc5LxQ8HAwgpIBQQhsGBgAAOYviH2yj/iwAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Disco Floor</h3>
+  <code>orbital:disco_floor</code></div></header>
+  <p class="what">Lays a floor of coloured glass that keeps changing colour under your feet.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#8d919b" title="Redstone Lamp">R</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i></div><p class="legend"><b>G</b> Glowstone · <b>R</b> Redstone Lamp</p></div>
+</article>
+<article class="item" data-find="firework show firework show">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcklEQVR42mNgGDTgmp3df3SxFQnXMMTqbnz5T7Qh6Abg1YzNkF+/vv0nSTOyISDNMEySZpjN6Jigph/XfP4jY2TNIBchY5JcQlaUwkI/wcXgPwiDXESyZmQDYF4kSTO6AQQNwZbq0A0g2iX4DCAJ0MUAAGADlgJ0wa7+AAAAAElFTkSuQmCC" alt="" width="32" height="32"><div><h3>Firework Show</h3>
+  <code>orbital:firework_show</code></div></header>
+  <p class="what">Thirty seconds of fireworks overhead, in every colour there is.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#3f4552" title="Gunpowder">G</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i></div><p class="legend"><b>F</b> Firework Rocket · <b>G</b> Gunpowder</p></div>
+</article>
+<article class="item" data-find="party mode party mode">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNgoCX4fy3nP0WaYZgizVQxhKDia3Z2WBX9uObz/9evbxhyKxKu/UfRDMPommEYXTMMU8cF+ABIMzYDcIIvszb9JwbTzgCYkwlh2hkw8GFADgAAuMwwI5rlGXoAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Party Mode</h3>
+  <code>orbital:party_mode</code></div></header>
+  <p class="what">Everything at once: fireworks, a disco floor, confetti, and chickens.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#6d7686" title="Cake">C</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#6d7686" title="Cake">C</i><i class="cell on" style="--tint:#f0c356" title="Glowstone">G</i><i class="cell on" style="--tint:#6d7686" title="Cake">C</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i><i class="cell on" style="--tint:#6d7686" title="Cake">C</i><i class="cell on" style="--tint:#d2543c" title="Firework Rocket">F</i></div><p class="legend"><b>C</b> Cake · <b>F</b> Firework Rocket · <b>G</b> Glowstone</p></div>
+</article>
+<article class="item" data-find="rainbow trail rainbow trail">
+  <header><img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAm0lEQVR42rWQsQmAMBREM5ITZAKHsLSytnIeR3GC4BRWFnaRL3y4XH6Mgn44UHL3/iXO/TnB+/jK/FTFIEO3vol3i7KaEqiJQUmQtx2hNVslXvyRQE3m9fhQZ1wGs5V6LwiHJVSSuVA/2CQzrXvkRupJIHggoZIsSHJXNMrMXYjYBiHZQ6FBgqwiBAG8FQch3wO0Gta1ACL16mOeqLte3Tn3rDcAAAAASUVORK5CYII=" alt="" width="32" height="32"><div><h3>Rainbow Trail</h3>
+  <code>orbital:rainbow_trail</code></div></header>
+  <p class="what">Leaves a trail of coloured blocks wherever you walk, for a minute.</p>
+  <div class="craft"><div class="grid"><i class="cell on" style="--tint:#6d7686" title="Red Dye">R</i><i class="cell on" style="--tint:#6d7686" title="Yellow Dye">Y</i><i class="cell on" style="--tint:#6d7686" title="Red Dye">R</i><i class="cell on" style="--tint:#6d7686" title="Yellow Dye">Y</i><i class="cell on" style="--tint:#dcdfe6" title="White Wool">W</i><i class="cell on" style="--tint:#6d7686" title="Yellow Dye">Y</i><i class="cell on" style="--tint:#6d7686" title="Red Dye">R</i><i class="cell on" style="--tint:#6d7686" title="Yellow Dye">Y</i><i class="cell on" style="--tint:#6d7686" title="Red Dye">R</i></div><p class="legend"><b>R</b> Red Dye · <b>W</b> White Wool · <b>Y</b> Yellow Dye</p></div>
+</article></div>
+</section>
+    <section id="creatures-list">
+      <div class="shead"><h2>The creatures themselves</h2><span class="tally">8</span></div>
+      <p class="stand">Each of these has a model built for it rather than a
+      re-skinned vanilla mob — its own proportions, its own animation.</p>
+      <div class="items"><article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42mNgwAJkhLT+Y8MMhABMYY7btP+Tco6gYJAYXoPQNYLYN6b9B2N0cQxDkDUja/z/AoLRDcIwBMRB1gzShO4CmEEwQ+AGINuOrBnZzzA+zBAUVyArgNkAk/TSyQFjfGrgzofZDqKRNSMbgqwG7g2qGECxFygKRIqjkSoJieKkTJXMRG52BgCOpvLMA1EpOQAAAABJRU5ErkJggg==" alt="" width="32" height="32">
+  <div><h3>Chronarch</h3>
+  <p>The one the mod is named around. Enormous, and it does not fit through a door.</p>
+  <p class="via">Called with <b>Chronarch Seal</b></p></div>
+</article>
+<article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPUlEQVR42mNgGPTAKqjhP1macGGSFBNlCKmaZaTkUA0hVTMMD4wLsIYF1Q24ducJUXgQGUBxSqRJXiAFAADSFFTq2tzgSQAAAABJRU5ErkJggg==" alt="" width="32" height="32">
+  <div><h3>Sky Whale</h3>
+  <p>Five blocks long, drifts rather than walks, and is entirely harmless.</p>
+  <p class="via">Called with <b>Sky Whale Call</b></p></div>
+</article>
+<article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAN0lEQVR42mNgoBWYU+T0HxkPdwPQFROL8Rrw/1oOCqa/ARR7YeAMwGcgNrXUMYDYdEF2KqSpAQAKjU9qgKZfzgAAAABJRU5ErkJggg==" alt="" width="32" height="32">
+  <div><h3>Titan</h3>
+  <p>Seven blocks of bronze plate. Slow, and it does not stop.</p>
+  <p class="via">Called with <b>Titan Seal</b></p></div>
+</article>
+<article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATUlEQVR42mNgGJ7AqszpPwwj80nWjI4p0kzQEGRF7zIMMDBBQ/BpRjeEaAP+X8shzgBcmmGYIkMo8gJZYUB2LGBLB+gaKU5MZOUJQmoAvoACnJGnjegAAAAASUVORK5CYII=" alt="" width="32" height="32">
+  <div><h3>Dragon</h3>
+  <p>Wings, a long neck and a longer tail. It flies at you.</p>
+  <p class="via">Called with <b>Dragon Egg</b></p></div>
+</article>
+<article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAANElEQVR42mNgGAXUBWFRKf+JwTg1w+h3GQZYMbIanJoJGUC0IficT7Zm2ruA1BgbTbcQAABqN44/VNX0hgAAAABJRU5ErkJggg==" alt="" width="32" height="32">
+  <div><h3>Mecha Spider</h3>
+  <p>Six legs on a chassis, with a light bar for a face.</p>
+  <p class="via">Called with <b>Spider Core</b></p></div>
+</article>
+<article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAARklEQVR42mNgGF6goaHlPzGYaAPqbnwhzwCQRnQck1RAugG/fn0j3QBkzTAME6OPC6gSBiDFIAzTCMMkRyPF6YBkA4YmAAA0gBHEAs6s7QAAAABJRU5ErkJggg==" alt="" width="32" height="32">
+  <div><h3>Stone Golem</h3>
+  <p>Five hundred hit points, a lit core in its chest, and no hurry at all.</p>
+  <p class="via">Called with <b>Golem Heart</b></p></div>
+</article>
+<article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAYElEQVR42mNgwAP8dBL+M5AKQJpwYZI1r0i4Rrwh6BrRMUFD8GlGN4SgATJScigaYXycBqDbjssAkgyhyAsUGUBWLOBLPNjSAYZB2CRJMuDBniNwAVLZDFhNJFV8QA0AADCMRZNmgr8FAAAAAElFTkSuQmCC" alt="" width="32" height="32">
+  <div><h3>Kraken</h3>
+  <p>A mantle over eight arms, each curling on its own. It reaches further than it looks.</p>
+  <p class="via">Called with <b>Kraken Pearl</b></p></div>
+</article>
+<article class="mob">
+  <img class="icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWUlEQVR42mNggIIf57z+M6ABYsVwShLiEzQEFxsveJGg8R8XJlnz/2s5xBuCrAkXxmkIMZrxGoLLgF+/vpFvAEgzDOM1gJBmqhgyMGFAk6gkOjGRlRLJzQsA6FbMCnBcB1wAAAAASUVORK5CYII=" alt="" width="32" height="32">
+  <div><h3>Phoenix</h3>
+  <p>A small bird under a three-block wingspan. Fast, and it does not stay down.</p>
+  <p class="via">Called with <b>Phoenix Ash</b></p></div>
+</article></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const find = document.getElementById("find");
+const cards = [...document.querySelectorAll(".item")];
+find.addEventListener("input", () => {
+  const q = find.value.trim().toLowerCase();
+  document.body.classList.toggle("searching", q.length > 0);
+  for (const card of cards) {
+    card.hidden = q.length > 0 && !card.dataset.find.includes(q);
+  }
+});
+</script>

@@ -459,6 +459,20 @@ def main():
         print(f"  {len(paired)} models read from the sheet painted for them "
               f"({', '.join(paired)}); chronarch has its own script and is not checked")
 
+    # --- every item appears in the field manual ---
+    #
+    # The manual is generated from the mod, but nothing in the mod says which
+    # heading an item belongs under, so that one table is written by hand. An
+    # item missing from it is an item the manual silently does not document.
+    manual = ROOT / "manual_data.py"
+    if manual.exists():
+        filed = set(re.findall(r'"([a-z_0-9]+)"', manual.read_text()))
+        for name in sorted(ids):
+            check(name in filed,
+                  f"{name} is in the mod but not in manual_data.CATEGORY — the "
+                  f"field manual would not document it")
+        print(f"  all {len(ids)} items are filed under a manual section")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:
