@@ -203,13 +203,10 @@ jobs:
             net.minecraft.entity.attribute.DefaultAttributeContainer$Builder \
             net.minecraft.entity.mob.HostileEntity \
             net.minecraft.entity.attribute.DefaultAttributeContainer \
-            net.minecraft.entity.EntityDimensions \
-            net.minecraft.item.Item \
-            net.minecraft.item.Item$TooltipContext \
-            net.minecraft.item.tooltip.TooltipType ; do
+            net.minecraft.entity.EntityDimensions ; do
             echo "=============================================================="
             echo "### $cls"
-            javap -cp "$jar" "$cls" 2>&1 | head -140
+            javap -cp "$jar" "$cls" 2>&1 | head -45
           done
           exit 0
 
@@ -339,6 +336,32 @@ jobs:
           print(f"{len(bad)} unknown ingredients")
           sys.exit(1 if bad else 0)
           PY
+
+      # One question, asked directly. Item.appendTooltip is how a description
+      # reaches the player in game, and its signature has changed in almost
+      # every recent version — the context type, the display component and the
+      # tooltip type have each been added, moved or renamed. Dumping the whole
+      # class to find it buried twenty classes of output in the log; this
+      # prints the line and nothing else.
+      - name: The exact shape of the tooltip API
+        if: always()
+        working-directory: minecraft/fabric-mod
+        run: |
+          set +e
+          jar="${MC_JAR:-}"
+          if [ -z "$jar" ] || [ ! -f "$jar" ]; then
+            echo "::warning::could not find the Minecraft jar — this check did NOT run"
+            exit 0
+          fi
+          echo "--- Item, anything mentioning tooltip ---"
+          javap -cp "$jar" net.minecraft.item.Item | grep -i tooltip \
+            || echo "Item declares no tooltip method at all"
+          echo "--- Item.TooltipContext ---"
+          javap -cp "$jar" 'net.minecraft.item.Item$TooltipContext' | head -12
+          echo "--- TooltipAppender, if there is one ---"
+          javap -cp "$jar" net.minecraft.item.tooltip.TooltipAppender 2>/dev/null | head -8 \
+            || echo "no TooltipAppender"
+          exit 0
 
       - name: Show what was produced
         if: always()
