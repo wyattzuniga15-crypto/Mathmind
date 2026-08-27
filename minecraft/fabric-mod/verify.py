@@ -518,6 +518,25 @@ def main():
     if not voiceless:
         print("  every item makes a sound")
 
+    # --- the manual's own prose matches its own count ---
+    #
+    # The lede said "one hundred and fifty items" beside a counter reading 165.
+    # It was the one number on that page typed out by hand rather than read
+    # from the mod — on a page whose whole claim is that it cannot drift.
+    page = ROOT / "manual.html"
+    if page.exists():
+        text = page.read_text()
+        shown = re.search(r"<b>(\d+)</b><span>Items", text)
+        check(shown and int(shown.group(1)) == len(ids),
+              f"manual.html counts {shown.group(1) if shown else '?'} items but the "
+              f"mod registers {len(ids)} — rerun make_manual.py")
+        import importlib
+        spell = importlib.import_module("make_manual").spell
+        check(spell(len(ids)).capitalize() + " items" in text,
+              f"manual.html's opening line does not say "
+              f"'{spell(len(ids)).capitalize()} items' — it has drifted from the count")
+        print("  the manual's prose and its counter agree with the mod")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:

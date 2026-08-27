@@ -52,6 +52,22 @@ def pretty(ingredient):
     return ingredient.split(":")[-1].replace("_", " ").title()
 
 
+ONES = ("zero one two three four five six seven eight nine ten eleven twelve "
+        "thirteen fourteen fifteen sixteen seventeen eighteen nineteen").split()
+TENS = ("  twenty thirty forty fifty sixty seventy eighty ninety").split()
+
+
+def spell(n):
+    """Small numbers in words, because the lede reads as prose, not a readout."""
+    if n < 20:
+        return ONES[n]
+    if n < 100:
+        return TENS[n // 10 - 2] + ("-" + ONES[n % 10] if n % 10 else "")
+    rest = n % 100
+    return (ONES[n // 100] + " hundred"
+            + (" and " + spell(rest) if rest else ""))
+
+
 def icon(item_id):
     png = ART / f"{item_id}.png"
     if not png.exists():
@@ -165,7 +181,9 @@ def build():
     total = sum(counts.values())
     page = TEMPLATE.format(total=total, mobcount=len(M.MOBS), rail=rail,
                            sections="\n".join(sections), mobs=mobs,
-                           sculptures=counts["sculptures"])
+                           sculptures=counts["sculptures"],
+                           spelled=spell(total).capitalize(),
+                           mobspelled=spell(len(M.MOBS)))
     out = ROOT / "manual.html"
     out.write_text(page)
     print(f"wrote {out} — {total} items, {len(M.MOBS)} mobs, {len(page) // 1024} KB")
@@ -311,7 +329,7 @@ section {{ scroll-margin-top:1rem; margin-bottom:3rem; }}
 <header class="top"><div class="in">
   <p class="eyebrow">Orbital Arsenal · Fabric · Minecraft 1.21.11</p>
   <h1>Everything in the mod, and how to use it</h1>
-  <p class="lede">One hundred and fifty items and eight creatures. Most of them
+  <p class="lede">{spelled} items and {mobspelled} creatures. Most of them
   break the world; a fair number put it back. Every recipe below is the one the
   mod actually ships — this page is generated from the mod's own files, so it
   cannot drift from what is in the jar.</p>
