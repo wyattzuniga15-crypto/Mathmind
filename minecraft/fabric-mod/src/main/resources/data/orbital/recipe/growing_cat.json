@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " B ",
+    "BFB",
+    " B "
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:bone_meal"
+    },
+    "F": {
+      "item": "minecraft:cod"
+    }
+  },
+  "result": {
+    "id": "orbital:growing_cat",
+    "count": 1
+  }
+}

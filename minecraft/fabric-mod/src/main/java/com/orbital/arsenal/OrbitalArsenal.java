@@ -38,6 +38,7 @@ public class OrbitalArsenal implements ModInitializer {
             Echoes.tick(server);
             Portals.tick(server);
             Chronarch.tick(server);
+            GrowingCats.tick(server);
             CompanionSetup.tick();
         });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damage) -> Souls.died(entity));

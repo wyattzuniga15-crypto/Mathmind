@@ -437,10 +437,49 @@ _BAZOOKA_KEY = {
 BAZOOKA = [[_BAZOOKA_KEY[c] for c in row] for row in _BAZOOKA_ART]
 
 
+# The Growing Cat: a kitten's face with sparkles at the corners. The item is
+# about change over time, which a single frame cannot show — so the sparkles
+# carry it, the same shorthand an enchantment glint uses.
+_go = (36, 24, 16, 255)     # outline
+_gO = (236, 146, 52, 255)   # fur
+_gW = (250, 246, 238, 255)  # muzzle
+_gK = (26, 20, 18, 255)     # ear tips
+_gE = (60, 200, 160, 255)   # eyes
+_gP = (244, 154, 172, 255)  # nose
+_gY = (255, 226, 120, 255)  # sparkle
+
+_CAT_ART = [
+    "..Y..........Y..",
+    "...K........K...",
+    "...KO......OK...",
+    "...KOO....OOK...",
+    "...OOOOOOOOOO...",
+    "..OOOOOOOOOOOO..",
+    "..OOEOOOOOOEOO..",
+    "..OOEOOOOOOEOO..",
+    "..OOOOOPPOOOOO..",
+    "..OOWWWPPWWWOO..",
+    "...OWWWWWWWWO...",
+    "...OOWWWWWWOO...",
+    "....OOOOOOOO....",
+    "..Y...OOOO...Y..",
+    "................",
+    "................",
+]
+
+_CAT_KEY = {
+    ".": _t, "O": _gO, "W": _gW, "K": _gK,
+    "E": _gE, "P": _gP, "Y": _gY, "o": _go,
+}
+
+GROWING_CAT = [[_CAT_KEY[c] for c in row] for row in _CAT_ART]
+
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
                           ("cat_bazooka", BAZOOKA),
+                          ("growing_cat", GROWING_CAT),
                           ("time_stop_clock", STOP_CLOCK),
                           ("slow_time_clock", SLOW_CLOCK),
                           ("echo_ghost", GHOST),

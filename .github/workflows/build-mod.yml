@@ -213,6 +213,39 @@ jobs:
       # direction costs another. So ask the jar: pull every SoundEvents
       # constant the mod actually names out of the sources and print its real
       # declared type. Runs on failure too, which is exactly when it is needed.
+      # Same trick as the sounds below, for the same reason. EntityAttributes
+      # lost its GENERIC_ prefix at 1.21.2, and SCALE only exists at all from
+      # 1.20.5 — so a name that is right on one version is a failed build on
+      # another. Ask the jar which ones are real, and on a miss print every
+      # name it does have, so one round trip carries the answer instead of
+      # just the complaint.
+      - name: Check every entity attribute the mod names
+        if: always()
+        working-directory: minecraft/fabric-mod
+        run: |
+          set +e
+          jar=$(find ~/.gradle/caches/fabric-loom .gradle -name '*.jar' 2>/dev/null \
+                | grep -iE 'minecraft.*(named|mapped)' | head -1)
+          [ -z "$jar" ] && echo "no remapped jar yet" && exit 0
+          used=$(grep -rhoE 'EntityAttributes\.[A-Z_0-9]+' src/main/java | sort -u | cut -d. -f2)
+          [ -z "$used" ] && echo "the mod names no attributes" && exit 0
+          javap -cp "$jar" net.minecraft.entity.attribute.EntityAttributes > /tmp/attrs.txt 2>&1
+          missed=0
+          for name in $used; do
+            if grep -qE "[ .]$name;" /tmp/attrs.txt; then
+              printf '%-28s ok\n' "$name"
+            else
+              echo "::error::EntityAttributes.$name does not exist in this Minecraft"
+              printf '%-28s MISSING\n' "$name"
+              missed=1
+            fi
+          done
+          if [ "$missed" = 1 ]; then
+            echo "--- attributes this version actually has ---"
+            grep -oE '[A-Z][A-Z_0-9]+;' /tmp/attrs.txt | tr -d ';' | sort
+          fi
+          exit 0
+
       - name: Dump the true type of every sound the mod uses
         if: always()
         working-directory: minecraft/fabric-mod

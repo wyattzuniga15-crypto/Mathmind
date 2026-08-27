@@ -484,6 +484,44 @@ hundred blocks overhead, which is above the build ceiling for anyone standing
 high — the fill was refused and the message simply never arrived. Both came
 from placing something at a coordinate without asking what was already there.
 
+## The Growing Cat
+
+Right-click and a kitten appears. It grows for fifteen minutes and ends up
+**eleven blocks tall** — six times a player's height — passing through kitten,
+cat, big, huge, enormous, titanic and colossal on the way, about every two and
+a half minutes.
+
+**Its size is not a number this mod keeps.** It is the cat's own scale
+attribute, read back every second and multiplied. That matters more than it
+sounds: an attribute saves with the entity, so a cat is exactly as big when you
+log back in and carries on from there. Nothing is written to disk, nothing is
+reloaded, and there is no second copy of the truth to drift out of step with
+the first. Cats are found by a command tag for the same reason — tags survive a
+restart and a chunk unload, and a list in memory survives neither.
+
+**Growth is multiplicative, not additive.** Adding a fixed amount each second
+looks wrong: enormous early, when the cat is small enough that a tenth of a
+block is half of it, and glacial later. Multiplying by a constant is the shape
+growth actually has — the same *proportion* every second — so it reads as
+steady the whole way up. The constant is the 900th root of the ratio between
+the ends, which lands it on the ceiling exactly at fifteen minutes.
+
+Health tracks the size, and the current health moves by the same proportion as
+the maximum: raising the maximum alone would leave a colossal cat sitting at
+ten hit points out of a hundred and sixty, looking mortally wounded for no
+reason.
+
+The curve was modelled before it was written. All six milestones fire, evenly
+spaced, and growth stops cleanly at the attribute's own ceiling of 16 rather
+than pushing against a value the game refuses.
+
+`EntityAttributes.SCALE` is the one name here that was a guess — the class lost
+its `GENERIC_` prefix at 1.21.2 and `SCALE` only exists at all from 1.20.5, so
+a name that is right on one version fails to build on another. The workflow now
+checks every attribute the mod names against the real jar and, on a miss,
+prints every name that version does have. One round trip carries the answer
+rather than just the complaint.
+
 ## Running the companion for free
 
 `/ai provider ollama` points the companion at a model on your own computer.
