@@ -178,6 +178,80 @@ def anchor(x, y, z):
     if 9.0 <= arm <= 11.0 and y < -2 and abs(z) <= 1.6: return I
     return None
 
+SP = (156, 122, 84, 255); DK = (72, 52, 34, 255); ST = (198, 202, 210, 255)
+SN = (232, 224, 190, 255); CH = (128, 88, 58, 255); LB = (250, 244, 236, 255)
+
+# Batch K, mirroring gen_sculptures.py block for block. The icon is the
+# sculpture only for as long as these two agree.
+
+def guitar(x, y, z):
+    if -16 <= x <= -2 and abs(y) <= 2:
+        t = (x + 16) / 14.0
+        wide = 7.0 - 3.4 * math.exp(-((t - 0.52) ** 2) / 0.012)
+        if abs(z) <= wide:
+            if abs(y) <= 1 and abs(z) <= wide - 2 and -14 <= x <= -4: return None
+            if y == 2 and (x + 6) ** 2 + z * z <= 9: return None
+            return SP
+    if -2 < x <= 15 and abs(z) <= 1.6 and -1 <= y <= 1: return DK
+    if 15 < x <= 18 and abs(z) <= 2.6 and -1 <= y <= 1: return DK
+    if -1 <= x <= 17 and y == 2 and abs(z) <= 1: return ST
+    return None
+
+def lighthouse(x, y, z):
+    d = math.sqrt(x*x + z*z)
+    if -18 <= y <= 8:
+        r = 7.0 - 3.0 * (y + 18) / 26.0
+        if d <= r and d >= r - 1.5:
+            return R if ((y + 18) // 4) % 2 == 0 else W
+        return None
+    if 8 < y <= 11 and post(x, z, 0, 0, 5.0): return K
+    if 11 < y <= 15:
+        if 3.0 <= d <= 4.0: return GL
+        if d < 3.0: return LB
+    if 15 < y <= 18 and post(x, z, 0, 0, 5.0 - (y - 15) * 1.4): return K
+    return None
+
+def key(x, y, z):
+    if abs(z) > 1: return None
+    ring = math.sqrt(x*x + (y - 9.0) ** 2)
+    if 4.0 <= ring <= 6.5 and y > 4: return G
+    if abs(x) <= 1.5 and -16 <= y <= 4: return G
+    if ((abs(y + 9) <= 1 and 1.5 < x <= 5.5)
+            or (abs(y + 12) <= 1 and 1.5 < x <= 6.5)
+            or (abs(y + 15) <= 1 and 1.5 < x <= 4.5)): return G
+    return None
+
+def ice_cream(x, y, z):
+    if -18 <= y < -2:
+        d = math.sqrt(x*x + z*z)
+        if d <= 7.0 * (y + 18) / 16.0:
+            return CH if (x + y + z) % 5 == 0 else SN
+    if ball(x, y, z, 0, -1, 0, 7.0): return W
+    if ball(x, y, z, 2, 7, -1, 6.0): return P
+    if ball(x, y, z, -1, 13, 2, 4.5): return CH
+    if ball(x, y, z, -1, 18, 2, 1.8): return R
+    if x == -1 and z == 2 and 19 < y <= 20: return N
+    return None
+
+def windmill(x, y, z):
+    d = math.sqrt(x*x + z*z)
+    if -16 <= y <= 6:
+        r = 7.0 - 3.5 * (y + 16) / 22.0
+        if r - 1.5 <= d <= r: return W
+        if y == -16 and d <= r: return W
+    if 6 < y <= 10 and d <= 7.0 - (y - 6) * 1.6: return R
+    if abs(z + 8.0) <= 1.5:
+        rr = math.sqrt(x*x + (y - 2.0) ** 2)
+        if rr <= 2.0: return N
+        if rr <= 14.0:
+            a = math.atan2(y - 2.0, x)
+            for k in range(4):
+                want = math.pi / 4.0 + k * math.pi / 2.0
+                off = abs(math.atan2(math.sin(a - want), math.cos(a - want)))
+                if off <= 0.16: return N
+                if off <= 0.42 and rr > 4.0: return LB
+    return None
+
 SHAPES = {
     "giant_chicken": (chicken, 12), "giant_boot": (boot, 14),
     "giant_hammer": (hammer, 16),   "giant_skull": (skull, 10),
@@ -187,12 +261,16 @@ SHAPES = {
     "giant_rocket": (rocket, 22),   "giant_teapot": (teapot, 14),
     "giant_crown": (crown, 16),     "giant_gramophone": (gramophone, 20),
     "giant_hourglass": (hourglass, 16), "giant_anchor": (anchor, 18),
+    "giant_guitar": (guitar, 20),   "giant_lighthouse": (lighthouse, 20),
+    "giant_key": (key, 18),         "giant_ice_cream": (ice_cream, 22),
+    "giant_windmill": (windmill, 20),
 }
 
 TRANSPARENT = (0, 0, 0, 0)
 
 # Shapes that only read from above. A torus seen side-on is a band.
-TOP_DOWN = {"giant_donut"}
+# A torus seen side-on is a band; a guitar seen side-on is a plank.
+TOP_DOWN = {"giant_donut", "giant_guitar"}
 
 def render(fn, reach, size=16, top=False):
     # Find the real extent first: scaling to the reach rather than to the
@@ -229,11 +307,15 @@ def render(fn, reach, size=16, top=False):
                     wx = int(round(mid_x + (col + sub_x - size/2.0) * scale))
                     wy = int(round(mid_y - (row + sub_y - size/2.0) * scale))
                     # Nearest occupied block toward the viewer, so what shows
-                    # is the surface facing out.
+                    # is the surface facing out. It has to stop at the first
+                    # one: letting the loop run to the end keeps the block
+                    # furthest away instead, which paints the back of every
+                    # sculpture over its front.
                     for z in range(reach, -reach-1, -1):
                         got = fn(wx, z, wy) if top else fn(wx, wy, z)
                         if got is not None:
                             hit = got
+                            break
                     if hit[3]:
                         break
                 if hit[3]:

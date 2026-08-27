@@ -1,6 +1,24 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.VeinMinerItem;
+import com.orbital.arsenal.items.UpdraftItem;
+import com.orbital.arsenal.items.RecallItem;
+import com.orbital.arsenal.items.SwapItem;
+import com.orbital.arsenal.items.PyramidItem;
+import com.orbital.arsenal.items.RailLayerItem;
+import com.orbital.arsenal.items.FarmPlotItem;
+import com.orbital.arsenal.items.GlassDomeItem;
+import com.orbital.arsenal.items.TorchBombItem;
+import com.orbital.arsenal.items.MineshaftItem;
+import com.orbital.arsenal.items.PortalFrameItem;
+import com.orbital.arsenal.items.AnvilRainItem;
+import com.orbital.arsenal.items.CabinItem;
+import com.orbital.arsenal.items.GiantGuitarItem;
+import com.orbital.arsenal.items.GiantLighthouseItem;
+import com.orbital.arsenal.items.GiantKeyItem;
+import com.orbital.arsenal.items.GiantIceCreamItem;
+import com.orbital.arsenal.items.GiantWindmillItem;
 import com.orbital.arsenal.items.GlassCannonItem;
 import com.orbital.arsenal.items.MidasTouchItem;
 import com.orbital.arsenal.items.OvergrowthItem;
@@ -269,6 +287,24 @@ public final class ModItems {
     public static Item FOSSILISE;
     public static Item HOLOGRAM;
     public static Item CLONER;
+    public static Item GIANT_GUITAR;
+    public static Item GIANT_LIGHTHOUSE;
+    public static Item GIANT_KEY;
+    public static Item GIANT_ICE_CREAM;
+    public static Item GIANT_WINDMILL;
+    public static Item VEIN_MINER;
+    public static Item UPDRAFT;
+    public static Item RECALL;
+    public static Item SWAP;
+    public static Item PYRAMID;
+    public static Item RAIL_LAYER;
+    public static Item FARM_PLOT;
+    public static Item GLASS_DOME;
+    public static Item TORCH_BOMB;
+    public static Item MINESHAFT;
+    public static Item PORTAL_FRAME;
+    public static Item ANVIL_RAIN;
+    public static Item CABIN;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -434,6 +470,24 @@ public final class ModItems {
         FOSSILISE = register("fossilise", FossiliseItem::new);
         HOLOGRAM = register("hologram", HologramItem::new);
         CLONER = register("cloner", ClonerItem::new);
+        GIANT_GUITAR = register("giant_guitar", GiantGuitarItem::new);
+        GIANT_LIGHTHOUSE = register("giant_lighthouse", GiantLighthouseItem::new);
+        GIANT_KEY = register("giant_key", GiantKeyItem::new);
+        GIANT_ICE_CREAM = register("giant_ice_cream", GiantIceCreamItem::new);
+        GIANT_WINDMILL = register("giant_windmill", GiantWindmillItem::new);
+        VEIN_MINER = register("vein_miner", VeinMinerItem::new);
+        UPDRAFT = register("updraft", UpdraftItem::new);
+        RECALL = register("recall", RecallItem::new);
+        SWAP = register("swap", SwapItem::new);
+        PYRAMID = register("pyramid", PyramidItem::new);
+        RAIL_LAYER = register("rail_layer", RailLayerItem::new);
+        FARM_PLOT = register("farm_plot", FarmPlotItem::new);
+        GLASS_DOME = register("glass_dome", GlassDomeItem::new);
+        TORCH_BOMB = register("torch_bomb", TorchBombItem::new);
+        MINESHAFT = register("mineshaft", MineshaftItem::new);
+        PORTAL_FRAME = register("portal_frame", PortalFrameItem::new);
+        ANVIL_RAIN = register("anvil_rain", AnvilRainItem::new);
+        CABIN = register("cabin", CabinItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -565,6 +619,24 @@ public final class ModItems {
             entries.add(FOSSILISE);
             entries.add(HOLOGRAM);
             entries.add(CLONER);
+            entries.add(GIANT_GUITAR);
+            entries.add(GIANT_LIGHTHOUSE);
+            entries.add(GIANT_KEY);
+            entries.add(GIANT_ICE_CREAM);
+            entries.add(GIANT_WINDMILL);
+            entries.add(VEIN_MINER);
+            entries.add(UPDRAFT);
+            entries.add(RECALL);
+            entries.add(SWAP);
+            entries.add(PYRAMID);
+            entries.add(RAIL_LAYER);
+            entries.add(FARM_PLOT);
+            entries.add(GLASS_DOME);
+            entries.add(TORCH_BOMB);
+            entries.add(MINESHAFT);
+            entries.add(PORTAL_FRAME);
+            entries.add(ANVIL_RAIN);
+            entries.add(CABIN);
         });
         return registered;
     }

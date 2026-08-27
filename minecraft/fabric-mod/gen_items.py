@@ -45,17 +45,26 @@ BASE_IMPORTS = [
     "import net.minecraft.world.World;",
 ]
 
-def emit(spec):
+def emit(spec, force=False):
     imports = sorted(set(BASE_IMPORTS + spec.get("imports", [])))
     body = "\n".join("        " + l for l in spec["body"])
     fields = "\n".join("    " + l for l in spec.get("fields", [])) + "\n" if spec.get("fields") else ""
     extra = "\n" + "\n".join("    " + l for l in spec["extra"]) + "\n" if spec.get("extra") else ""
     text = TEMPLATE.format(cls=spec["cls"], doc=spec["doc"], imports="\n".join(imports),
                            body=body, fields=fields, extra=extra)
-    (OUT / f"{spec['cls']}Item.java").write_text(text)
+    out = OUT / f"{spec['cls']}Item.java"
+    # Refuse to clobber. Four items in one batch happened to reuse names that
+    # already existed, and the generator overwrote all four without a word —
+    # three of them working items from earlier batches. A generator that can
+    # silently destroy hand-written code is worse than no generator.
+    if out.exists() and not force:
+        raise SystemExit(f"{out.name} already exists — pick another name, or pass "
+                         f"--force if the intent really is to regenerate it")
+    out.write_text(text)
 
 if __name__ == "__main__":
+    force = "--force" in sys.argv[1:]
     specs = json.loads(Path(sys.argv[1]).read_text())
     for spec in specs:
-        emit(spec)
+        emit(spec, force)
     print(f"wrote {len(specs)} item classes")

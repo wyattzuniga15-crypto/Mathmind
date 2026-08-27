@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "NNN",
+    "NSN",
+    "NNN"
+  ],
+  "key": {
+    "N": {
+      "item": "minecraft:spruce_planks"
+    },
+    "S": {
+      "item": "minecraft:note_block"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_guitar",
+    "count": 1
+  }
+}

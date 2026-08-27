@@ -347,6 +347,78 @@ GLYPHS["vaporise"] = (lambda: (
                [disc(g, 3+i*4, 7, 2, WHITE) for i in range(3)],
                [disc(g, 5+i*5, 3, 2, SNOW) for i in range(2)], g)[-1])(blank()))()
 
+OBS = (48, 34, 62, 255); PORTAL = (150, 76, 200, 255); RUST = (154, 96, 62, 255)
+WHEATC = (216, 186, 88, 255); SOIL = (94, 66, 44, 255)
+
+GLYPHS["vein_miner"] = (lambda: (
+    lambda g: (diag(g, 2, 3, 7, 1, 1, GRIP, 2), rect(g, 1, 1, 6, 3, STEEL),
+               rect(g, 2, 2, 5, 2, DARK),
+               [disc(g, 11+((i*3) % 5), 5+i*4, 2, COLD) for i in range(3)],
+               [disc(g, 11+((i*3) % 5), 5+i*4, 1, WHITE) for i in range(3)],
+               g)[-1])(blank()))()
+GLYPHS["updraft"] = (lambda: (
+    lambda g: (rect(g, 0, 13, 15, 15, GREY), rect(g, 0, 13, 15, 13, GREEN),
+               [rect(g, 2+i*5, 6, 3+i*5, 12, WHITE) for i in range(3)],
+               [rect(g, 1+i*5-j, 5-j, 4+i*5+j, 5-j, COLD)
+                for i in range(3) for j in range(3)], g)[-1])(blank()))()
+GLYPHS["recall"] = (lambda: (
+    lambda g: (disc(g, 7, 8, 7, VOID), disc(g, 7, 8, 5, PUR),
+               rect(g, 6, 3, 8, 13, GLOW), rect(g, 3, 7, 11, 9, GLOW),
+               disc(g, 7, 8, 2, WHITE), g)[-1])(blank()))()
+GLYPHS["swap"] = (lambda: (
+    lambda g: (rect(g, 3, 4, 12, 5, PINK), rect(g, 3, 10, 12, 11, CYAN),
+               rect(g, 3, 2, 5, 4, PINK), rect(g, 10, 11, 12, 13, CYAN),
+               rect(g, 11, 3, 12, 6, PINK), rect(g, 3, 9, 4, 12, CYAN),
+               g)[-1])(blank()))()
+GLYPHS["pyramid"] = (lambda: (
+    lambda g: ([rect(g, 7-i, 1+i, 8+i, 1+i, BONE if i % 3 == 0 else SANDY)
+                for i in range(15)],
+               rect(g, 6, 12, 9, 15, DARK), rect(g, 0, 15, 15, 15, SANDY),
+               g)[-1])(blank()))()
+GLYPHS["rail_layer"] = (lambda: (
+    lambda g: (rect(g, 0, 7, 15, 15, GREY),
+               [rect(g, 0, 9+i*3, 15, 10+i*3, BARK) for i in range(3)],
+               rect(g, 3, 7, 4, 15, RUST), rect(g, 11, 7, 12, 15, RUST),
+               rect(g, 0, 0, 15, 6, SKY), g)[-1])(blank()))()
+GLYPHS["farm_plot"] = (lambda: (
+    lambda g: (rect(g, 0, 8, 15, 15, SOIL),
+               [rect(g, 0, 9+i*3, 15, 9+i*3, BARK) for i in range(3)],
+               [rect(g, 1+i*3, 2, 2+i*3, 7, WHEATC) for i in range(5)],
+               [rect(g, 0+i*3, 2, 3+i*3, 3, WHEATC) for i in range(5)],
+               g)[-1])(blank()))()
+GLYPHS["glass_dome"] = (lambda: (
+    lambda g: (disc(g, 7, 13, 11, COLD), disc(g, 7, 13, 9, WHITE),
+               rect(g, 0, 14, 15, 15, T), rect(g, 0, 13, 15, 15, GREY),
+               rect(g, 6, 9, 9, 13, DARK),
+               [rect(g, 1+i*4, 5+abs(i-1)*3, 1+i*4, 12, COLD) for i in range(4)],
+               g)[-1])(blank()))()
+GLYPHS["torch_bomb"] = (lambda: (
+    lambda g: (disc(g, 7, 10, 5, BLACK), disc(g, 6, 9, 2, DARK),
+               [rect(g, 1+i*6, 1+(i % 2)*3, 2+i*6, 6+(i % 2)*3, BARK) for i in range(3)],
+               [rect(g, 1+i*6, 1+(i % 2)*3, 2+i*6, 2+(i % 2)*3, GLOW) for i in range(3)],
+               g)[-1])(blank()))()
+GLYPHS["mineshaft"] = (lambda: (
+    lambda g: (rect(g, 0, 0, 15, 15, GREY),
+               [rect(g, 0, 2+i*3, 12-i*3, 4+i*3, T) for i in range(5)],
+               [rect(g, 12-i*3, 2+i*3, 13-i*3, 4+i*3, DARK) for i in range(5)],
+               rect(g, 1, 1, 1, 2, GLOW), g)[-1])(blank()))()
+GLYPHS["portal_frame"] = (lambda: (
+    lambda g: (rect(g, 2, 0, 13, 15, OBS),
+               [rect(g, 2+i*3, 0, 3+i*3, 15, BLACK) for i in (0, 3)],
+               rect(g, 4, 2, 11, 13, PORTAL), rect(g, 5, 3, 10, 12, PUR),
+               disc(g, 7, 7, 2, WHITE), g)[-1])(blank()))()
+GLYPHS["anvil_rain"] = (lambda: (
+    lambda g: ([rect(g, 1+i*6, 1+(i % 2)*6, 5+i*6, 2+(i % 2)*6, DARK) for i in range(3)],
+               [rect(g, 2+i*6, 3+(i % 2)*6, 4+i*6, 3+(i % 2)*6, DARK) for i in range(3)],
+               [rect(g, 1+i*6, 4+(i % 2)*6, 5+i*6, 5+(i % 2)*6, STEEL) for i in range(3)],
+               rect(g, 0, 14, 15, 15, GREY), g)[-1])(blank()))()
+GLYPHS["cabin"] = (lambda: (
+    lambda g: (rect(g, 2, 7, 13, 15, BARK),
+               [rect(g, 2, 8+i*3, 13, 8+i*3, GRIP) for i in range(3)],
+               [rect(g, 7-i, 6-i, 8+i, 6-i, DARK) for i in range(6)],
+               rect(g, 6, 11, 9, 15, GRIP), rect(g, 3, 9, 5, 11, COLD),
+               rect(g, 10, 9, 12, 11, COLD), g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):

@@ -365,6 +365,44 @@ def main():
               "would fire once and never again")
         print("  the per-tick write budget counts and resets")
 
+    # --- the generators still agree with what they generated ---
+    #
+    # A sculpture's shape lives in gen_sculptures.py and its Java is emitted
+    # from there. Fix a bug in the Java alone and the table still holds the
+    # broken version — the next run of the generator quietly puts it back. That
+    # happened: the teapot's phantom column was fixed by hand, and regenerating
+    # for an unrelated batch undid it without a word. So run the generator into
+    # a copy and require the result to match the tree.
+    gen = ROOT / "gen_sculptures.py"
+    if gen.exists():
+        items = ROOT / "src/main/java/com/orbital/arsenal/items"
+        before = {f.name: f.read_bytes() for f in items.glob("Giant*Item.java")}
+        result = subprocess.run(["python3", str(gen)], cwd=ROOT, capture_output=True, text=True)
+        after = {f.name: f.read_bytes() for f in items.glob("Giant*Item.java")}
+        drifted = sorted(n for n in before if before[n] != after.get(n))
+        for name in drifted:
+            items.joinpath(name).write_bytes(before[name])
+        check(result.returncode == 0, f"gen_sculptures.py failed: {result.stderr.strip()[:200]}")
+        check(not drifted,
+              "gen_sculptures.py would overwrite " + ", ".join(drifted)
+              + " — the table and the Java have drifted apart, so the next run "
+                "of the generator silently reverts whatever was fixed by hand")
+        # And say plainly which ones this covers. "20 sculptures match" while
+        # silently skipping eight of them is the shape of a check that passes
+        # without checking. Four predate the generator and are written out by
+        # hand — those are named; anything else missing from the table is a
+        # sculpture the check would not have been guarding.
+        ELDERS = {"GiantAnvilItem.java", "GiantCakeItem.java",
+                  "GiantDiamondItem.java", "GiantDuckItem.java"}
+        owned = set(re.findall(r'cls="(Giant\w+)"', gen.read_text()))
+        for name in sorted(before):
+            check(name[:-9] in owned or name in ELDERS,
+                  f"{name} is neither in the gen_sculptures table nor on the list of "
+                  f"four that predate it — nothing checks its shape against a source")
+        if not drifted:
+            print(f"  {len(owned)} sculptures match the table they came from, "
+                  f"{len(ELDERS)} predate it")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:
