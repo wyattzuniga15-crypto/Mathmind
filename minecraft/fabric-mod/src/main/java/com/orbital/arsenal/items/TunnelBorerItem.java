@@ -63,6 +63,14 @@ public class TunnelBorerItem extends Item {
                 // including the block under it had just been cleared, so every torch
                 // popped off the tick it was placed.
                 if (step[0] % 8 == 0) {
+                    // A floor under it before the torch: bored through a cave, the
+                    // block below the tunnel edge is air and the torch drops through.
+                    BlockPos under = new BlockPos(px + (-sz), feet - 1, pz + sx);
+                    BlockState below = serverWorld.getBlockState(under);
+                    if (below.isAir()) {
+                        Journal.clear(serverWorld, under, below,
+                                Blocks.COBBLESTONE.getDefaultState());
+                    }
                     BlockPos lamp = new BlockPos(px + (-sz), feet, pz + sx);
                     Journal.clear(serverWorld, lamp, serverWorld.getBlockState(lamp),
                             Blocks.TORCH.getDefaultState());

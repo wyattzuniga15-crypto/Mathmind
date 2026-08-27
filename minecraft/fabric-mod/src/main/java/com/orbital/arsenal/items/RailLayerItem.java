@@ -63,6 +63,11 @@ public class RailLayerItem extends Item {
                 put(serverWorld, px, floorY + 1, pz,
                         (boost ? Blocks.POWERED_RAIL : Blocks.RAIL).getDefaultState());
                 if (boost) {
+                    // Something under the torch first. Beside the track is untouched
+                    // ground, and over a ravine that is air — the torch would be laid
+                    // and pop off in the same tick.
+                    put(serverWorld, px + sz, floorY, pz + sx,
+                            Blocks.COBBLESTONE.getDefaultState());
                     put(serverWorld, px + sz, floorY + 1, pz + sx,
                             Blocks.TORCH.getDefaultState());
                 }
