@@ -159,6 +159,42 @@ def main():
         if result.returncode != 0:
             problems.append("journal run-length round-trip failed")
 
+    # --- sounds are used the way the real jar declares them ---
+    #
+    # Whether a SoundEvents constant is bare or a RegistryEntry.Reference is
+    # not guessable and not consistent — BLOCK_NOTE_BLOCK_BASS is wrapped and
+    # BLOCK_GLASS_BREAK beside it is not — and the stubs cannot settle it,
+    # because the stubs are whatever I last assumed. So the answer is recorded
+    # from a real build and checked here. A sound that is in neither list is
+    # reported as unverified rather than failed: it is a guess, and the point
+    # is knowing that before the push rather than after the build.
+    table = ROOT / "known_sound_types.json"
+    if table.exists():
+        known = json.loads(table.read_text())
+        bare = set(known.get("bare", []))
+        wrapped = set(known.get("wrapped", []))
+        used = {}
+        for src in (ROOT / "src/main/java").rglob("*.java"):
+            text = src.read_text()
+            for name in re.findall(r"SoundEvents\.([A-Z_0-9]+)(\.value\(\))?", text):
+                pass
+            for match in re.finditer(r"SoundEvents\.([A-Z_0-9]+)(\.value\(\))?", text):
+                used.setdefault(match.group(1), set()).add(bool(match.group(2)))
+        unverified = []
+        for name, forms in sorted(used.items()):
+            if name in wrapped:
+                check(forms == {True},
+                      f"SoundEvents.{name} is a registry entry — it needs .value()")
+            elif name in bare:
+                check(forms == {False},
+                      f"SoundEvents.{name} is a bare SoundEvent — drop the .value()")
+            else:
+                unverified.append(name)
+        print(f"  {len(used) - len(unverified)} sounds match the types a real build reported")
+        if unverified:
+            print("  unverified sounds (a guess until CI reports on them): "
+                  + ", ".join(unverified))
+
     # --- every companion tool reaches every provider ---
     #
     # The Anthropic SDK reads the annotations on the Tools classes itself,

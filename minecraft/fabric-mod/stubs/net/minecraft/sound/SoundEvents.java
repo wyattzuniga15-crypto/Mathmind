@@ -10,7 +10,8 @@ import net.minecraft.registry.entry.RegistryEntry;
 // next one is read off the build rather than assumed.
 public class SoundEvents {
     public static final SoundEvent ENTITY_WITHER_SPAWN = new SoundEvent();
-    public static final SoundEvent BLOCK_NOTE_BLOCK_BASS = new SoundEvent();
+    public static final RegistryEntry.Reference<SoundEvent> BLOCK_NOTE_BLOCK_BASS =
+            new RegistryEntry.Reference<>();
     public static final SoundEvent BLOCK_GLASS_BREAK = new SoundEvent();
     public static final SoundEvent ENTITY_LIGHTNING_BOLT_THUNDER = new SoundEvent();
     public static final SoundEvent ENTITY_EXPERIENCE_ORB_PICKUP = new SoundEvent();

@@ -32,7 +32,7 @@ public class GrandPianoItem extends Item {
                 "GRAND PIANO", (w, u, at) -> {
                     Sculpture.boom(w, at, 7.0F, 200);
                     // The whole point is the noise it makes on the way out.
-                    w.playSound(null, BlockPos.ofFloored(at), SoundEvents.BLOCK_NOTE_BLOCK_BASS,
+                    w.playSound(null, BlockPos.ofFloored(at), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
                             SoundCategory.MASTER, 100.0F, 0.5F);
                     w.spawnParticles(ParticleTypes.NOTE, true, true,
                             at.x, at.y + 4, at.z, 200, 8.0, 4.0, 8.0, 1.0);
