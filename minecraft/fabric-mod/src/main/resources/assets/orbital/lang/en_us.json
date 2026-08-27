@@ -64,5 +64,17 @@
   "item.orbital.chain_lightning": "Chain Lightning",
   "item.orbital.ice_spikes": "Ice Spikes",
   "item.orbital.landmine": "Landmine",
-  "item.orbital.nuke_suitcase": "Nuke Suitcase"
+  "item.orbital.nuke_suitcase": "Nuke Suitcase",
+  "item.orbital.teleport_staff": "Teleport Staff",
+  "item.orbital.wall_phase": "Wall Phaser",
+  "item.orbital.time_bubble": "Time Bubble",
+  "item.orbital.item_magnet": "Magnet",
+  "item.orbital.speed_boots": "Speed Boots",
+  "item.orbital.water_walking": "Water Walking Boots",
+  "item.orbital.auto_miner": "Auto Miner",
+  "item.orbital.block_printer": "Block Printer",
+  "item.orbital.elevator": "Elevator",
+  "item.orbital.ore_finder": "Ore Finder",
+  "item.orbital.supply_drop": "Supply Drop",
+  "item.orbital.homing_compass": "Homing Compass"
 }

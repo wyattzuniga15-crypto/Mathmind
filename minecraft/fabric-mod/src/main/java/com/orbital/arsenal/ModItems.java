@@ -1,6 +1,18 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.TeleportStaffItem;
+import com.orbital.arsenal.items.WallPhaseItem;
+import com.orbital.arsenal.items.TimeBubbleItem;
+import com.orbital.arsenal.items.ItemMagnetItem;
+import com.orbital.arsenal.items.SpeedBootsItem;
+import com.orbital.arsenal.items.WaterWalkingItem;
+import com.orbital.arsenal.items.AutoMinerItem;
+import com.orbital.arsenal.items.BlockPrinterItem;
+import com.orbital.arsenal.items.ElevatorItem;
+import com.orbital.arsenal.items.OreFinderItem;
+import com.orbital.arsenal.items.SupplyDropItem;
+import com.orbital.arsenal.items.HomingCompassItem;
 import com.orbital.arsenal.items.DisintegratorItem;
 import com.orbital.arsenal.items.BlackHoleGrenadeItem;
 import com.orbital.arsenal.items.NapalmLauncherItem;
@@ -141,6 +153,18 @@ public final class ModItems {
     public static Item ICE_SPIKES;
     public static Item LANDMINE;
     public static Item NUKE_SUITCASE;
+    public static Item TELEPORT_STAFF;
+    public static Item WALL_PHASE;
+    public static Item TIME_BUBBLE;
+    public static Item ITEM_MAGNET;
+    public static Item SPEED_BOOTS;
+    public static Item WATER_WALKING;
+    public static Item AUTO_MINER;
+    public static Item BLOCK_PRINTER;
+    public static Item ELEVATOR;
+    public static Item ORE_FINDER;
+    public static Item SUPPLY_DROP;
+    public static Item HOMING_COMPASS;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -242,6 +266,18 @@ public final class ModItems {
         ICE_SPIKES = register("ice_spikes", IceSpikesItem::new);
         LANDMINE = register("landmine", LandmineItem::new);
         NUKE_SUITCASE = register("nuke_suitcase", NukeSuitcaseItem::new);
+        TELEPORT_STAFF = register("teleport_staff", TeleportStaffItem::new);
+        WALL_PHASE = register("wall_phase", WallPhaseItem::new);
+        TIME_BUBBLE = register("time_bubble", TimeBubbleItem::new);
+        ITEM_MAGNET = register("item_magnet", ItemMagnetItem::new);
+        SPEED_BOOTS = register("speed_boots", SpeedBootsItem::new);
+        WATER_WALKING = register("water_walking", WaterWalkingItem::new);
+        AUTO_MINER = register("auto_miner", AutoMinerItem::new);
+        BLOCK_PRINTER = register("block_printer", BlockPrinterItem::new);
+        ELEVATOR = register("elevator", ElevatorItem::new);
+        ORE_FINDER = register("ore_finder", OreFinderItem::new);
+        SUPPLY_DROP = register("supply_drop", SupplyDropItem::new);
+        HOMING_COMPASS = register("homing_compass", HomingCompassItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -309,6 +345,18 @@ public final class ModItems {
             entries.add(ICE_SPIKES);
             entries.add(LANDMINE);
             entries.add(NUKE_SUITCASE);
+            entries.add(TELEPORT_STAFF);
+            entries.add(WALL_PHASE);
+            entries.add(TIME_BUBBLE);
+            entries.add(ITEM_MAGNET);
+            entries.add(SPEED_BOOTS);
+            entries.add(WATER_WALKING);
+            entries.add(AUTO_MINER);
+            entries.add(BLOCK_PRINTER);
+            entries.add(ELEVATOR);
+            entries.add(ORE_FINDER);
+            entries.add(SUPPLY_DROP);
+            entries.add(HOMING_COMPASS);
         });
         return registered;
     }

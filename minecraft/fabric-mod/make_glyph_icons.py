@@ -88,6 +88,45 @@ GLYPHS["nuke_suitcase"] = (lambda: (
                rect(g, 6, 1, 9, 3, GRIP), disc(g, 7, 9, 4, GLOW), disc(g, 7, 9, 2, BLACK),
                g)[-1])(blank()))()
 
+GLYPHS["teleport_staff"] = (lambda: (
+    lambda g: (rect(g, 7, 5, 8, 15, GRIP), disc(g, 7, 4, 4, VOID), disc(g, 7, 4, 2, PINK),
+               g)[-1])(blank()))()
+GLYPHS["wall_phase"] = (lambda: (
+    lambda g: (rect(g, 1, 2, 14, 13, DARK), rect(g, 6, 4, 9, 13, T),
+               [rect(g, 1, 2+i*4, 14, 2+i*4, STEEL) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["time_bubble"] = (lambda: (
+    lambda g: (disc(g, 7, 7, 7, COLD, 6), disc(g, 7, 7, 5, WHITE),
+               rect(g, 7, 3, 7, 7, DARK), rect(g, 7, 7, 10, 7, DARK), g)[-1])(blank()))()
+GLYPHS["item_magnet"] = (lambda: (
+    lambda g: (disc(g, 7, 8, 7, HOT, 4), rect(g, 0, 8, 15, 15, T),
+               rect(g, 1, 8, 3, 14, HOT), rect(g, 11, 8, 13, 14, HOT),
+               rect(g, 1, 12, 3, 14, STEEL), rect(g, 11, 12, 13, 14, STEEL), g)[-1])(blank()))()
+GLYPHS["speed_boots"] = (lambda: (
+    lambda g: (rect(g, 4, 5, 8, 12, STEEL), rect(g, 4, 12, 13, 14, STEEL),
+               [rect(g, 0, 6+i*3, 3, 6+i*3, GLOW) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["water_walking"] = (lambda: (
+    lambda g: (rect(g, 4, 3, 8, 10, GRIP), rect(g, 4, 10, 13, 12, GRIP),
+               rect(g, 0, 13, 15, 15, BLUE), rect(g, 3, 13, 14, 13, COLD), g)[-1])(blank()))()
+GLYPHS["auto_miner"] = (lambda: (
+    lambda g: (rect(g, 6, 1, 9, 9, STEEL), diag(g, 5, 9, 4, 0, 1, DARK, 6),
+               rect(g, 7, 13, 8, 15, DARK), g)[-1])(blank()))()
+GLYPHS["block_printer"] = (lambda: (
+    lambda g: (rect(g, 2, 2, 13, 8, STEEL), rect(g, 4, 4, 11, 6, DARK),
+               [rect(g, 2+i*4, 11, 5+i*4, 14, GRIP) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["elevator"] = (lambda: (
+    lambda g: (rect(g, 2, 11, 13, 14, WHITE),
+               [diag(g, 7, 9-i*3, 1, 0, 0, GLOW) for i in range(3)],
+               [rect(g, 5+i, 8-i*3, 10-i, 9-i*3, GLOW) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["ore_finder"] = (lambda: (
+    lambda g: (disc(g, 7, 6, 6, GOLD, 4), rect(g, 9, 10, 13, 14, GOLD),
+               disc(g, 7, 6, 3, COLD), g)[-1])(blank()))()
+GLYPHS["supply_drop"] = (lambda: (
+    lambda g: (rect(g, 3, 6, 12, 14, GRIP), rect(g, 3, 8, 12, 9, DARK),
+               rect(g, 7, 6, 8, 14, DARK), disc(g, 7, 3, 4, WHITE, 3), g)[-1])(blank()))()
+GLYPHS["homing_compass"] = (lambda: (
+    lambda g: (disc(g, 7, 7, 7, GOLD, 5), disc(g, 7, 7, 5, WHITE),
+               diag(g, 7, 3, 5, 0, 1, HOT), diag(g, 5, 5, 3, 1, 1, HOT), g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):
