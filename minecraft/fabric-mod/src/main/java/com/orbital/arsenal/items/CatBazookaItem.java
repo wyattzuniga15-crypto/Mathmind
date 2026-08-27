@@ -12,7 +12,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -39,7 +38,7 @@ import net.minecraft.world.World;
  * Where it lands it digs a crater forty-four blocks across, and then a thousand
  * live cats come out of the hole in a sphere.
  */
-public class CatBazookaItem extends Item {
+public class CatBazookaItem extends ArsenalItem {
     /** How hard the cat leaves the tube, in blocks per tick. */
     private static final double MUZZLE_SPEED = 2.6;
     /** If it somehow never touches down, go off anyway rather than hanging. */
@@ -60,7 +59,7 @@ public class CatBazookaItem extends Item {
     private static final int COOLDOWN = 200;
 
     public CatBazookaItem(Settings settings) {
-        super(settings);
+        super(settings, "Fires a cat.");
     }
 
     @Override

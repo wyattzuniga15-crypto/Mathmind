@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,13 +14,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drives a ring of ice spears up out of the ground around you. */
-public class IceSpikesItem extends Item {
+public class IceSpikesItem extends ArsenalItem {
     private static final int SPIKES = 24;
     private static final double RING = 9.0;
     private static final int COOLDOWN = 100;
 
     public IceSpikesItem(Settings settings) {
-        super(settings);
+        super(settings, "Drives a ring of ice spears up out of the ground around you.");
     }
 
     @Override

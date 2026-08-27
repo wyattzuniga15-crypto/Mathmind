@@ -2,7 +2,6 @@ package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.weapons.Area;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -14,13 +13,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Throws everything in a wide arc away from you, hard. Harms nothing; moves everything. */
-public class SonicCannonItem extends Item {
+public class SonicCannonItem extends ArsenalItem {
     private static final double REACH = 34.0;
     private static final double FORCE = 3.4;
     private static final int COOLDOWN = 60;
 
     public SonicCannonItem(Settings settings) {
-        super(settings);
+        super(settings, "Throws everything in a wide arc away from you, hard. Harms nothing; moves everything.");
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Freezes everything in sight: snow on the ground, ice on the water. */
-public class IceAgeItem extends Item {
+public class IceAgeItem extends ArsenalItem {
     private static final int RADIUS = 44;
     private static final int COOLDOWN = 300;
 
     public IceAgeItem(Settings settings) {
-        super(settings);
+        super(settings, "Freezes everything in sight: snow on the ground, ice on the water.");
     }
 
     @Override

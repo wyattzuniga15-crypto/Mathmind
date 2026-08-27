@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A winner's cup, for when subtlety is not required. */
-public class GiantTrophyItem extends Item {
+public class GiantTrophyItem extends ArsenalItem {
     private static final int REACH = 12;
     private static final int HEIGHT = 85;
     private static final int CRATER = 16;
@@ -22,7 +21,7 @@ public class GiantTrophyItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantTrophyItem(Settings settings) {
-        super(settings);
+        super(settings, "A winner's cup, for when subtlety is not required.");
     }
 
     @Override

@@ -7,7 +7,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -20,13 +19,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Grows a thicket of glowing crystal spires out of the ground. */
-public class CrystalGrowthItem extends Item {
+public class CrystalGrowthItem extends ArsenalItem {
     private static final int SPIRES = 40;
     private static final double SPREAD = 20.0;
     private static final int COOLDOWN = 250;
 
     public CrystalGrowthItem(Settings settings) {
-        super(settings);
+        super(settings, "Grows a thicket of glowing crystal spires out of the ground.");
     }
 
     @Override

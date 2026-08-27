@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,12 +18,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Copies a chunk of the world in front of you and stamps it down beside itself. */
-public class ClonerItem extends Item {
+public class ClonerItem extends ArsenalItem {
     private static final int HALF = 10;
     private static final int COOLDOWN = 300;
 
     public ClonerItem(Settings settings) {
-        super(settings);
+        super(settings, "Copies a chunk of the world in front of you and stamps it down beside itself.");
     }
 
     @Override

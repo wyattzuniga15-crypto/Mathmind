@@ -9,7 +9,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -32,7 +31,7 @@ import net.minecraft.world.World;
  * speed the game draws. Letting go simply stops doing that and hands the thing
  * a velocity.
  */
-public class GravityGunItem extends Item {
+public class GravityGunItem extends ArsenalItem {
     /** What each player is holding. One thing each, deliberately. */
     // Keyed by UUID rather than by the player object. A PlayerEntity is
     // replaced on every respawn and every dimension change, so an
@@ -47,7 +46,7 @@ public class GravityGunItem extends Item {
     private static final double THROW_SPEED = 2.4;
 
     public GravityGunItem(Settings settings) {
-        super(settings);
+        super(settings, "Rips something loose, holds it in front of you, and throws it.");
     }
 
     @Override

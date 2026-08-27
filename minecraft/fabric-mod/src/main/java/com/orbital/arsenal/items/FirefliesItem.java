@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.Scheduler;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,14 +14,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A drift of lights around you for two minutes. They follow you about. */
-public class FirefliesItem extends Item {
+public class FirefliesItem extends ArsenalItem {
     private static final int DURATION = 2400;
     private static final int LIGHTS = 40;
     private static final double REACH = 12.0;
     private static final int COOLDOWN = 300;
 
     public FirefliesItem(Settings settings) {
-        super(settings);
+        super(settings, "A drift of lights around you for two minutes. They follow you about.");
     }
 
     @Override

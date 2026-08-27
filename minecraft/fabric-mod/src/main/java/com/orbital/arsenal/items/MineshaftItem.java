@@ -5,7 +5,6 @@ import com.orbital.arsenal.time.Journal;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -17,13 +16,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Cuts a lit spiral staircase from your feet down to bedrock. */
-public class MineshaftItem extends Item {
+public class MineshaftItem extends ArsenalItem {
     private static final int RADIUS = 4;
     private static final int PER_TICK = 2;
     private static final int COOLDOWN = 300;
 
     public MineshaftItem(Settings settings) {
-        super(settings);
+        super(settings, "Cuts a lit spiral staircase from your feet down to bedrock.");
     }
 
     @Override

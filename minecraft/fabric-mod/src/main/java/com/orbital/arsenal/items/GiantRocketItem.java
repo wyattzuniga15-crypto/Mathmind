@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A rocket, arriving the wrong way up. */
-public class GiantRocketItem extends Item {
+public class GiantRocketItem extends ArsenalItem {
     private static final int REACH = 22;
     private static final int HEIGHT = 120;
     private static final int CRATER = 22;
@@ -22,7 +21,7 @@ public class GiantRocketItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantRocketItem(Settings settings) {
-        super(settings);
+        super(settings, "A rocket, arriving the wrong way up.");
     }
 
     @Override

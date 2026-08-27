@@ -5,7 +5,6 @@ import com.orbital.arsenal.time.Journal;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -17,14 +16,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Lays a long packed-ice ramp running away from you, downhill all the way. */
-public class SkiSlopeItem extends Item {
+public class SkiSlopeItem extends ArsenalItem {
     private static final int LENGTH = 160;
     private static final int WIDE = 4;
     private static final int PER_TICK = 3;
     private static final int COOLDOWN = 300;
 
     public SkiSlopeItem(Settings settings) {
-        super(settings);
+        super(settings, "Lays a long packed-ice ramp running away from you, downhill all the way.");
     }
 
     @Override

@@ -9,7 +9,6 @@ import java.util.Set;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -22,13 +21,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Point at an ore and the whole vein goes, however far it runs. */
-public class VeinMinerItem extends Item {
+public class VeinMinerItem extends ArsenalItem {
     private static final int MAX = 640;
     private static final int PER_TICK = 60;
     private static final int COOLDOWN = 60;
 
     public VeinMinerItem(Settings settings) {
-        super(settings);
+        super(settings, "Point at an ore and the whole vein goes, however far it runs.");
     }
 
     @Override

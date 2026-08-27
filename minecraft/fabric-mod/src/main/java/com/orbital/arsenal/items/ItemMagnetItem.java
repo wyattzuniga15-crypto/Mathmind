@@ -4,7 +4,6 @@ import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.weapons.Area;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,13 +15,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Pulls every loose item and mob within forty blocks toward you for ten seconds. */
-public class ItemMagnetItem extends Item {
+public class ItemMagnetItem extends ArsenalItem {
     private static final int DURATION = 200;
     private static final double REACH = 40.0;
     private static final int COOLDOWN = 200;
 
     public ItemMagnetItem(Settings settings) {
-        super(settings);
+        super(settings, "Pulls every loose item and mob within forty blocks toward you for ten seconds.");
     }
 
     @Override

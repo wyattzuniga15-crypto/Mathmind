@@ -7,7 +7,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -30,7 +29,7 @@ import net.minecraft.world.World;
  * solid block. Repainting a solid volume would turn the inside of every hill
  * to sand and hollow the world out from under you.
  */
-public class TerraformerItem extends Item {
+public class TerraformerItem extends ArsenalItem {
     private static final int RADIUS = 30;
     private static final int PER_TICK = 600;
     private static final int COOLDOWN = 100;
@@ -40,7 +39,7 @@ public class TerraformerItem extends Item {
     private static final String[] NAMES = {"desert", "snowfield", "the Nether"};
 
     public TerraformerItem(Settings settings) {
-        super(settings);
+        super(settings, "Repaints the land into another climate. Click to cycle: desert, snow, Nether.");
     }
 
     @Override

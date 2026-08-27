@@ -5,7 +5,6 @@ import com.orbital.arsenal.time.Journal;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Bores a three-wide shaft straight down to bedrock and leaves a ladder in it. */
-public class AutoMinerItem extends Item {
+public class AutoMinerItem extends ArsenalItem {
     private static final int PER_TICK = 3;
     private static final int COOLDOWN = 200;
 
     public AutoMinerItem(Settings settings) {
-        super(settings);
+        super(settings, "Bores a three-wide shaft straight down to bedrock and leaves a ladder in it.");
     }
 
     @Override

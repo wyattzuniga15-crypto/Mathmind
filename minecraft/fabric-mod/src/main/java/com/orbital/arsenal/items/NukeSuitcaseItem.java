@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A briefcase bomb. Ten seconds of counting, and then a very large hole. */
-public class NukeSuitcaseItem extends Item {
+public class NukeSuitcaseItem extends ArsenalItem {
     private static final int FUSE = 200;
     private static final int RADIUS = 46;
     private static final int COOLDOWN = 600;
 
     public NukeSuitcaseItem(Settings settings) {
-        super(settings);
+        super(settings, "A briefcase bomb. Ten seconds of counting, and then a very large hole.");
     }
 
     @Override

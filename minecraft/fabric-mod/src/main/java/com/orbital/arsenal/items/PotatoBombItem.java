@@ -10,7 +10,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -36,7 +35,7 @@ import net.minecraft.world.World;
  * is then tilled and planted. The thing that flattened the hillside still
  * feeds you.
  */
-public class PotatoBombItem extends Item {
+public class PotatoBombItem extends ArsenalItem {
     /** Radii of the potato, in blocks. Longer than it is thick, like a potato. */
     private static final int RX = 8;
     private static final int RY = 5;
@@ -53,7 +52,7 @@ public class PotatoBombItem extends Item {
     private static final int COOLDOWN = 200;
 
     public PotatoBombItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops an enormous potato on the world from ninety blocks up.");
     }
 
     @Override

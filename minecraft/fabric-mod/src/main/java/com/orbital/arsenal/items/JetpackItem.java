@@ -4,7 +4,6 @@ import com.orbital.arsenal.Scheduler;
 import java.util.HashSet;
 import java.util.Set;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -23,7 +22,7 @@ import net.minecraft.world.World;
  * Sneaking descends, which is the one control everybody reaches for without
  * being told.
  */
-public class JetpackItem extends Item {
+public class JetpackItem extends ArsenalItem {
     private static final int FUEL = 600;
     private static final double LIFT = 0.09;
     private static final double TOP_SPEED = 0.65;
@@ -39,7 +38,7 @@ public class JetpackItem extends Item {
     private static final Set<java.util.UUID> FLYING = new HashSet<>();
 
     public JetpackItem(Settings settings) {
-        super(settings);
+        super(settings, "Thirty seconds of flight, on a toggle.");
     }
 
     @Override

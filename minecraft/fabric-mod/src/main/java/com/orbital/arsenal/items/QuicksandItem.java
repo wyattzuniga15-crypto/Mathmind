@@ -8,7 +8,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -21,13 +20,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Turns the ground to sand that swallows whatever is standing on it. */
-public class QuicksandItem extends Item {
+public class QuicksandItem extends ArsenalItem {
     private static final int RADIUS = 12;
     private static final int DURATION = 400;
     private static final int COOLDOWN = 200;
 
     public QuicksandItem(Settings settings) {
-        super(settings);
+        super(settings, "Turns the ground to sand that swallows whatever is standing on it.");
     }
 
     @Override

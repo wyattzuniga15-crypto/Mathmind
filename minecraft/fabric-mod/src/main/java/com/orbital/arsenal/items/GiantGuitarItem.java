@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drops a guitar the size of a barn. It is not in tune. */
-public class GiantGuitarItem extends Item {
+public class GiantGuitarItem extends ArsenalItem {
     private static final int REACH = 16;
     private static final int HEIGHT = 90;
     private static final int CRATER = 16;
@@ -22,7 +21,7 @@ public class GiantGuitarItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantGuitarItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops a guitar the size of a barn. It is not in tune.");
     }
 
     @Override

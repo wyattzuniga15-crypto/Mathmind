@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,9 +13,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A three-tier birthday cake, with a candle, delivered from orbit. */
-public class GiantCakeItem extends Item {
+public class GiantCakeItem extends ArsenalItem {
     public GiantCakeItem(Settings settings) {
-        super(settings);
+        super(settings, "A three-tier birthday cake, with a candle, delivered from orbit.");
     }
 
     @Override

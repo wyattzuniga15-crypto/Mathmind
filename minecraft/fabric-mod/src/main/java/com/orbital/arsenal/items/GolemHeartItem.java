@@ -4,7 +4,6 @@ import com.orbital.arsenal.entity.ModEntities;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,11 +15,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Wakes a stone golem. Slow, five hundred hit points, and it hits like the stone it is made of. */
-public class GolemHeartItem extends Item {
+public class GolemHeartItem extends ArsenalItem {
     private static final int COOLDOWN = 400;
 
     public GolemHeartItem(Settings settings) {
-        super(settings);
+        super(settings, "Wakes a stone golem. Slow, five hundred hit points, and it hits like the stone it is made of.");
     }
 
     @Override

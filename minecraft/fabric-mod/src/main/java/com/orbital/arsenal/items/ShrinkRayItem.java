@@ -5,7 +5,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -24,7 +23,7 @@ import net.minecraft.world.World;
  * factor inverted, and because a player who has shrunk something invariably
  * wants to put it back.
  */
-public class ShrinkRayItem extends Item {
+public class ShrinkRayItem extends ArsenalItem {
     private static final double RANGE = 40.0;
     private static final double STEP = 1.6;
     /** The scale attribute's own limits; outside them the game refuses. */
@@ -33,7 +32,7 @@ public class ShrinkRayItem extends Item {
     private static final int COOLDOWN = 10;
 
     public ShrinkRayItem(Settings settings) {
-        super(settings);
+        super(settings, "Resizes whatever you point at. Click to shrink, sneak-click to grow.");
     }
 
     @Override

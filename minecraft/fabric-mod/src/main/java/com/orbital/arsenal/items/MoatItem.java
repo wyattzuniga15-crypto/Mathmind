@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -16,14 +15,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Digs a water-filled ring around you, with the bridge left in. */
-public class MoatItem extends Item {
+public class MoatItem extends ArsenalItem {
     private static final int INNER = 14;
     private static final int OUTER = 20;
     private static final int DEEP = 6;
     private static final int COOLDOWN = 300;
 
     public MoatItem(Settings settings) {
-        super(settings);
+        super(settings, "Digs a water-filled ring around you, with the bridge left in.");
     }
 
     @Override

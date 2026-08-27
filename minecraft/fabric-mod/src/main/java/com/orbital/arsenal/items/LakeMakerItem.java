@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -29,14 +28,14 @@ import net.minecraft.world.World;
  * Flowing water would spend a minute finding its level and drag the server
  * with it.
  */
-public class LakeMakerItem extends Item {
+public class LakeMakerItem extends ArsenalItem {
     private static final int RADIUS = 28;
     private static final int DEPTH = 10;
     private static final int PER_TICK = 4;
     private static final int COOLDOWN = 200;
 
     public LakeMakerItem(Settings settings) {
-        super(settings);
+        super(settings, "Digs a lake and fills it, with a sand beach around the rim.");
     }
 
     @Override

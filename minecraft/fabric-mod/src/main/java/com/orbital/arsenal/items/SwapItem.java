@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Trades places with whatever you are looking at. */
-public class SwapItem extends Item {
+public class SwapItem extends ArsenalItem {
     private static final double GRAB = 5.0;
     private static final int COOLDOWN = 100;
 
     public SwapItem(Settings settings) {
-        super(settings);
+        super(settings, "Trades places with whatever you are looking at.");
     }
 
     @Override

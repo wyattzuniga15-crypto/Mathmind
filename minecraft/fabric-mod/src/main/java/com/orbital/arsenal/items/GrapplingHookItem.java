@@ -2,7 +2,6 @@ package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -21,14 +20,14 @@ import net.minecraft.world.World;
  * pull straight at a cliff face drags you into the wall and stops; aiming over
  * the lip carries you onto the top of it, which is what people mean.
  */
-public class GrapplingHookItem extends Item {
+public class GrapplingHookItem extends ArsenalItem {
     private static final double RANGE = 60.0;
     private static final double PULL = 1.5;
     private static final double LIFT = 0.45;
     private static final int COOLDOWN = 12;
 
     public GrapplingHookItem(Settings settings) {
-        super(settings);
+        super(settings, "Fires a line at whatever you are looking at and reels you to it.");
     }
 
     @Override

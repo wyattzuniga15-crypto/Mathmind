@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Turns everything in a wide sphere to glass. It stays standing, and one hit brings the lot down. */
-public class GlassCannonItem extends Item {
+public class GlassCannonItem extends ArsenalItem {
     private static final int RADIUS = 24;
     private static final int COOLDOWN = 200;
 
     public GlassCannonItem(Settings settings) {
-        super(settings);
+        super(settings, "Turns everything in a wide sphere to glass. It stays standing, and one hit brings the lot down.");
     }
 
     @Override

@@ -7,7 +7,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -19,13 +18,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Lays a slime pad that throws anything landing on it thirty blocks up. */
-public class TrampolineItem extends Item {
+public class TrampolineItem extends ArsenalItem {
     private static final int RADIUS = 6;
     private static final int DURATION = 1200;
     private static final int COOLDOWN = 120;
 
     public TrampolineItem(Settings settings) {
-        super(settings);
+        super(settings, "Lays a slime pad that throws anything landing on it thirty blocks up.");
     }
 
     @Override

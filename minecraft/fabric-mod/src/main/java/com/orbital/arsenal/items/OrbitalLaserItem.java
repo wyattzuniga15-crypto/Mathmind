@@ -8,7 +8,6 @@ import java.util.Map;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -33,7 +32,7 @@ import net.minecraft.world.World;
  * re-fires use() every few ticks in vanilla, and a hold-to-fire item built on
  * that flickers on and off; toggling sidesteps the whole problem.
  */
-public class OrbitalLaserItem extends Item {
+public class OrbitalLaserItem extends ArsenalItem {
     private static final double RANGE = 200.0;
     private static final int BORE = 7;        // radius — 15 blocks across
     private static final int ABOVE = 20;      // cut trees and rooftops above the aim
@@ -65,7 +64,7 @@ public class OrbitalLaserItem extends Item {
     }
 
     public OrbitalLaserItem(Settings settings) {
-        super(settings);
+        super(settings, "A beam from orbit that keeps firing and follows wherever you look.");
     }
 
     @Override

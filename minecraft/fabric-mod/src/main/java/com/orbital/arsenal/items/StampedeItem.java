@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Two hundred cows, arriving at speed, from that direction. */
-public class StampedeItem extends Item {
+public class StampedeItem extends ArsenalItem {
     private static final int HERD = 200;
     private static final int PER_TICK = 6;
     private static final int COOLDOWN = 400;
 
     public StampedeItem(Settings settings) {
-        super(settings);
+        super(settings, "Two hundred cows, arriving at speed, from that direction.");
     }
 
     @Override

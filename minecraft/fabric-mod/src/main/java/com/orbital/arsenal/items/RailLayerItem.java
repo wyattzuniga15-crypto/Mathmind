@@ -5,7 +5,6 @@ import com.orbital.arsenal.time.Journal;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Lays a level rail line straight out along your line of sight, cuttings and all. */
-public class RailLayerItem extends Item {
+public class RailLayerItem extends ArsenalItem {
     private static final int LENGTH = 200;
     private static final int PER_TICK = 4;
     private static final int COOLDOWN = 300;
 
     public RailLayerItem(Settings settings) {
-        super(settings);
+        super(settings, "Lays a level rail line straight out along your line of sight, cuttings and all.");
     }
 
     @Override

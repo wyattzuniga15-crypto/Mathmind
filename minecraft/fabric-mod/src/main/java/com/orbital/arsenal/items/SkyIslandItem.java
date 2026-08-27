@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -29,7 +28,7 @@ import net.minecraft.world.World;
  * The underside is tapered to a keel, because a flat-bottomed slab reads as a
  * mistake and a pointed one reads as an island.
  */
-public class SkyIslandItem extends Item {
+public class SkyIslandItem extends ArsenalItem {
     private static final int RADIUS = 22;
     private static final int DEPTH = 14;
     private static final int LIFT = 45;
@@ -37,7 +36,7 @@ public class SkyIslandItem extends Item {
     private static final int COOLDOWN = 400;
 
     public SkyIslandItem(Settings settings) {
-        super(settings);
+        super(settings, "Lifts a disc of ground into the sky, trees and buildings intact.");
     }
 
     @Override

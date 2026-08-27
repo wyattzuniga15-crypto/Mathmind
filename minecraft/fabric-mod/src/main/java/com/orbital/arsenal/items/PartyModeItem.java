@@ -11,7 +11,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -24,12 +23,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Everything at once: fireworks, a disco floor, confetti, and chickens. */
-public class PartyModeItem extends Item {
+public class PartyModeItem extends ArsenalItem {
     private static final int DURATION = 900;
     private static final int COOLDOWN = 600;
 
     public PartyModeItem(Settings settings) {
-        super(settings);
+        super(settings, "Everything at once: fireworks, a disco floor, confetti, and chickens.");
     }
 
     @Override

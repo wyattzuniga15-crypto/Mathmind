@@ -2,7 +2,6 @@ package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.echo.Echoes;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -24,11 +23,11 @@ import net.minecraft.world.World;
  * It rewinds you and nothing else, which is the whole reason it is not just a
  * smaller Rewind Clock. The world keeps whatever happened; only you go back.
  */
-public class ChronarchHeartItem extends Item {
+public class ChronarchHeartItem extends ArsenalItem {
     private static final int COOLDOWN = 600;
 
     public ChronarchHeartItem(Settings settings) {
-        super(settings);
+        super(settings, "What the Chronarch was using on you, now yours: rewind *yourself*.");
     }
 
     @Override

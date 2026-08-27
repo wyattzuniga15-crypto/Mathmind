@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Smooths the ground around you into rolling hills instead of whatever was there. */
-public class LandscaperItem extends Item {
+public class LandscaperItem extends ArsenalItem {
     private static final int RADIUS = 26;
     private static final int COOLDOWN = 250;
 
     public LandscaperItem(Settings settings) {
-        super(settings);
+        super(settings, "Smooths the ground around you into rolling hills instead of whatever was there.");
     }
 
     @Override

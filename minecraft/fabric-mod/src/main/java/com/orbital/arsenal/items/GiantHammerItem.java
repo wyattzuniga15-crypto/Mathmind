@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A war hammer the size of a house, head first. */
-public class GiantHammerItem extends Item {
+public class GiantHammerItem extends ArsenalItem {
     private static final int REACH = 16;
     private static final int HEIGHT = 100;
     private static final int CRATER = 24;
@@ -22,7 +21,7 @@ public class GiantHammerItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantHammerItem(Settings settings) {
-        super(settings);
+        super(settings, "A war hammer the size of a house, head first.");
     }
 
     @Override

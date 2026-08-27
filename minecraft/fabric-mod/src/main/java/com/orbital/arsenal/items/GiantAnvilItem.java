@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -13,9 +12,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drops a colossal anvil. It is very heavy, and the hole says so. */
-public class GiantAnvilItem extends Item {
+public class GiantAnvilItem extends ArsenalItem {
     public GiantAnvilItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops a colossal anvil. It is very heavy, and the hole says so.");
     }
 
     @Override

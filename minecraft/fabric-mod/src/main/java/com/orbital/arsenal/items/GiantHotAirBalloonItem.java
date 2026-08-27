@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drops a hot air balloon, basket and all. It does not stay up. */
-public class GiantHotAirBalloonItem extends Item {
+public class GiantHotAirBalloonItem extends ArsenalItem {
     private static final int REACH = 16;
     private static final int HEIGHT = 110;
     private static final int CRATER = 14;
@@ -22,7 +21,7 @@ public class GiantHotAirBalloonItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantHotAirBalloonItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops a hot air balloon, basket and all. It does not stay up.");
     }
 
     @Override

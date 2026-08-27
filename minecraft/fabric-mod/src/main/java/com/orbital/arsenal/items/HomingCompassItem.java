@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,7 +14,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Points the way back to where you last used it, and tells you how far. */
-public class HomingCompassItem extends Item {
+public class HomingCompassItem extends ArsenalItem {
     /** Where each player set their marker. */
     // Keyed by UUID rather than by the player object. A PlayerEntity is
     // replaced on every respawn and every dimension change, so an
@@ -27,7 +26,7 @@ public class HomingCompassItem extends Item {
     private static final int COOLDOWN = 20;
 
     public HomingCompassItem(Settings settings) {
-        super(settings);
+        super(settings, "Points the way back to where you last used it, and tells you how far.");
     }
 
     @Override

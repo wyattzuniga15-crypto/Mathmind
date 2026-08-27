@@ -4,7 +4,6 @@ import com.orbital.arsenal.entity.ModEntities;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,11 +15,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Calls down a sky whale. It is five blocks long, entirely peaceful, and will drift over your world for as long as you leave it alone. */
-public class SkyWhaleEggItem extends Item {
+public class SkyWhaleEggItem extends ArsenalItem {
     private static final int COOLDOWN = 200;
 
     public SkyWhaleEggItem(Settings settings) {
-        super(settings);
+        super(settings, "Calls down a sky whale. It is five blocks long, entirely peaceful, and will drift over your world for as long as you leave it alone.");
     }
 
     @Override

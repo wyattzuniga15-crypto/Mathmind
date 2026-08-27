@@ -1,7 +1,6 @@
 package com.orbital.arsenal.items;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -11,14 +10,14 @@ import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 /** Cycles the time: dawn, noon, dusk, midnight. */
-public class TimeOfDayItem extends Item {
+public class TimeOfDayItem extends ArsenalItem {
     private static final long[] TIMES = {1_000L, 6_000L, 12_000L, 18_000L};
     private static final String[] NAMES = {"Dawn.", "Noon.", "Dusk.", "Midnight."};
     private static int mode = 0;
     private static final int COOLDOWN = 40;
 
     public TimeOfDayItem(Settings settings) {
-        super(settings);
+        super(settings, "Cycles the time: dawn, noon, dusk, midnight.");
     }
 
     @Override

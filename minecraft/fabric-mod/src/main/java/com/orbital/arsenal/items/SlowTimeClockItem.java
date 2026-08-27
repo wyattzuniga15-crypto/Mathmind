@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.ModItems;
 import com.orbital.arsenal.time.TimeControl;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -23,14 +22,14 @@ import net.minecraft.world.World;
  *
  * Right-click again to bring the world back up to speed early.
  */
-public class SlowTimeClockItem extends Item {
+public class SlowTimeClockItem extends ArsenalItem {
     private static final int SECONDS = 20;
     /** A quarter of the normal twenty ticks a second. */
     private static final float RATE = 5.0f;
     private static final int COOLDOWN = ModItems.CLOCK_COOLDOWN;
 
     public SlowTimeClockItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops the world to a quarter speed while you carry on at your own.");
     }
 
     @Override

@@ -8,7 +8,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -28,7 +27,7 @@ import net.minecraft.world.World;
  * for ten seconds is an event. Each course is a ring rather than a disc, so the
  * inside stays hollow and becomes the vent without a second pass to carve it.
  */
-public class VolcanoSeedItem extends Item {
+public class VolcanoSeedItem extends ArsenalItem {
     private static final int HEIGHT = 60;
     private static final double BASE = 34.0;
     private static final double VENT = 5.0;
@@ -38,7 +37,7 @@ public class VolcanoSeedItem extends Item {
     private static final int COOLDOWN = 600;
 
     public VolcanoSeedItem(Settings settings) {
-        super(settings);
+        super(settings, "Plant it, and a volcano grows out of the ground — then erupts.");
     }
 
     @Override

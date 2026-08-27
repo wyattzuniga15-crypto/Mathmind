@@ -7,7 +7,6 @@ import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -27,12 +26,12 @@ import net.minecraft.world.World;
  * "a copy of me that fights for me" has to do. Writing that from scratch would
  * take a custom brain and arrive at the same behaviour.
  */
-public class DoppelgangerItem extends Item {
+public class DoppelgangerItem extends ArsenalItem {
     private static final double SCALE = 0.62;
     private static final int COOLDOWN = 100;
 
     public DoppelgangerItem(Settings settings) {
-        super(settings);
+        super(settings, "Calls up a double of you that fights on your side.");
     }
 
     @Override

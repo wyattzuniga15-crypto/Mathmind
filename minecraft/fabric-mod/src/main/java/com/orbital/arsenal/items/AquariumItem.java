@@ -9,7 +9,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -21,14 +20,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Puts up a glass tank of water in front of you, fish included. */
-public class AquariumItem extends Item {
+public class AquariumItem extends ArsenalItem {
     private static final int HALF = 8;
     private static final int TALL = 12;
     private static final int FISH = 20;
     private static final int COOLDOWN = 300;
 
     public AquariumItem(Settings settings) {
-        super(settings);
+        super(settings, "Puts up a glass tank of water in front of you, fish included.");
     }
 
     @Override

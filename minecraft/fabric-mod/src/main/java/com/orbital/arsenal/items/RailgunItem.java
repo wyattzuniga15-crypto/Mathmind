@@ -7,7 +7,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -28,7 +27,7 @@ import net.minecraft.world.World;
  * aim vector rather than by stepping a driving axis, so a shot at any angle is
  * the same clean cylinder; stepping an axis leaves a staircase on diagonals.
  */
-public class RailgunItem extends Item {
+public class RailgunItem extends ArsenalItem {
     private static final int RANGE = 400;
     private static final double BORE = 2.6;
     /** One metre of shaft per step; a step longer than the bore leaves gaps. */
@@ -37,7 +36,7 @@ public class RailgunItem extends Item {
     private static final int COOLDOWN = 100;
 
     public RailgunItem(Settings settings) {
-        super(settings);
+        super(settings, "Bores a perfectly straight shaft along your line of sight.");
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.boss.Chronarch;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,11 +14,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Wakes the Chronarch where you are looking. Consumed doing it. */
-public class ChronarchSealItem extends Item {
+public class ChronarchSealItem extends ArsenalItem {
     private static final int COOLDOWN = 200;
 
     public ChronarchSealItem(Settings settings) {
-        super(settings);
+        super(settings, "Wakes the Chronarch where you are looking. Consumed doing it.");
     }
 
     @Override

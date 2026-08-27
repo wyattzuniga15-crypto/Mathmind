@@ -4,7 +4,6 @@ import com.orbital.arsenal.entity.ModEntities;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,11 +15,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Summons a Titan: seven blocks of bronze humanoid with six hundred hit points and a very bad attitude. */
-public class TitanSealItem extends Item {
+public class TitanSealItem extends ArsenalItem {
     private static final int COOLDOWN = 400;
 
     public TitanSealItem(Settings settings) {
-        super(settings);
+        super(settings, "Summons a Titan: seven blocks of bronze humanoid with six hundred hit points and a very bad attitude.");
     }
 
     @Override

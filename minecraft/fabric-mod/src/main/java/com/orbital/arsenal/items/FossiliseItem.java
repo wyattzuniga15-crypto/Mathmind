@@ -7,7 +7,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -20,12 +19,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Turns every living thing near you to stone. Permanently. */
-public class FossiliseItem extends Item {
+public class FossiliseItem extends ArsenalItem {
     private static final double REACH = 24.0;
     private static final int COOLDOWN = 300;
 
     public FossiliseItem(Settings settings) {
-        super(settings);
+        super(settings, "Turns every living thing near you to stone. Permanently.");
     }
 
     @Override

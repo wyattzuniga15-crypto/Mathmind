@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -16,14 +15,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Raises a blocky twenty-block statue of you, where you stand. */
-public class StatueItem extends Item {
+public class StatueItem extends ArsenalItem {
     private static final int LEGS = 8;
     private static final int TORSO = 18;
     private static final int TOP = 24;
     private static final int COOLDOWN = 400;
 
     public StatueItem(Settings settings) {
-        super(settings);
+        super(settings, "Raises a blocky twenty-block statue of you, where you stand.");
     }
 
     @Override

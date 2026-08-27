@@ -1,7 +1,6 @@
 package com.orbital.arsenal.items;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -12,12 +11,12 @@ import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 /** Cycles the weather: clear, then rain, then a thunderstorm. */
-public class WeatherControlItem extends Item {
+public class WeatherControlItem extends ArsenalItem {
     private static int mode = 0;
     private static final int COOLDOWN = 60;
 
     public WeatherControlItem(Settings settings) {
-        super(settings);
+        super(settings, "Cycles the weather: clear, then rain, then a thunderstorm.");
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,14 +17,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A pocket singularity. Drags everything nearby inward for eight seconds, then lets go. */
-public class BlackHoleGrenadeItem extends Item {
+public class BlackHoleGrenadeItem extends ArsenalItem {
     private static final int LIFETIME = 160;
     private static final double REACH = 26.0;
     private static final double PULL = 0.22;
     private static final int COOLDOWN = 200;
 
     public BlackHoleGrenadeItem(Settings settings) {
-        super(settings);
+        super(settings, "A pocket singularity. Drags everything nearby inward for eight seconds, then lets go.");
     }
 
     @Override

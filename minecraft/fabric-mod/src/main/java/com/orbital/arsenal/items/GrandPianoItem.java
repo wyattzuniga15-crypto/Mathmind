@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,9 +16,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** The oldest joke there is: a grand piano, from a great height. */
-public class GrandPianoItem extends Item {
+public class GrandPianoItem extends ArsenalItem {
     public GrandPianoItem(Settings settings) {
-        super(settings);
+        super(settings, "The oldest joke there is: a grand piano, from a great height.");
     }
 
     @Override

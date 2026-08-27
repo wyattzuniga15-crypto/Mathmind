@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,14 +17,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** It rains chickens. Two hundred of them. */
-public class ChickenRainItem extends Item {
+public class ChickenRainItem extends ArsenalItem {
     private static final int BIRDS = 200;
     private static final int PER_TICK = 5;
     private static final double SPREAD = 22.0;
     private static final int COOLDOWN = 400;
 
     public ChickenRainItem(Settings settings) {
-        super(settings);
+        super(settings, "It rains chickens. Two hundred of them.");
     }
 
     @Override

@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -18,11 +17,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Builds an obsidian frame in front of you and lights it. */
-public class PortalFrameItem extends Item {
+public class PortalFrameItem extends ArsenalItem {
     private static final int COOLDOWN = 200;
 
     public PortalFrameItem(Settings settings) {
-        super(settings);
+        super(settings, "Builds an obsidian frame in front of you and lights it.");
     }
 
     @Override

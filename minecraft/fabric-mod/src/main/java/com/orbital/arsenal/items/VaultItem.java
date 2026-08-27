@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -16,13 +15,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Seals an obsidian room under your feet, with a chest waiting in it. */
-public class VaultItem extends Item {
+public class VaultItem extends ArsenalItem {
     private static final int HALF = 5;
     private static final int DROP = 12;
     private static final int COOLDOWN = 400;
 
     public VaultItem(Settings settings) {
-        super(settings);
+        super(settings, "Seals an obsidian room under your feet, with a chest waiting in it.");
     }
 
     @Override

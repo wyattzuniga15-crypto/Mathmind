@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Raises a lit tower with a spiral stair inside, sixty blocks up. */
-public class TowerBuilderItem extends Item {
+public class TowerBuilderItem extends ArsenalItem {
     private static final int HEIGHT = 60;
     private static final int R = 6;
     private static final int COOLDOWN = 300;
 
     public TowerBuilderItem(Settings settings) {
-        super(settings);
+        super(settings, "Raises a lit tower with a spiral stair inside, sixty blocks up.");
     }
 
     @Override

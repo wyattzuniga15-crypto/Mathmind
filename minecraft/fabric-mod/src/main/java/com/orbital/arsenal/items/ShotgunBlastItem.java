@@ -5,7 +5,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,13 +16,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A close-range cone that shreds everything in front of you. */
-public class ShotgunBlastItem extends Item {
+public class ShotgunBlastItem extends ArsenalItem {
     private static final double RANGE = 18.0;
     private static final double SPREAD = 0.55;
     private static final int COOLDOWN = 30;
 
     public ShotgunBlastItem(Settings settings) {
-        super(settings);
+        super(settings, "A close-range cone that shreds everything in front of you.");
     }
 
     @Override

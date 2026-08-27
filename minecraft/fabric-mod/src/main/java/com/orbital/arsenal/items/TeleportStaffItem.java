@@ -1,7 +1,6 @@
 package com.orbital.arsenal.items;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -14,12 +13,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Puts you wherever you are looking, up to two hundred blocks away. */
-public class TeleportStaffItem extends Item {
+public class TeleportStaffItem extends ArsenalItem {
     private static final double RANGE = 200.0;
     private static final int COOLDOWN = 40;
 
     public TeleportStaffItem(Settings settings) {
-        super(settings);
+        super(settings, "Puts you wherever you are looking, up to two hundred blocks away.");
     }
 
     @Override

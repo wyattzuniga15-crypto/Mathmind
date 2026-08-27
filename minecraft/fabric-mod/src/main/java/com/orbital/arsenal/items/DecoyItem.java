@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drops an armour stand wearing your name. Mobs are drawn to it instead of you. */
-public class DecoyItem extends Item {
+public class DecoyItem extends ArsenalItem {
     private static final int LIFETIME = 1200;
     private static final double PULL = 20.0;
     private static final int COOLDOWN = 200;
 
     public DecoyItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops an armour stand wearing your name. Mobs are drawn to it instead of you.");
     }
 
     @Override

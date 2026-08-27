@@ -4,7 +4,6 @@ import com.orbital.arsenal.Scheduler;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,13 +16,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Lights up every ore within forty blocks for fifteen seconds, through solid rock. */
-public class OreFinderItem extends Item {
+public class OreFinderItem extends ArsenalItem {
     private static final int RADIUS = 40;
     private static final int SHOWS = 300;
     private static final int COOLDOWN = 300;
 
     public OreFinderItem(Settings settings) {
-        super(settings);
+        super(settings, "Lights up every ore within forty blocks for fifteen seconds, through solid rock.");
     }
 
     @Override

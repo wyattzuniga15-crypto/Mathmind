@@ -9,7 +9,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -22,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Two hundred balloons, released all at once, going up. */
-public class BalloonReleaseItem extends Item {
+public class BalloonReleaseItem extends ArsenalItem {
     private static final int BALLOONS = 200;
     private static final int PER_TICK = 8;
     private static final int DURATION = 400;
@@ -30,7 +29,7 @@ public class BalloonReleaseItem extends Item {
     private static final int COOLDOWN = 300;
 
     public BalloonReleaseItem(Settings settings) {
-        super(settings);
+        super(settings, "Two hundred balloons, released all at once, going up.");
     }
 
     @Override

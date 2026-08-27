@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import com.orbital.arsenal.weapons.Shells;
 import java.util.List;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,7 +17,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A ring of TNT dropped from the sky, detonating on impact rather than on a timer. */
-public class StrikeCannonItem extends Item {
+public class StrikeCannonItem extends ArsenalItem {
     private static final int SHELLS = 5000;
     // Radius scales with the shell count rather than staying put: 5000 shells
     // packed into the old 40-block radius would sit a third of a block apart,
@@ -31,7 +30,7 @@ public class StrikeCannonItem extends Item {
     private static final int COOLDOWN = 200;
 
     public StrikeCannonItem(Settings settings) {
-        super(settings);
+        super(settings, "A ring of TNT dropped from the sky, detonating on impact rather than on a timer.");
     }
 
     @Override

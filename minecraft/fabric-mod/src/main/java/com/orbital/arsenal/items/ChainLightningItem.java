@@ -7,7 +7,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,13 +18,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A bolt that jumps from target to target, up to twelve times. */
-public class ChainLightningItem extends Item {
+public class ChainLightningItem extends ArsenalItem {
     private static final int JUMPS = 12;
     private static final double HOP = 18.0;
     private static final int COOLDOWN = 120;
 
     public ChainLightningItem(Settings settings) {
-        super(settings);
+        super(settings, "A bolt that jumps from target to target, up to twelve times.");
     }
 
     @Override

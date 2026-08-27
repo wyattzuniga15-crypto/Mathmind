@@ -7,7 +7,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -19,13 +18,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Turns the ground around you to slime for a minute. Everything bounces. */
-public class BouncyGroundItem extends Item {
+public class BouncyGroundItem extends ArsenalItem {
     private static final int RADIUS = 16;
     private static final int DURATION = 1_200;
     private static final int COOLDOWN = 300;
 
     public BouncyGroundItem(Settings settings) {
-        super(settings);
+        super(settings, "Turns the ground around you to slime for a minute. Everything bounces.");
     }
 
     @Override

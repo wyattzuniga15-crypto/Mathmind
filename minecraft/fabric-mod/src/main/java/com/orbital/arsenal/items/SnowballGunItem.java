@@ -4,7 +4,6 @@ import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.weapons.Area;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,13 +15,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A stream of snowballs, for as long as you can stand it. */
-public class SnowballGunItem extends Item {
+public class SnowballGunItem extends ArsenalItem {
     private static final int SHOTS = 60;
     private static final double RANGE = 26.0;
     private static final int COOLDOWN = 100;
 
     public SnowballGunItem(Settings settings) {
-        super(settings);
+        super(settings, "A stream of snowballs, for as long as you can stand it.");
     }
 
     @Override

@@ -7,7 +7,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
@@ -33,7 +32,7 @@ import net.minecraft.world.World;
  * changed shape more than once between versions. These take no parameters at
  * all, so they cannot break that way.
  */
-public class OreSenseItem extends Item {
+public class OreSenseItem extends ArsenalItem {
     private static final int RADIUS = 32;
     private static final int SCAN_PER_TICK = 60_000;
     /** How long the ores stay lit, and how often they pulse. */
@@ -82,7 +81,7 @@ public class OreSenseItem extends Item {
     }
 
     public OreSenseItem(Settings settings) {
-        super(settings);
+        super(settings, "A pulse that shows you every ore around you, through solid stone.");
     }
 
     @Override

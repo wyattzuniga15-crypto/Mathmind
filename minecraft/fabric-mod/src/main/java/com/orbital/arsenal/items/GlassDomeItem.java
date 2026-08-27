@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -16,12 +15,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Puts a glass dome over you. Weather stops at the door. */
-public class GlassDomeItem extends Item {
+public class GlassDomeItem extends ArsenalItem {
     private static final int RADIUS = 18;
     private static final int COOLDOWN = 300;
 
     public GlassDomeItem(Settings settings) {
-        super(settings);
+        super(settings, "Puts a glass dome over you. Weather stops at the door.");
     }
 
     @Override

@@ -8,7 +8,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -29,7 +28,7 @@ import net.minecraft.world.World;
  * a straight trench — a tornado that travelled in a line would just be a
  * slower railgun.
  */
-public class TornadoItem extends Item {
+public class TornadoItem extends ArsenalItem {
     private static final int LIFETIME = 600;
     private static final double DRIFT = 0.35;
     private static final double RADIUS = 7.0;
@@ -51,7 +50,7 @@ public class TornadoItem extends Item {
     }
 
     public TornadoItem(Settings settings) {
-        super(settings);
+        super(settings, "A vortex that wanders off on its own and tears up whatever it crosses.");
     }
 
     @Override

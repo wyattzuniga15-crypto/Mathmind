@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.time.Souls;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -31,7 +30,7 @@ import net.minecraft.world.World;
  * versions into something I could not verify. A revived mob is the same
  * creature in the same place with the same name, but it is a new animal.
  */
-public class RewindClockItem extends Item {
+public class RewindClockItem extends ArsenalItem {
     private final int reach;
     private final String label;
     private final int cooldown;
@@ -41,8 +40,18 @@ public class RewindClockItem extends Item {
      * @param label how to name that reach in chat
      * @param cooldown ticks before it can be used again — deeper clocks wait longer
      */
+    /** What this particular clock does, from the window it was built with. */
+    private static String describe(String label) {
+        if ("everything".equals(label)) {
+            return "Puts the world back to the beginning — the whole recording, undone.";
+        }
+        return "Puts the world back " + label + ", every block of it.";
+    }
+
     public RewindClockItem(Settings settings, int reach, String label, int cooldown) {
-        super(settings);
+        // Four items share this class, so the class comment describes all four
+        // and would be no use on any of them. Each clock says its own reach.
+        super(settings, describe(label));
         this.reach = reach;
         this.label = label;
         this.cooldown = cooldown;

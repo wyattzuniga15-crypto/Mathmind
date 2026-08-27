@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.Scheduler;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,12 +15,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Thirty seconds of fireworks overhead, in every colour there is. */
-public class FireworkShowItem extends Item {
+public class FireworkShowItem extends ArsenalItem {
     private static final int DURATION = 600;
     private static final int COOLDOWN = 300;
 
     public FireworkShowItem(Settings settings) {
-        super(settings);
+        super(settings, "Thirty seconds of fireworks overhead, in every colour there is.");
     }
 
     @Override

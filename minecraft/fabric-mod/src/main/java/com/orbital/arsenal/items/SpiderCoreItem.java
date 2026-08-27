@@ -4,7 +4,6 @@ import com.orbital.arsenal.entity.ModEntities;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,11 +15,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Assembles a six-legged machine. It is the quickest thing in the mod and it will reach you. */
-public class SpiderCoreItem extends Item {
+public class SpiderCoreItem extends ArsenalItem {
     private static final int COOLDOWN = 400;
 
     public SpiderCoreItem(Settings settings) {
-        super(settings);
+        super(settings, "Assembles a six-legged machine. It is the quickest thing in the mod and it will reach you.");
     }
 
     @Override

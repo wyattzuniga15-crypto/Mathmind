@@ -248,6 +248,8 @@ def main():
         # arguments, so a ::new-only scan reports them as dead code.
         used = set(re.findall(r"(\w+Item)::new", mod)) | set(re.findall(r"new (\w+Item)\(", mod))
         on_disk = {p.stem for p in (ROOT / "src/main/java/com/orbital/arsenal/items").glob("*Item.java")}
+        # ArsenalItem is the base class every item extends, not an item.
+        on_disk.discard("ArsenalItem")
         check(on_disk <= used, f"item classes nothing registers: {sorted(on_disk - used)}")
 
         # Files left behind by an item that was renamed or dropped.
@@ -510,6 +512,8 @@ def main():
     # build either way it falls.
     voiceless = []
     for src in sorted((ROOT / "src/main/java/com/orbital/arsenal/items").glob("*.java")):
+        if src.stem == "ArsenalItem":
+            continue   # the base class every item extends, not an item itself
         text = src.read_text()
         if not any(w in text for w in ("playSound", "Sculpture.boom", "Strikes.blast")):
             voiceless.append(src.stem)
@@ -551,6 +555,37 @@ def main():
                   f"{path.stem} needs minecraft:{name}, which cannot be obtained in a "
                   f"single-player world — the item is uncraftable in survival")
     print(f"  every recipe can be crafted by one player alone")
+
+    # --- what an item says in game is what its javadoc says ---
+    #
+    # The tooltip text is passed to the base class as a literal, and the
+    # generators fill it from each item's own javadoc — the same sentence the
+    # field manual is built from. Nothing in the compiler ties those two
+    # together, so an item's description could be edited in one and not the
+    # other and the page and the game would quietly disagree.
+    told = 0
+    for src in sorted((ROOT / "src/main/java/com/orbital/arsenal/items").glob("*.java")):
+        text = src.read_text()
+        if src.stem == "ArsenalItem":
+            continue
+        check(f"public class {src.stem} extends ArsenalItem" in text,
+              f"{src.name} does not extend ArsenalItem, so it has no tooltip")
+        doc = re.search(r"/\*\*(.*?)\*/\s*public class", text, re.S)
+        said = re.search(r'super\(settings, "((?:[^"\\]|\\.)*)"\)', text)
+        if not said:
+            # RewindClockItem builds its line from the window it was given,
+            # because four items share that class and one sentence cannot
+            # describe all four.
+            check("super(settings, describe(" in text,
+                  f"{src.name} passes no description to ArsenalItem")
+            continue
+        told += 1
+        first = re.split(r"\s{2,}", " ".join(
+            l.strip().lstrip("*").strip() for l in doc.group(1).split("\n")).strip())[0].strip()
+        check(said.group(1).replace('\\"', '"') == first,
+              f"{src.name}'s tooltip and its javadoc have drifted apart:\n"
+              f"      javadoc: {first}\n      tooltip: {said.group(1)}")
+    print(f"  {told} items say in game exactly what their javadoc says")
 
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Bores a shaft straight up from where you stand, out to open sky. */
-public class SkylightItem extends Item {
+public class SkylightItem extends ArsenalItem {
     private static final int R = 3;
     private static final int COOLDOWN = 100;
 
     public SkylightItem(Settings settings) {
-        super(settings);
+        super(settings, "Bores a shaft straight up from where you stand, out to open sky.");
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Bores a person-sized passage straight through whatever is in front of you. */
-public class WallPhaseItem extends Item {
+public class WallPhaseItem extends ArsenalItem {
     private static final int DEPTH = 24;
     private static final int COOLDOWN = 60;
 
     public WallPhaseItem(Settings settings) {
-        super(settings);
+        super(settings, "Bores a person-sized passage straight through whatever is in front of you.");
     }
 
     @Override

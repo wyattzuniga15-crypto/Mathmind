@@ -9,7 +9,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -31,7 +30,7 @@ import net.minecraft.world.World;
  * remembered as one centre and radius rather than a list of blocks, so it
  * costs nothing to hold.
  */
-public class FreezeRayItem extends Item {
+public class FreezeRayItem extends ArsenalItem {
     private static final int RADIUS = 24;
     private static final int PER_TICK = 9_000;
     private static final int COOLDOWN = 60;
@@ -40,7 +39,7 @@ public class FreezeRayItem extends Item {
     private static Vec3d frozenAt = null;
 
     public FreezeRayItem(Settings settings) {
-        super(settings);
+        super(settings, "Freezes everything in a wide sphere, then shatters it on the next shot.");
     }
 
     @Override

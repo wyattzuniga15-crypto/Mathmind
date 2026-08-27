@@ -2,7 +2,6 @@ package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -14,13 +13,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Draws a glowing wireframe box in the air, so you can see a build before you make it. */
-public class HologramItem extends Item {
+public class HologramItem extends ArsenalItem {
     private static final int SIZE = 16;
     private static final int SHOWS = 1200;
     private static final int COOLDOWN = 60;
 
     public HologramItem(Settings settings) {
-        super(settings);
+        super(settings, "Draws a glowing wireframe box in the air, so you can see a build before you make it.");
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Sets a wide circle of ground alight, and leaves it burning. */
-public class NapalmLauncherItem extends Item {
+public class NapalmLauncherItem extends ArsenalItem {
     private static final int RADIUS = 22;
     private static final int COOLDOWN = 160;
 
     public NapalmLauncherItem(Settings settings) {
-        super(settings);
+        super(settings, "Sets a wide circle of ground alight, and leaves it burning.");
     }
 
     @Override

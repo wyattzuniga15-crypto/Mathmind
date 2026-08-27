@@ -6,7 +6,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,12 +18,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Slam the ground and a shockwave runs outward, throwing everything it passes. */
-public class EarthquakeHammerItem extends Item {
+public class EarthquakeHammerItem extends ArsenalItem {
     private static final int RINGS = 30;
     private static final int COOLDOWN = 200;
 
     public EarthquakeHammerItem(Settings settings) {
-        super(settings);
+        super(settings, "Slam the ground and a shockwave runs outward, throwing everything it passes.");
     }
 
     @Override

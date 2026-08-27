@@ -7,7 +7,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -20,7 +19,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Two hundred anvils, from a great height, on wherever you are pointing. */
-public class AnvilRainItem extends Item {
+public class AnvilRainItem extends ArsenalItem {
     private static final int ANVILS = 200;
     private static final int PER_TICK = 3;
     private static final double SPREAD = 18.0;
@@ -28,7 +27,7 @@ public class AnvilRainItem extends Item {
     private static final int COOLDOWN = 300;
 
     public AnvilRainItem(Settings settings) {
-        super(settings);
+        super(settings, "Two hundred anvils, from a great height, on wherever you are pointing.");
     }
 
     @Override

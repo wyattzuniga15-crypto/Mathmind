@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,12 +18,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Plants a pillar of light you can see from a very long way off. */
-public class BeaconItem extends Item {
+public class BeaconItem extends ArsenalItem {
     private static final int HEIGHT = 90;
     private static final int COOLDOWN = 120;
 
     public BeaconItem(Settings settings) {
-        super(settings);
+        super(settings, "Plants a pillar of light you can see from a very long way off.");
     }
 
     @Override

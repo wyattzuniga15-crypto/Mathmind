@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -28,7 +27,7 @@ import net.minecraft.world.World;
  * shaft; here end_rod gives the white-hot core and soul_fire_flame the blue
  * sheath, at no entity cost at all.
  */
-public class KamehamehaItem extends Item {
+public class KamehamehaItem extends ArsenalItem {
     private static final int RANGE = 160;
     private static final double STRIDE = 2.0;
     private static final int BORE = 5;
@@ -38,7 +37,7 @@ public class KamehamehaItem extends Item {
     private static final String[] SYLLABLES = {"KA", "ME", "HA", "ME", "HAAA!"};
 
     public KamehamehaItem(Settings settings) {
-        super(settings);
+        super(settings, "Charge through KA-ME-HA-ME-HAAA, then a beam that bores straight through whatever it meets.");
     }
 
     @Override

@@ -6,7 +6,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -19,11 +18,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Puts down a kitten that will not stop getting bigger. */
-public class GrowingCatItem extends Item {
+public class GrowingCatItem extends ArsenalItem {
     private static final int COOLDOWN = 40;
 
     public GrowingCatItem(Settings settings) {
-        super(settings);
+        super(settings, "Puts down a kitten that will not stop getting bigger.");
     }
 
     @Override

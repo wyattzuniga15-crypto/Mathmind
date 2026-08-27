@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drops a chess knight thirty-six blocks tall. It moves in an L, once. */
-public class GiantChessKnightItem extends Item {
+public class GiantChessKnightItem extends ArsenalItem {
     private static final int REACH = 18;
     private static final int HEIGHT = 105;
     private static final int CRATER = 16;
@@ -22,7 +21,7 @@ public class GiantChessKnightItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantChessKnightItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops a chess knight thirty-six blocks tall. It moves in an L, once.");
     }
 
     @Override

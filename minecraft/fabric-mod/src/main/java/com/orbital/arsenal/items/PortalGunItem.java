@@ -2,7 +2,6 @@ package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.portal.Portals;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -30,12 +29,12 @@ import net.minecraft.world.World;
  * to sit on, and one hanging in mid-air with nothing behind it reads as a bug
  * even when it works.
  */
-public class PortalGunItem extends Item {
+public class PortalGunItem extends ArsenalItem {
     private static final double RANGE = 64.0;
     private static final int COOLDOWN = 8;
 
     public PortalGunItem(Settings settings) {
-        super(settings);
+        super(settings, "The Aperture Science Handheld Portal Device, more or less.");
     }
 
     @Override

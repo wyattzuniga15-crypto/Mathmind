@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Buries everything nearby under moss and leaves, as if it had been left alone for a century. */
-public class OvergrowthItem extends Item {
+public class OvergrowthItem extends ArsenalItem {
     private static final int RADIUS = 28;
     private static final int COOLDOWN = 300;
 
     public OvergrowthItem(Settings settings) {
-        super(settings);
+        super(settings, "Buries everything nearby under moss and leaves, as if it had been left alone for a century.");
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Builds a sandstone pyramid, hollow, with a chamber inside it. */
-public class PyramidItem extends Item {
+public class PyramidItem extends ArsenalItem {
     private static final int SIDE = 24;
     private static final int COOLDOWN = 400;
 
     public PyramidItem(Settings settings) {
-        super(settings);
+        super(settings, "Builds a sandstone pyramid, hollow, with a chamber inside it.");
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** An old crater, weathered in — rim, bowl, and a molten core. */
-public class MeteorCraterItem extends Item {
+public class MeteorCraterItem extends ArsenalItem {
     private static final int RADIUS = 38;
     private static final int DEPTH = 20;
     private static final int COOLDOWN = 300;
 
     public MeteorCraterItem(Settings settings) {
-        super(settings);
+        super(settings, "An old crater, weathered in — rim, bowl, and a molten core.");
     }
 
     @Override

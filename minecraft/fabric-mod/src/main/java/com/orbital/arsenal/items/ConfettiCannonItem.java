@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.Scheduler;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,12 +14,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Fires a great burst of confetti. Purely decorative, and that is the point. */
-public class ConfettiCannonItem extends Item {
+public class ConfettiCannonItem extends ArsenalItem {
     private static final int PUFFS = 40;
     private static final int COOLDOWN = 60;
 
     public ConfettiCannonItem(Settings settings) {
-        super(settings);
+        super(settings, "Fires a great burst of confetti. Purely decorative, and that is the point.");
     }
 
     @Override

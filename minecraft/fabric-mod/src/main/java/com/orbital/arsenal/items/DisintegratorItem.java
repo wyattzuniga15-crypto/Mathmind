@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Dissolves a sphere of world into nothing at all. No crater lip, no debris — the blocks simply stop existing. */
-public class DisintegratorItem extends Item {
+public class DisintegratorItem extends ArsenalItem {
     private static final int RADIUS = 20;
     private static final int COOLDOWN = 120;
 
     public DisintegratorItem(Settings settings) {
-        super(settings);
+        super(settings, "Dissolves a sphere of world into nothing at all. No crater lip, no debris — the blocks simply stop existing.");
     }
 
     @Override

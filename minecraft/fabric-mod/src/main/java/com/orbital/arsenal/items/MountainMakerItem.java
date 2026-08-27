@@ -7,7 +7,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -20,13 +19,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Raises a mountain where you are looking, course by course. */
-public class MountainMakerItem extends Item {
+public class MountainMakerItem extends ArsenalItem {
     private static final int HEIGHT = 70;
     private static final double BASE = 46.0;
     private static final int COOLDOWN = 500;
 
     public MountainMakerItem(Settings settings) {
-        super(settings);
+        super(settings, "Raises a mountain where you are looking, course by course.");
     }
 
     @Override

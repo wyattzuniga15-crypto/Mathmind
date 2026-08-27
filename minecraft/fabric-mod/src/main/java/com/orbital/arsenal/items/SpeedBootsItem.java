@@ -2,7 +2,6 @@ package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -14,13 +13,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Thirty seconds of running much faster than you should. */
-public class SpeedBootsItem extends Item {
+public class SpeedBootsItem extends ArsenalItem {
     private static final int DURATION = 600;
     private static final double BOOST = 0.22;
     private static final int COOLDOWN = 300;
 
     public SpeedBootsItem(Settings settings) {
-        super(settings);
+        super(settings, "Thirty seconds of running much faster than you should.");
     }
 
     @Override

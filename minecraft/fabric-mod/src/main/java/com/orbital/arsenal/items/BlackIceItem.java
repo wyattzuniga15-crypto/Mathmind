@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,14 +18,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Freezes a wide sheet of ground so slick that nothing standing on it can stop. */
-public class BlackIceItem extends Item {
+public class BlackIceItem extends ArsenalItem {
     private static final int RADIUS = 26;
     private static final int DURATION = 900;
     private static final double TOP_SPEED = 0.6;
     private static final int COOLDOWN = 250;
 
     public BlackIceItem(Settings settings) {
-        super(settings);
+        super(settings, "Freezes a wide sheet of ground so slick that nothing standing on it can stop.");
     }
 
     @Override

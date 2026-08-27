@@ -7,7 +7,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -19,13 +18,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Lays a floor of coloured glass that keeps changing colour under your feet. */
-public class DiscoFloorItem extends Item {
+public class DiscoFloorItem extends ArsenalItem {
     private static final int RADIUS = 10;
     private static final int DURATION = 800;
     private static final int COOLDOWN = 300;
 
     public DiscoFloorItem(Settings settings) {
-        super(settings);
+        super(settings, "Lays a floor of coloured glass that keeps changing colour under your feet.");
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A mushroom twenty-three blocks across. */
-public class GiantMushroomItem extends Item {
+public class GiantMushroomItem extends ArsenalItem {
     private static final int REACH = 12;
     private static final int HEIGHT = 80;
     private static final int CRATER = 20;
@@ -22,7 +21,7 @@ public class GiantMushroomItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantMushroomItem(Settings settings) {
-        super(settings);
+        super(settings, "A mushroom twenty-three blocks across.");
     }
 
     @Override

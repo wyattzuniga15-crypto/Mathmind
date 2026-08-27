@@ -5,7 +5,6 @@ import com.orbital.arsenal.time.Journal;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Raises a platform under you, forty blocks up, and rides it with you. */
-public class ElevatorItem extends Item {
+public class ElevatorItem extends ArsenalItem {
     private static final int RISE = 40;
     private static final int COOLDOWN = 120;
 
     public ElevatorItem(Settings settings) {
-        super(settings);
+        super(settings, "Raises a platform under you, forty blocks up, and rides it with you.");
     }
 
     @Override

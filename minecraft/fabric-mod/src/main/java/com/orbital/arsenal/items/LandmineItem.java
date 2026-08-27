@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,13 +18,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Buries a charge where you stand. It waits for something to walk over it. */
-public class LandmineItem extends Item {
+public class LandmineItem extends ArsenalItem {
     private static final int ARMED_FOR = 6_000;
     private static final double TRIGGER = 3.0;
     private static final int COOLDOWN = 40;
 
     public LandmineItem(Settings settings) {
-        super(settings);
+        super(settings, "Buries a charge where you stand. It waits for something to walk over it.");
     }
 
     @Override

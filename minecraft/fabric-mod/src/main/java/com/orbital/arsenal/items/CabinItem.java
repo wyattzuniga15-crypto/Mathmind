@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -16,13 +15,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Builds a one-room log cabin around you, window, torch and all. */
-public class CabinItem extends Item {
+public class CabinItem extends ArsenalItem {
     private static final int HALF = 5;
     private static final int TALL = 5;
     private static final int COOLDOWN = 300;
 
     public CabinItem(Settings settings) {
-        super(settings);
+        super(settings, "Builds a one-room log cabin around you, window, torch and all.");
     }
 
     @Override

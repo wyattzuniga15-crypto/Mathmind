@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Throws a railed bridge across whatever gap is in front of you. */
-public class BridgeBuilderItem extends Item {
+public class BridgeBuilderItem extends ArsenalItem {
     private static final int LENGTH = 90;
     private static final int COOLDOWN = 250;
 
     public BridgeBuilderItem(Settings settings) {
-        super(settings);
+        super(settings, "Throws a railed bridge across whatever gap is in front of you.");
     }
 
     @Override

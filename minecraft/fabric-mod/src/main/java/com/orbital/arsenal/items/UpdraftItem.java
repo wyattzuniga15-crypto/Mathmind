@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,7 +16,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A column of rising air. Step in and go up; step out and do not. */
-public class UpdraftItem extends Item {
+public class UpdraftItem extends ArsenalItem {
     private static final double RADIUS = 5.0;
     private static final int HEIGHT = 60;
     private static final int DURATION = 600;
@@ -25,7 +24,7 @@ public class UpdraftItem extends Item {
     private static final int COOLDOWN = 200;
 
     public UpdraftItem(Settings settings) {
-        super(settings);
+        super(settings, "A column of rising air. Step in and go up; step out and do not.");
     }
 
     @Override

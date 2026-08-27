@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,7 +16,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Sneak and use to mark where you stand. Use to come back to it. */
-public class RecallItem extends Item {
+public class RecallItem extends ArsenalItem {
     // Keyed by UUID and holding no entity and no world. A map keyed by the
     // player object loses its entry on every respawn and holds the old one
     // for ever; a map holding the ServerWorld pins the world on unload.
@@ -25,7 +24,7 @@ public class RecallItem extends Item {
     private static final int COOLDOWN = 60;
 
     public RecallItem(Settings settings) {
-        super(settings);
+        super(settings, "Sneak and use to mark where you stand. Use to come back to it.");
     }
 
     @Override

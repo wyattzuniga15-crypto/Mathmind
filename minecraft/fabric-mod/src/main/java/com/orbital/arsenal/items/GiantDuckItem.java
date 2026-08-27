@@ -7,7 +7,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drops an enormous rubber duck, which leaves it a pond to sit in. */
-public class GiantDuckItem extends Item {
+public class GiantDuckItem extends ArsenalItem {
     private static final int REACH = 12;
     private static final int RADIUS = 26;
     private static final int DEPTH = 9;
 
     public GiantDuckItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops an enormous rubber duck, which leaves it a pond to sit in.");
     }
 
     @Override

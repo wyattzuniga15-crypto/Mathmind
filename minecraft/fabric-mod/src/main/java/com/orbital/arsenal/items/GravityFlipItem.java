@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.Scheduler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -25,7 +24,7 @@ import net.minecraft.world.World;
  * When it ends the push stops and everything comes down at once, which is the
  * good part.
  */
-public class GravityFlipItem extends Item {
+public class GravityFlipItem extends ArsenalItem {
     private static final int DURATION = 400;
     private static final double REACH = 40.0;
     /** Minecraft pulls entities down about 0.08/tick; a touch more lifts. */
@@ -34,7 +33,7 @@ public class GravityFlipItem extends Item {
     private static final int COOLDOWN = 300;
 
     public GravityFlipItem(Settings settings) {
-        super(settings);
+        super(settings, "Turns gravity off over a wide area for twenty seconds.");
     }
 
     @Override

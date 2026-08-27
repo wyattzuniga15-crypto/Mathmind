@@ -17,10 +17,10 @@ TEMPLATE = '''package com.orbital.arsenal.items;
 {imports}
 
 /** {doc} */
-public class {cls}Item extends Item {{
+public class {cls}Item extends ArsenalItem {{
 {fields}
     public {cls}Item(Settings settings) {{
-        super(settings);
+        super(settings, "{doc}");
     }}
 
     @Override
@@ -37,7 +37,6 @@ public class {cls}Item extends Item {{
 
 BASE_IMPORTS = [
     "import net.minecraft.entity.player.PlayerEntity;",
-    "import net.minecraft.item.Item;",
     "import net.minecraft.server.world.ServerWorld;",
     "import net.minecraft.text.Text;",
     "import net.minecraft.util.ActionResult;",

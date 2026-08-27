@@ -7,7 +7,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -27,7 +26,7 @@ import net.minecraft.world.World;
  * you happened to be doing when its minute came round. Right-click again to
  * switch it off.
  */
-public class EchoBeaconItem extends Item {
+public class EchoBeaconItem extends ArsenalItem {
     private static final int INTERVAL = 1200; // 60 seconds
     private static final int COOLDOWN = 40;
 
@@ -42,7 +41,7 @@ public class EchoBeaconItem extends Item {
     private static final Set<java.util.UUID> RUNNING = new java.util.HashSet<>();
 
     public EchoBeaconItem(Settings settings) {
-        super(settings);
+        super(settings, "Switch it on and a new echo joins you every minute, unattended.");
     }
 
     @Override

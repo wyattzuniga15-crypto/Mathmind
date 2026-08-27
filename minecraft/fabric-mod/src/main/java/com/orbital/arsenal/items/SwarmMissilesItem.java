@@ -7,7 +7,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,13 +18,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Twenty missiles that pick their own targets and chase them down. */
-public class SwarmMissilesItem extends Item {
+public class SwarmMissilesItem extends ArsenalItem {
     private static final int MISSILES = 20;
     private static final double HUNT = 48.0;
     private static final int COOLDOWN = 240;
 
     public SwarmMissilesItem(Settings settings) {
-        super(settings);
+        super(settings, "Twenty missiles that pick their own targets and chase them down.");
     }
 
     @Override

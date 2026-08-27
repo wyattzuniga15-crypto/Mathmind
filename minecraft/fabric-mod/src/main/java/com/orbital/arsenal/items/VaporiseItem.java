@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Boils away every drop of water and pool of lava within forty blocks. */
-public class VaporiseItem extends Item {
+public class VaporiseItem extends ArsenalItem {
     private static final int RADIUS = 40;
     private static final int COOLDOWN = 200;
 
     public VaporiseItem(Settings settings) {
-        super(settings);
+        super(settings, "Boils away every drop of water and pool of lava within forty blocks.");
     }
 
     @Override

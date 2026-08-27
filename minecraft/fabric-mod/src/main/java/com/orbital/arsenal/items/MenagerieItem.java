@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,12 +17,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Calls up one of each of the mod's eight creatures. They will not get along. */
-public class MenagerieItem extends Item {
+public class MenagerieItem extends ArsenalItem {
     private static final double RING = 18.0;
     private static final int COOLDOWN = 600;
 
     public MenagerieItem(Settings settings) {
-        super(settings);
+        super(settings, "Calls up one of each of the mod's eight creatures. They will not get along.");
     }
 
     @Override

@@ -7,7 +7,6 @@ import java.util.Map;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -20,7 +19,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A rock that follows you everywhere. It is not good for anything. */
-public class PetRockItem extends Item {
+public class PetRockItem extends ArsenalItem {
     /** Where each player's rock currently sits. */
     // Keyed by UUID rather than by the player object. A PlayerEntity is
     // replaced on every respawn and every dimension change, so an
@@ -32,7 +31,7 @@ public class PetRockItem extends Item {
     private static final int COOLDOWN = 40;
 
     public PetRockItem(Settings settings) {
-        super(settings);
+        super(settings, "A rock that follows you everywhere. It is not good for anything.");
     }
 
     @Override

@@ -7,7 +7,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -27,14 +26,14 @@ import net.minecraft.world.World;
  * things off. It only falls back to a random spot when there is nothing
  * within reach, so it never simply stops.
  */
-public class LightningCallerItem extends Item {
+public class LightningCallerItem extends ArsenalItem {
     private static final int DURATION = 900;
     private static final int EVERY = 10;
     private static final double REACH = 26.0;
     private static final int COOLDOWN = 300;
 
     public LightningCallerItem(Settings settings) {
-        super(settings);
+        super(settings, "A storm that walks with you, and hunts.");
     }
 
     @Override

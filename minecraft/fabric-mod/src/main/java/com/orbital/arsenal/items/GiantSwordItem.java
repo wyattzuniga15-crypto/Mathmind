@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A sword driven into the ground point first. */
-public class GiantSwordItem extends Item {
+public class GiantSwordItem extends ArsenalItem {
     private static final int REACH = 22;
     private static final int HEIGHT = 110;
     private static final int CRATER = 14;
@@ -22,7 +21,7 @@ public class GiantSwordItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantSwordItem(Settings settings) {
-        super(settings);
+        super(settings, "A sword driven into the ground point first.");
     }
 
     @Override

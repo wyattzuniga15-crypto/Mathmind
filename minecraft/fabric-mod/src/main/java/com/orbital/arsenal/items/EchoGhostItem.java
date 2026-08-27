@@ -2,7 +2,6 @@ package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.echo.Echoes;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -23,12 +22,12 @@ import net.minecraft.world.World;
  *
  * Crouch and right-click to send them all away.
  */
-public class EchoGhostItem extends Item {
+public class EchoGhostItem extends ArsenalItem {
     /** Short, because pressing repeatedly to raise a crowd is the point. */
     private static final int COOLDOWN = 20;
 
     public EchoGhostItem(Settings settings) {
-        super(settings);
+        super(settings, "One press, one ghost. Press again for another, and so on.");
     }
 
     @Override

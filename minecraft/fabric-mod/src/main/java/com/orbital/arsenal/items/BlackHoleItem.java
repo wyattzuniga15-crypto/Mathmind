@@ -9,7 +9,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -36,7 +35,7 @@ import net.minecraft.world.World;
  * hole visibly eats the world from the inside out, and it is budgeted per tick
  * because 22 million block changes in one go would stop the server dead.
  */
-public class BlackHoleItem extends Item {
+public class BlackHoleItem extends ArsenalItem {
     private static final int RADIUS = 175;
     private static final int AIM_DISTANCE = 80; // keeps the sphere in loaded chunks
     private static final int BLOCKS_PER_TICK = 40000;
@@ -48,7 +47,7 @@ public class BlackHoleItem extends Item {
     private final Random random = new Random();
 
     public BlackHoleItem(Settings settings) {
-        super(settings);
+        super(settings, "A singularity that eats a sphere of the world.");
     }
 
     @Override

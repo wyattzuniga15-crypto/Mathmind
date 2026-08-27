@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -18,14 +17,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Buries a lit stone dungeon under you, with a shaft down into it. */
-public class DungeonMakerItem extends Item {
+public class DungeonMakerItem extends ArsenalItem {
     private static final int W = 14;
     private static final int H = 6;
     private static final int DROP = 18;
     private static final int COOLDOWN = 300;
 
     public DungeonMakerItem(Settings settings) {
-        super(settings);
+        super(settings, "Buries a lit stone dungeon under you, with a shaft down into it.");
     }
 
     @Override

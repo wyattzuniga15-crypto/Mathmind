@@ -6,7 +6,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,14 +18,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Scatters two hundred torches over the ground and walls around you. No more dark corners. */
-public class TorchBombItem extends Item {
+public class TorchBombItem extends ArsenalItem {
     private static final int REACH = 24;
     private static final int TORCHES = 200;
     private static final int PER_TICK = 12;
     private static final int COOLDOWN = 200;
 
     public TorchBombItem(Settings settings) {
-        super(settings);
+        super(settings, "Scatters two hundred torches over the ground and walls around you. No more dark corners.");
     }
 
     @Override

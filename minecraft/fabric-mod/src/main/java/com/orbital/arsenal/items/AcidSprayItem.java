@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Eats through the ground in a spreading pool that keeps sinking. */
-public class AcidSprayItem extends Item {
+public class AcidSprayItem extends ArsenalItem {
     private static final int RADIUS = 14;
     private static final int SINKS = 20;
     private static final int COOLDOWN = 180;
 
     public AcidSprayItem(Settings settings) {
-        super(settings);
+        super(settings, "Eats through the ground in a spreading pool that keeps sinking.");
     }
 
     @Override

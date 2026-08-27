@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -16,12 +15,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Levels a field, tills it, plants it with wheat and puts the water in. */
-public class FarmPlotItem extends Item {
+public class FarmPlotItem extends ArsenalItem {
     private static final int HALF = 11;
     private static final int COOLDOWN = 300;
 
     public FarmPlotItem(Settings settings) {
-        super(settings);
+        super(settings, "Levels a field, tills it, plants it with wheat and puts the water in.");
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -14,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Drops a lighthouse, lit, thirty-six blocks tall. */
-public class GiantLighthouseItem extends Item {
+public class GiantLighthouseItem extends ArsenalItem {
     private static final int REACH = 14;
     private static final int HEIGHT = 95;
     private static final int CRATER = 18;
@@ -22,7 +21,7 @@ public class GiantLighthouseItem extends Item {
     private static final int COOLDOWN = 200;
 
     public GiantLighthouseItem(Settings settings) {
-        super(settings);
+        super(settings, "Drops a lighthouse, lit, thirty-six blocks tall.");
     }
 
     @Override

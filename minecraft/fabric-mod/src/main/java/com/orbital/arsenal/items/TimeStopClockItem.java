@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.ModItems;
 import com.orbital.arsenal.time.TimeControl;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -23,12 +22,12 @@ import net.minecraft.world.World;
  *
  * Right-click again to let time go before the fifteen seconds are up.
  */
-public class TimeStopClockItem extends Item {
+public class TimeStopClockItem extends ArsenalItem {
     private static final int SECONDS = 15;
     private static final int COOLDOWN = ModItems.CLOCK_COOLDOWN;
 
     public TimeStopClockItem(Settings settings) {
-        super(settings);
+        super(settings, "Stops the world dead. You keep moving.");
     }
 
     @Override

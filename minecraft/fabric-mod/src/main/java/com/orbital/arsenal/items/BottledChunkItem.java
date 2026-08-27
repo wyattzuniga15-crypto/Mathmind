@@ -8,7 +8,6 @@ import java.util.Map;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -40,7 +39,7 @@ import net.minecraft.world.World;
  * versions — this needs none of that, at the cost of the copy being forgotten
  * when the server stops.
  */
-public class BottledChunkItem extends Item {
+public class BottledChunkItem extends ArsenalItem {
     private static final int SIZE = 16;
     private static final int BLOCKS_PER_TICK = 2000;
     private static final int COOLDOWN = 40;
@@ -55,7 +54,7 @@ public class BottledChunkItem extends Item {
     private static final Map<java.util.UUID, BlockState[]> BOTTLES = new HashMap<>();
 
     public BottledChunkItem(Settings settings) {
-        super(settings);
+        super(settings, "Copy and paste the world.");
     }
 
     @Override

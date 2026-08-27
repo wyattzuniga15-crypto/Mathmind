@@ -6,7 +6,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,12 +18,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Leaves a trail of coloured blocks wherever you walk, for a minute. */
-public class RainbowTrailItem extends Item {
+public class RainbowTrailItem extends ArsenalItem {
     private static final int DURATION = 1_200;
     private static final int COOLDOWN = 200;
 
     public RainbowTrailItem(Settings settings) {
-        super(settings);
+        super(settings, "Leaves a trail of coloured blocks wherever you walk, for a minute.");
     }
 
     @Override

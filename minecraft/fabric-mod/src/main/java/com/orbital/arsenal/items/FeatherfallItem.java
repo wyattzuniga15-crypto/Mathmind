@@ -4,7 +4,6 @@ import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.weapons.Area;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,13 +15,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Everything nearby falls like a feather for a minute, including you. */
-public class FeatherfallItem extends Item {
+public class FeatherfallItem extends ArsenalItem {
     private static final int DURATION = 1200;
     private static final double REACH = 30.0;
     private static final int COOLDOWN = 300;
 
     public FeatherfallItem(Settings settings) {
-        super(settings);
+        super(settings, "Everything nearby falls like a feather for a minute, including you.");
     }
 
     @Override

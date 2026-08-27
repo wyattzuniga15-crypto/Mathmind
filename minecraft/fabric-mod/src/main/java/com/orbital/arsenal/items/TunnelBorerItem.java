@@ -5,7 +5,6 @@ import com.orbital.arsenal.time.Journal;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -17,13 +16,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Bores a lit tunnel straight ahead, two hundred blocks of it. */
-public class TunnelBorerItem extends Item {
+public class TunnelBorerItem extends ArsenalItem {
     private static final int LENGTH = 200;
     private static final int PER_TICK = 3;
     private static final int COOLDOWN = 300;
 
     public TunnelBorerItem(Settings settings) {
-        super(settings);
+        super(settings, "Bores a lit tunnel straight ahead, two hundred blocks of it.");
     }
 
     @Override

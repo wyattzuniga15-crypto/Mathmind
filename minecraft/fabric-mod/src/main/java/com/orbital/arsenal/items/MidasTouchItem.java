@@ -4,7 +4,6 @@ import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -17,12 +16,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Everything within twenty blocks becomes solid gold. Including, unfortunately, the trees. */
-public class MidasTouchItem extends Item {
+public class MidasTouchItem extends ArsenalItem {
     private static final int RADIUS = 20;
     private static final int COOLDOWN = 300;
 
     public MidasTouchItem(Settings settings) {
-        super(settings);
+        super(settings, "Everything within twenty blocks becomes solid gold. Including, unfortunately, the trees.");
     }
 
     @Override

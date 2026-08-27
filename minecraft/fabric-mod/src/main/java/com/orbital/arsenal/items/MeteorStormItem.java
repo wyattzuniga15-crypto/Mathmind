@@ -4,7 +4,6 @@ import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.weapons.Shells;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -24,7 +23,7 @@ import net.minecraft.world.World;
  * Meteors fall a few per tick rather than in waves, because a wave lands in
  * one instant and reads as a single explosion; a trickle reads as weather.
  */
-public class MeteorStormItem extends Item {
+public class MeteorStormItem extends ArsenalItem {
     private static final int DURATION = 1_200;
     private static final int EVERY = 6;
     private static final int PER_VOLLEY = 3;
@@ -33,7 +32,7 @@ public class MeteorStormItem extends Item {
     private static final int COOLDOWN = 400;
 
     public MeteorStormItem(Settings settings) {
-        super(settings);
+        super(settings, "A bombardment that follows you for a minute.");
     }
 
     @Override

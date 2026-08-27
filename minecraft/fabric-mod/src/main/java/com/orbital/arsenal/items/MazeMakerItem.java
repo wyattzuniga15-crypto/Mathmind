@@ -7,7 +7,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -19,14 +18,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Builds a real maze around you — walls on a grid, with gaps you have to find. */
-public class MazeMakerItem extends Item {
+public class MazeMakerItem extends ArsenalItem {
     private static final int CELLS = 12;
     private static final int CELL = 4;
     private static final int WALL = 5;
     private static final int COOLDOWN = 400;
 
     public MazeMakerItem(Settings settings) {
-        super(settings);
+        super(settings, "Builds a real maze around you — walls on a grid, with gaps you have to find.");
     }
 
     @Override

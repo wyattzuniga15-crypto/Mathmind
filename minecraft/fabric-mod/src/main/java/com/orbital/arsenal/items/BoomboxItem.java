@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,12 +18,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Plays a tune, and lights up the ground in time with it. */
-public class BoomboxItem extends Item {
+public class BoomboxItem extends ArsenalItem {
     private static final int BARS = 32;
     private static final int COOLDOWN = 200;
 
     public BoomboxItem(Settings settings) {
-        super(settings);
+        super(settings, "Plays a tune, and lights up the ground in time with it.");
     }
 
     @Override

@@ -6,7 +6,6 @@ import com.orbital.arsenal.weapons.Strikes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -27,7 +26,7 @@ import net.minecraft.world.World;
  * the Bedrock version of this weapon had to settle for 120 blocks across
  * precisely because it only had explosions to work with.
  */
-public class TacticalNukeItem extends Item {
+public class TacticalNukeItem extends ArsenalItem {
     private static final int RADIUS = 100;
     private static final int DEPTH = 30;
     private static final int ABOVE = 25;
@@ -36,7 +35,7 @@ public class TacticalNukeItem extends Item {
     private static final int COOLDOWN = 400;
 
     public TacticalNukeItem(Settings settings) {
-        super(settings);
+        super(settings, "A five-second fuse, then a bowl 200 blocks across carved out of the ground.");
     }
 
     @Override

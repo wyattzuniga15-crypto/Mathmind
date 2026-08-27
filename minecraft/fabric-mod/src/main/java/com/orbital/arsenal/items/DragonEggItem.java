@@ -4,7 +4,6 @@ import com.orbital.arsenal.entity.ModEntities;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,11 +15,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Hatches a dragon. Six blocks of wingspan, fast, and it hits harder than anything else that flies. */
-public class DragonEggItem extends Item {
+public class DragonEggItem extends ArsenalItem {
     private static final int COOLDOWN = 400;
 
     public DragonEggItem(Settings settings) {
-        super(settings);
+        super(settings, "Hatches a dragon. Six blocks of wingspan, fast, and it hits harder than anything else that flies.");
     }
 
     @Override

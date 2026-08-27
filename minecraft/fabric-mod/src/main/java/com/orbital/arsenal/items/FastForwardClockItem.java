@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.ModItems;
 import com.orbital.arsenal.time.TimeControl;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -26,14 +25,14 @@ import net.minecraft.world.World;
  * second while it runs, and that is felt on a machine that was keeping up
  * comfortably at normal speed.
  */
-public class FastForwardClockItem extends Item {
+public class FastForwardClockItem extends ArsenalItem {
     private static final int SECONDS = 15;
     /** Five times the normal twenty ticks a second. */
     private static final float RATE = 100.0f;
     private static final int COOLDOWN = ModItems.CLOCK_COOLDOWN;
 
     public FastForwardClockItem(Settings settings) {
-        super(settings);
+        super(settings, "The third clock, and the one that builds rather than waits.");
     }
 
     @Override

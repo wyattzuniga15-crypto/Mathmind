@@ -3,7 +3,6 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.weapons.Shells;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,12 +14,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** A line of explosions walking away from you along your line of sight. */
-public class CarpetBombItem extends Item {
+public class CarpetBombItem extends ArsenalItem {
     private static final int RUNS = 30;
     private static final int COOLDOWN = 250;
 
     public CarpetBombItem(Settings settings) {
-        super(settings);
+        super(settings, "A line of explosions walking away from you along your line of sight.");
     }
 
     @Override
