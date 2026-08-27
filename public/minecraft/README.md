@@ -81,6 +81,10 @@ The full progression is here, the same shape as the real thing:
   that turn on you when struck, endermen that blink away when hit
 - TNT with chain reactions, water and lava making obsidian, XP levels, achievements
 - All audio synthesized live with WebAudio
+- Hand-authored pixel-art textures generated in code: coherent mottling rather than
+  static, voronoi cobblestone lit from the top left, ore pockets with dark rims, a
+  ragged grass overhang, plank boards with staggered joints and knots, growth rings on
+  log ends, and grass blades that bend at the tip
 
 ## Files
 

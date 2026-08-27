@@ -187,7 +187,7 @@ class Player extends Entity {
     const held = game.inv.held();
     const heldDef = held ? itemDef(held.id) : null;
     if (heldDef && held.id === I.bow) {
-      if (input.mouseRight && game.inv.count(I.arrow) > 0) {
+      if (input.mouseRight && (game.creative || game.inv.count(I.arrow) > 0)) {
         this.bowCharge = Math.min(1, (this.bowCharge || 0) + dt);
       } else if (this.bowCharge > 0.15) {
         // release
@@ -198,8 +198,8 @@ class Player extends Entity {
           look[0] * sp, look[1] * sp + 0.5, look[2] * sp, true));
         Sfx.bow();
         this.bowCharge = 0;
-        // consume one arrow
-        for (let i = 0; i < 36; i++) {
+        // consume one arrow (creative quivers are bottomless)
+        if (!game.creative) for (let i = 0; i < 36; i++) {
           const s = game.inv.slots[i];
           if (s && s.id === I.arrow) { s.count--; if (s.count <= 0) game.inv.slots[i] = null; break; }
         }

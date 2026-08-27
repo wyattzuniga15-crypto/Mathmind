@@ -3,6 +3,7 @@
 
 const SAVE_KEY = 'blockcraft_save_v1';
 const SENS_KEY = 'blockcraft_sens';
+const BEST_TOOL = nameToId('diamond_pickaxe');   // stands in for "mined properly"
 const DAY_LENGTH = 600; // seconds per full day
 
 // localStorage can throw in sandboxed embeds — fall back to in-memory saves
@@ -192,6 +193,8 @@ const Game = {
       this.inv.load(p.inv);
       this.stats = p.stats || this.stats;
       this.stats.ach = this.stats.ach || {};
+      if (Array.isArray(data.growths))
+        this.growths = data.growths.map(g => ({ x: g.x, y: g.y, z: g.z, at: this.timeSec + (g.in || 0) }));
       if (this.world.getBlock(this.player.x, this.player.y, this.player.z) !== 0)
         this.player.y = this.findSpawnY(this.player.x, this.player.z);
     } else {
@@ -314,6 +317,8 @@ const Game = {
           hp: p.hp, hunger: p.hunger, xp: p.xp, spawn: p.spawn,
           inv: this.inv.serialize(), stats: this.stats,
         },
+        // store the wait left, since the clock restarts with the session
+        growths: this.growths.map(g => ({ x: g.x, y: g.y, z: g.z, in: Math.max(0, g.at - this.timeSec) })),
       }));
     } catch (e) { console.warn('save failed', e); }
   },
@@ -468,7 +473,8 @@ const Game = {
       if (id === B.tnt) { this.igniteTnt(bx, by, bz, rand(0.4, 1.2)); continue; }
       this.world.setBlock(bx, by, bz, 0);
       if (Math.random() < 0.25) {
-        const drop = blockDrops(id, 999);
+        // 999 is not a real item, so tool-gated blocks used to drop nothing at all
+        const drop = blockDrops(id, BEST_TOOL);
         if (drop) this.spawnDrop(bx + 0.5, by + 0.5, bz + 0.5, drop[0], drop[1]);
       }
     }

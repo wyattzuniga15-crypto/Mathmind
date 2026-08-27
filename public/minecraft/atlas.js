@@ -21,6 +21,8 @@ function T(name, fn) {
   const d = {
     rng,
     px(x, y, c, a = 255) {
+      // round first: a fractional index writes to nothing at all on a typed array
+      x = Math.round(x); y = Math.round(y);
       if (x < 0 || y < 0 || x > 15 || y > 15) return;
       const o = (y * TILE + x) * 4;
       img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = a;
@@ -105,51 +107,246 @@ function leavesTile(name, base) {
   });
 }
 
-// ---------------- terrain tiles ----------------
-T('grass_top', d => { d.fill([98, 160, 58], 16); d.speckle([80, 138, 44], 46, 8); });
-T('dirt', d => { d.fill([134, 96, 67], 13); d.speckle([106, 74, 50], 34, 8); d.speckle([155, 118, 84], 20, 8); });
-T('grass_side', d => {
-  d.fill([134, 96, 67], 13); d.speckle([106, 74, 50], 26, 8);
-  d.rect(0, 0, 16, 3, [98, 160, 58], 14);
-  for (let x = 0; x < 16; x++) if (d.rng() < 0.6) d.px(x, 3, [98, 160, 58]);
-});
-T('stone', d => stoneBase(d, [127, 127, 127], 9));
-T('cobblestone', d => {
-  d.fill([110, 110, 110], 16);
-  for (let k = 0; k < 7; k++) {
-    const x = (d.rng() * 13) | 0, y = (d.rng() * 13) | 0, r = 2 + (d.rng() * 3 | 0);
-    const g = 100 + d.rng() * 45;
-    d.rect(x, y, r, r, [g, g, g], 8);
+
+// ---------------- pixel-art helpers ----------------
+// Coherent, quantised mottling: block textures read as a few flat shades of one
+// colour rather than per-pixel static, which is what makes them look drawn.
+function mottle(d, base, amp, scale, levels, seed) {
+  const rng = mulberry32(seed ^ 0x9E37);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    // two octaves keep the patches coherent while the grain stays per-pixel
+    const n = (noise2(seed, x / scale, y / scale) * 0.65 +
+               noise2(seed ^ 0x33, x / (scale * 0.42), y / (scale * 0.42)) * 0.35) - 0.5;
+    const q = Math.round(n * 2 * levels) / levels;
+    const v = q * amp + (rng() - 0.5) * amp * 0.45;
+    d.px(x, y, [base[0] + v, base[1] + v, base[2] + v]);
   }
-  d.speckle([70, 70, 70], 30, 8);
+}
+// Irregular stones packed together, each with a darker gap around it.
+function cobbles(d, seedPts, base, spread, mortar, seed) {
+  const pts = [];
+  const rng = mulberry32(seed);
+  for (let i = 0; i < seedPts; i++)
+    pts.push([rng() * 16, rng() * 16, base + (rng() - 0.5) * spread]);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    let best = 1e9, second = 1e9, tone = base, near = null;
+    for (const p of pts) {
+      // wrap so the stones meet cleanly at the tile edges
+      const dx = Math.min(Math.abs(x - p[0]), 16 - Math.abs(x - p[0]));
+      const dy = Math.min(Math.abs(y - p[1]), 16 - Math.abs(y - p[1]));
+      const dd = dx * dx + dy * dy;
+      if (dd < best) { second = best; best = dd; tone = p[2]; near = p; }
+      else if (dd < second) second = dd;
+    }
+    const edge = Math.sqrt(second) - Math.sqrt(best) < 1.35;
+    let g;
+    if (edge) g = mortar;
+    else {
+      // light each stone from the top-left so it reads as rounded
+      const sx = x - near[0], sy = y - near[1];
+      g = tone - (sx + sy) * 2.6 + (noise2(seed, x / 2.2, y / 2.2) - 0.5) * 12;
+    }
+    d.px(x, y, [g, g, g]);
+  }
+}
+// An ore pocket: an irregular clump of colour with a dark rim, like the real ones.
+function oreBlob(d, cx, cy, r, col, rng) {
+  const cells = [];
+  const R = Math.ceil(r);
+  for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) {
+    const dd = Math.hypot(x, y) + (rng() - 0.5) * 0.9;
+    if (dd <= r) cells.push([cx + x, cy + y]);
+  }
+  // rim first, then the ore over the top
+  for (const [x, y] of cells) for (const [ox, oy] of [[1,0],[-1,0],[0,1],[0,-1]])
+    d.px(x + ox, y + oy, [col[0] * 0.35, col[1] * 0.35, col[2] * 0.35]);
+  for (const [x, y] of cells) {
+    const hi = rng() < 0.35;
+    d.px(x, y, hi ? [Math.min(255, col[0] * 1.25), Math.min(255, col[1] * 1.25), Math.min(255, col[2] * 1.25)] : col);
+  }
+}
+function oreTile2(name, oreCol, blobs, seed) {
+  return T(name, d => {
+    mottle(d, [126, 126, 126], 22, 3.0, 3, seed);
+    const rng = mulberry32(seed ^ 0x5A5A);
+    const spots = [];
+    for (let i = 0; i < blobs; i++) {
+      let x, y, tries = 0;
+      do { x = 2 + (rng() * 12) | 0; y = 2 + (rng() * 12) | 0; tries++; }
+      while (tries < 24 && spots.some(s => Math.hypot(s[0] - x, s[1] - y) < 4.2));
+      spots.push([x, y]);
+      oreBlob(d, x, y, 0.95 + rng() * 0.7, oreCol, rng);
+    }
+  });
+}
+
+// ---------------- terrain tiles ----------------
+T('grass_top', d => {
+  mottle(d, [110, 156, 74], 30, 3.2, 3, 0x611);
+  // darker tufts scattered through the sward
+  const rng = mulberry32(0x612);
+  for (let k = 0; k < 26; k++) {
+    const x = (rng() * 16) | 0, y = (rng() * 16) | 0;
+    d.px(x, y, [88, 130, 58]);
+    if (rng() < 0.5) d.px(x, y + 1, [82, 122, 54]);
+  }
+  for (let k = 0; k < 14; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [132, 178, 92]);
 });
-T('bedrock', d => { d.fill([70, 70, 70], 34); d.speckle([30, 30, 30], 44, 10); });
-T('sand', d => { d.fill([219, 207, 163], 8); d.speckle([196, 184, 138], 34, 6); });
-T('gravel', d => { d.fill([132, 127, 123], 20); d.speckle([90, 86, 82], 30, 12); d.speckle([160, 155, 150], 22, 10); });
-logSide('oak_log', [104, 82, 50], [78, 60, 34]);
+T('dirt', d => {
+  mottle(d, [134, 96, 64], 26, 3.0, 3, 0x621);
+  const rng = mulberry32(0x622);
+  for (let k = 0; k < 22; k++) {
+    const x = (rng() * 16) | 0, y = (rng() * 16) | 0;
+    d.px(x, y, [104, 72, 46]);
+    if (rng() < 0.4) d.px(x + 1, y, [110, 78, 50]);
+  }
+  for (let k = 0; k < 10; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [160, 122, 86]);
+});
+T('grass_side', d => {
+  mottle(d, [134, 96, 64], 26, 3.0, 3, 0x621);
+  const rng = mulberry32(0x631);
+  for (let k = 0; k < 18; k++) d.px((rng() * 16) | 0, 3 + ((rng() * 13) | 0), [104, 72, 46]);
+  // the grass hangs over the dirt in a ragged fringe, never a straight line
+  for (let x = 0; x < 16; x++) {
+    const depth = 1 + Math.round(noise2(0x632, x / 2.4, 0) * 2.6);
+    for (let y = 0; y <= depth; y++) {
+      const shade = y === depth ? [92, 134, 60] : [110, 156, 74];
+      const v = (rng() - 0.5) * 16;
+      d.px(x, y, [shade[0] + v, shade[1] + v, shade[2] + v]);
+    }
+    if (rng() < 0.4) d.px(x, depth + 1, [96, 138, 62]);
+  }
+});
+T('stone', d => {
+  mottle(d, [128, 128, 128], 22, 2.8, 3, 0x641);
+  const rng = mulberry32(0x642);
+  // a few soft darker seams, the way stone weathers
+  for (let k = 0; k < 5; k++) {
+    let x = (rng() * 16) | 0, y = (rng() * 16) | 0;
+    const len = 2 + (rng() * 4) | 0;
+    for (let i = 0; i < len; i++) {
+      d.px(x, y, [104, 104, 104]);
+      x += rng() < 0.7 ? 1 : 0; y += rng() < 0.3 ? 1 : 0;
+    }
+  }
+  for (let k = 0; k < 8; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [146, 146, 146]);
+});
+T('cobblestone', d => cobbles(d, 12, 132, 62, 72, 0x651));
+T('bedrock', d => {
+  cobbles(d, 9, 74, 62, 40, 0x6F1);
+  const rng = mulberry32(0x6F2);
+  for (let k = 0; k < 26; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [34, 34, 34]);
+  for (let k = 0; k < 14; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [112, 112, 112]);
+});
+T('sand', d => {
+  mottle(d, [219, 207, 160], 16, 3.6, 3, 0x671);
+  const rng = mulberry32(0x672);
+  for (let k = 0; k < 24; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [200, 187, 140]);
+  for (let k = 0; k < 12; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [236, 226, 186]);
+});
+T('gravel', d => {
+  cobbles(d, 22, 126, 66, 84, 0x661);
+  const rng = mulberry32(0x662);
+  for (let k = 0; k < 20; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [168, 164, 158]);
+  for (let k = 0; k < 16; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [86, 82, 78]);
+});
+T('oak_log', d => {
+  mottle(d, [110, 86, 52], 18, 3.0, 3, 1697);
+  const rng = mulberry32(1702);
+  // vertical grain at irregular intervals
+  let x = 0;
+  while (x < 16) {
+    const w = 1 + ((rng() * 2) | 0);
+    for (let y = 0; y < 16; y++) {
+      if (rng() < 0.82) for (let i = 0; i < w; i++) {
+        const v = (rng() - 0.5) * 10;
+        d.px(x + i, y, [80 + v, 62 + v, 36 + v]);
+      }
+    }
+    x += w + 1 + ((rng() * 2) | 0);
+  }
+});
 T('log_top', d => {
-  d.fill([104, 82, 50], 8);
-  d.rect(2, 2, 12, 12, [178, 142, 88], 8);
-  d.rect(4, 4, 8, 8, [150, 116, 66], 6);
-  d.rect(6, 6, 4, 4, [178, 142, 88], 6);
+  // growth rings, then the bark edge
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const r = Math.hypot(x - 7.5, y - 7.5) + noise2(0x691, x / 3, y / 3) * 1.1;
+    const ring = Math.sin(r * 2.3) > 0 ? 0 : 1;
+    const base = ring ? [150, 116, 68] : [176, 142, 92];
+    const v = (noise2(0x692, x / 4, y / 4) - 0.5) * 12;
+    d.px(x, y, [base[0] + v, base[1] + v, base[2] + v]);
+  }
+  d.border([104, 82, 50], 8);
+  for (let i = 1; i < 15; i++) { d.px(i, 1, [116, 92, 56]); d.px(i, 14, [116, 92, 56]); d.px(1, i, [116, 92, 56]); d.px(14, i, [116, 92, 56]); }
+  d.px(7, 7, [128, 98, 58]); d.px(8, 8, [128, 98, 58]);
 });
-leavesTile('oak_leaves', [58, 122, 40]);
+T('oak_leaves', d => {
+  d.fill([0, 0, 0], 0, 0);
+  const rng = mulberry32(1713);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const n = noise2(1714, x / 2.6, y / 2.6);
+    if (n < 0.21) continue;                       // gaps you can see sky through
+    const q = Math.round((n - 0.5) * 4) / 4;
+    const v = q * 42 + (rng() - 0.5) * 16;
+    d.px(x, y, [60 + v, 118 + v, 44 + v]);
+  }
+  // a few bright leaves catching the light
+  for (let k = 0; k < 12; k++) {
+    const x = (rng() * 16) | 0, y = (rng() * 16) | 0;
+    if (d.get(x, y)[3] > 0) d.px(x, y, [81, 153, 59]);
+  }
+});
 T('oak_planks', d => {
-  d.fill([160, 129, 79], 8);
-  for (const y of [0, 4, 8, 12]) d.rect(0, y, 16, 1, [116, 90, 52], 4);
-  d.px(4, 2, [116,90,52]); d.px(12, 6, [116,90,52]); d.px(3, 10, [116,90,52]); d.px(11, 14, [116,90,52]);
+  const rng = mulberry32(0x681);
+  const tones = [[168, 134, 84], [156, 124, 76], [176, 142, 90], [162, 130, 80]];
+  for (let b = 0; b < 4; b++) {
+    const t = tones[b];
+    for (let y = b * 4; y < b * 4 + 4; y++) for (let x = 0; x < 16; x++) {
+      const v = (noise2(0x682 + b, x / 5, y) - 0.5) * 18;
+      d.px(x, y, [t[0] + v, t[1] + v, t[2] + v]);
+    }
+    // the seam between boards, and one staggered end-joint per board
+    for (let x = 0; x < 16; x++) d.px(x, b * 4 + 3, [118, 92, 54]);
+    const joint = 2 + ((b * 5 + 3) % 12);
+    for (let y = b * 4; y < b * 4 + 3; y++) d.px(joint, y, [124, 98, 58]);
+    // grain and a knot
+    for (let k = 0; k < 3; k++) {
+      const gx = (rng() * 16) | 0, gy = b * 4 + ((rng() * 3) | 0);
+      d.px(gx, gy, [140, 110, 66]); d.px(gx + 1, gy, [146, 116, 70]);
+    }
+    if (b % 2 === 0) {
+      const kx = 4 + ((rng() * 8) | 0), ky = b * 4 + 1;
+      d.px(kx, ky, [116, 90, 52]); d.px(kx + 1, ky, [128, 100, 60]);
+    }
+  }
 });
-T('water', d => { d.fill([52, 92, 200], 12, 200); d.speckle([80, 120, 220], 26, 10); });
+T('water', d => {
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const n = noise2(0x6C1, x / 5.5, y / 4.0);
+    const q = Math.round((n - 0.5) * 3) / 3;
+    const v = q * 26;
+    d.px(x, y, [46 + v, 92 + v * 1.2, 196 + v], 205);
+  }
+  const rng = mulberry32(0x6C2);
+  for (let k = 0; k < 10; k++) {
+    const x = (rng() * 14) | 0, y = (rng() * 16) | 0;
+    d.px(x, y, [104, 150, 226], 215); d.px(x + 1, y, [104, 150, 226], 215);
+  }
+});
 T('glass', d => {
-  d.fill([0,0,0], 0, 0);
-  d.border([210, 230, 235]);
-  d.px(3, 2, [255,255,255],190); d.px(4, 3, [255,255,255],190); d.px(2, 3, [255,255,255],150);
-  d.px(12, 11, [255,255,255],120); d.px(11, 12, [255,255,255],120);
+  d.fill([0, 0, 0], 0, 0);
+  // a thin pale frame plus two highlight streaks — mostly see-through
+  for (let i = 0; i < 16; i++) {
+    d.px(i, 0, [214, 232, 236], 170); d.px(i, 15, [214, 232, 236], 170);
+    d.px(0, i, [214, 232, 236], 170); d.px(15, i, [214, 232, 236], 170);
+  }
+  for (let i = 0; i < 5; i++) d.px(3 + i, 2 + i, [255, 255, 255], 120);
+  for (let i = 0; i < 3; i++) d.px(10 + i, 9 + i, [255, 255, 255], 90);
+  d.px(1, 1, [236, 248, 250], 190); d.px(14, 14, [190, 210, 214], 150);
 });
-oreTile('coal_ore', null, [40, 40, 40]);
-oreTile('iron_ore', null, [216, 175, 147]);
-oreTile('gold_ore', null, [252, 222, 80]);
-oreTile('diamond_ore', null, [90, 230, 220]);
+oreTile2('coal_ore', [28, 28, 28], 5, 1809);
+oreTile2('iron_ore', [206, 160, 124], 5, 1810);
+oreTile2('gold_ore', [250, 220, 70], 5, 1811);
+oreTile2('diamond_ore', [92, 232, 222], 5, 1812);
 T('table_top', d => {
   d.fill([160, 129, 79], 8); d.border([116, 90, 52]);
   d.rect(2, 2, 5, 5, [190, 160, 110], 6); d.rect(9, 9, 5, 5, [190, 160, 110], 6);
@@ -182,7 +379,11 @@ T('snowy_grass_side', d => {
   d.fill([134, 96, 67], 13); d.speckle([106, 74, 50], 26, 8);
   d.rect(0, 0, 16, 3, [240, 246, 250], 6);
 });
-T('snow', d => { d.fill([240, 246, 250], 5); d.speckle([220, 228, 238], 22, 4); });
+T('snow', d => {
+  mottle(d, [243, 248, 252], 10, 4.0, 2, 0x701);
+  const rng = mulberry32(0x702);
+  for (let k = 0; k < 12; k++) d.px((rng() * 16) | 0, (rng() * 16) | 0, [224, 232, 242]);
+});
 T('cactus_side', d => {
   d.fill([14, 100, 32], 8);
   for (const x of [1, 5, 9, 13]) d.rect(x, 0, 1, 16, [60, 150, 70], 8);
@@ -194,46 +395,136 @@ T('sandstone_side', d => {
   d.rect(0, 0, 16, 2, [225, 213, 170], 4); d.rect(0, 13, 16, 3, [200, 188, 142], 5);
   d.speckle([190, 178, 132], 18, 6);
 });
-logSide('birch_log', [216, 215, 210], [60, 60, 56]);
-logSide('spruce_log', [58, 38, 20], [40, 26, 12]);
-leavesTile('spruce_leaves', [46, 90, 52]);
+T('birch_log', d => {
+  mottle(d, [216, 214, 206], 18, 3.0, 3, 1698);
+  const rng = mulberry32(1701);
+  // vertical grain at irregular intervals
+  let x = 0;
+  while (x < 16) {
+    const w = 1 + ((rng() * 2) | 0);
+    for (let y = 0; y < 16; y++) {
+      if (rng() < 0.82) for (let i = 0; i < w; i++) {
+        const v = (rng() - 0.5) * 10;
+        d.px(x + i, y, [92 + v, 94 + v, 88 + v]);
+      }
+    }
+    x += w + 1 + ((rng() * 2) | 0);
+  }
+});
+T('spruce_log', d => {
+  mottle(d, [62, 42, 24], 18, 3.0, 3, 1699);
+  const rng = mulberry32(1700);
+  // vertical grain at irregular intervals
+  let x = 0;
+  while (x < 16) {
+    const w = 1 + ((rng() * 2) | 0);
+    for (let y = 0; y < 16; y++) {
+      if (rng() < 0.82) for (let i = 0; i < w; i++) {
+        const v = (rng() - 0.5) * 10;
+        d.px(x + i, y, [40 + v, 26 + v, 14 + v]);
+      }
+    }
+    x += w + 1 + ((rng() * 2) | 0);
+  }
+});
+T('spruce_leaves', d => {
+  d.fill([0, 0, 0], 0, 0);
+  const rng = mulberry32(1714);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const n = noise2(1713, x / 2.6, y / 2.6);
+    if (n < 0.21) continue;                       // gaps you can see sky through
+    const q = Math.round((n - 0.5) * 4) / 4;
+    const v = q * 42 + (rng() - 0.5) * 16;
+    d.px(x, y, [46 + v, 92 + v, 54 + v]);
+  }
+  // a few bright leaves catching the light
+  for (let k = 0; k < 12; k++) {
+    const x = (rng() * 16) | 0, y = (rng() * 16) | 0;
+    if (d.get(x, y)[3] > 0) d.px(x, y, [62, 119, 72]);
+  }
+});
 T('dandelion', d => {
-  d.fill([0,0,0], 0, 0);
-  d.rect(7, 8, 1, 8, [46, 110, 30], 6);
-  d.px(6, 10, [46,110,30]); d.px(9, 11, [46,110,30]);
-  d.rect(6, 4, 3, 3, [255, 216, 30], 10); d.px(7, 3, [255, 236, 120]);
+  d.fill([0, 0, 0], 0, 0);
+  const rng = mulberry32(1841);
+  // stem with a couple of leaves
+  for (let y = 7; y < 16; y++) d.px(7 + (y > 12 ? 1 : 0), y, [58, 118, 42]);
+  d.px(6, 10, [70, 132, 50]); d.px(5, 11, [70, 132, 50]);
+  d.px(9, 12, [70, 132, 50]); d.px(10, 13, [70, 132, 50]);
+  // the bloom
+  const P = [252, 216, 40], C = [255, 244, 140];
+  for (const [x, y] of [[6,3],[7,2],[8,3],[5,4],[9,4],[6,5],[8,5],[7,6]]) d.px(x, y, P);
+  for (const [x, y] of [[7,3],[7,4],[8,4],[6,4]]) d.px(x, y, C);
+  for (let k = 0; k < 3; k++) d.px(5 + ((rng() * 5) | 0), 2 + ((rng() * 4) | 0),
+    [Math.min(255, P[0] * 1.2), Math.min(255, P[1] * 1.2), Math.min(255, P[2] * 1.2)]);
 });
 T('poppy', d => {
-  d.fill([0,0,0], 0, 0);
-  d.rect(7, 8, 1, 8, [46, 110, 30], 6);
-  d.px(6, 11, [46,110,30]); d.px(9, 10, [46,110,30]);
-  d.rect(6, 3, 3, 4, [200, 30, 30], 12); d.px(7, 5, [60, 10, 10]);
+  d.fill([0, 0, 0], 0, 0);
+  const rng = mulberry32(1842);
+  // stem with a couple of leaves
+  for (let y = 7; y < 16; y++) d.px(7 + (y > 12 ? 1 : 0), y, [58, 118, 42]);
+  d.px(6, 10, [70, 132, 50]); d.px(5, 11, [70, 132, 50]);
+  d.px(9, 12, [70, 132, 50]); d.px(10, 13, [70, 132, 50]);
+  // the bloom
+  const P = [206, 44, 40], C = [40, 26, 20];
+  for (const [x, y] of [[6,3],[7,2],[8,3],[5,4],[9,4],[6,5],[8,5],[7,6]]) d.px(x, y, P);
+  for (const [x, y] of [[7,3],[7,4],[8,4],[6,4]]) d.px(x, y, C);
+  for (let k = 0; k < 3; k++) d.px(5 + ((rng() * 5) | 0), 2 + ((rng() * 4) | 0),
+    [Math.min(255, P[0] * 1.2), Math.min(255, P[1] * 1.2), Math.min(255, P[2] * 1.2)]);
 });
 T('tall_grass', d => {
-  d.fill([0,0,0], 0, 0);
-  for (let k = 0; k < 8; k++) {
-    const x = 1 + (d.rng() * 14) | 0, h = 5 + (d.rng() * 9) | 0;
-    for (let y = 0; y < h; y++) d.px(x + ((y > h*0.6 && d.rng()<0.4) ? 1 : 0), 15 - y, [88, 150, 50, 255], 255);
+  d.fill([0, 0, 0], 0, 0);
+  const rng = mulberry32(0x721);
+  // individual blades, tapering and leaning as they rise
+  for (let k = 0; k < 11; k++) {
+    let x = 1 + ((rng() * 14) | 0);
+    const h = 6 + ((rng() * 9) | 0);
+    const lean = rng() < 0.5 ? -1 : 1;
+    const tone = 88 + rng() * 44;
+    for (let i = 0; i < h; i++) {
+      const y = 15 - i;
+      if (i > h * 0.62 && rng() < 0.45) x += lean;   // the tip bends over
+      d.px(x, y, [tone * 0.62, tone + 42, tone * 0.5]);
+      if (i < h * 0.5 && rng() < 0.4) d.px(x + 1, y, [tone * 0.5, tone + 26, tone * 0.42]);
+    }
   }
 });
 T('sapling', d => {
-  d.fill([0,0,0], 0, 0);
-  d.rect(7, 9, 2, 7, [104, 82, 50], 6);
-  d.rect(4, 3, 8, 6, [58, 122, 40], 16);
-  d.px(7, 2, [58, 122, 40]); d.px(8, 2, [58, 122, 40]);
+  d.fill([0, 0, 0], 0, 0);
+  const rng = mulberry32(0x741);
+  for (let y = 9; y < 16; y++) d.px(7, y, [104, 82, 50]);
+  d.px(8, 12, [104, 82, 50]);
+  // a small crown of leaves
+  for (let y = 2; y < 10; y++) for (let x = 3; x < 13; x++) {
+    const r = Math.hypot(x - 7.5, y - 6) ;
+    if (r > 4.2 || (r > 3 && rng() < 0.55)) continue;
+    const v = (rng() - 0.5) * 40;
+    d.px(x, y, [62 + v, 122 + v, 46 + v]);
+  }
 });
 T('obsidian', d => { d.fill([24, 18, 38], 8); d.speckle([60, 44, 90], 20, 10); d.speckle([10, 8, 18], 24, 4); });
 T('mossy_cobblestone', d => {
-  d.fill([110, 110, 110], 16);
-  for (let k = 0; k < 6; k++) { const g = 100 + d.rng() * 40; d.rect((d.rng()*13)|0, (d.rng()*13)|0, 3, 3, [g, g, g], 8); }
-  d.speckle([88, 128, 60], 40, 12);
+  cobbles(d, 12, 126, 58, 68, 0x651);
+  const rng = mulberry32(0x652);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    if (noise2(0x653, x / 3.4, y / 3.4) > 0.58) {
+      const v = (rng() - 0.5) * 22;
+      d.px(x, y, [86 + v, 118 + v, 58 + v]);
+    }
+  }
 });
 T('farmland', d => { d.fill([96, 62, 38], 10); for (const x of [2, 6, 10, 14]) d.rect(x, 0, 1, 16, [70, 44, 26], 5); });
 T('wheat_crop', d => {
-  d.fill([0,0,0], 0, 0);
-  for (const x of [2, 5, 8, 11, 14]) {
-    d.rect(x, 4, 1, 12, [190, 170, 70], 10);
-    d.px(x - 1, 4, [220, 200, 90]); d.px(x, 3, [220, 200, 90]);
+  d.fill([0, 0, 0], 0, 0);
+  const rng = mulberry32(0x751);
+  for (const x of [2, 6, 10, 14]) {
+    for (let y = 4; y < 16; y++) d.px(x, y, [178, 162, 62]);
+    // grains hanging off the stalk
+    for (let y = 4; y < 11; y += 2) {
+      d.px(x - 1, y, [224, 204, 96]);
+      d.px(x + 1, y + 1, [224, 204, 96]);
+    }
+    d.px(x, 3, [236, 220, 130]);
+    if (rng() < 0.5) d.px(x, 2, [236, 220, 130]);
   }
 });
 T('bookshelf', d => {
@@ -244,14 +535,31 @@ T('bookshelf', d => {
   for (let row of [2, 9]) { x = 1; while (x < 15) { const w = 2 + (d.rng()*2|0); d.rect(x, row, Math.min(w, 15-x), 5, cs[(d.rng()*cs.length)|0], 12); x += w; } }
 });
 T('brick_block', d => {
-  d.fill([150, 97, 83], 8);
-  for (const y of [0, 4, 8, 12]) d.rect(0, y, 16, 1, [180, 180, 180], 6);
-  for (let r = 0; r < 4; r++) for (let x = (r % 2) * 4 + 2; x < 16; x += 8) d.rect(x, r * 4 + 1, 1, 3, [180, 180, 180], 6);
+  const mortar = [166, 158, 150];
+  d.fill(mortar, 6);
+  const rng = mulberry32(0x6D1);
+  for (let row = 0; row < 4; row++) {
+    const y = row * 4;
+    const off = row % 2 ? -4 : 0;
+    for (let bx = off; bx < 16; bx += 8) {
+      const t = 150 + (rng() - 0.5) * 22;
+      for (let yy = y; yy < y + 3; yy++) for (let xx = bx; xx < bx + 7; xx++) {
+        if (xx < 0 || xx > 15) continue;
+        const v = (rng() - 0.5) * 12;
+        d.px(xx, yy, [t + v, t * 0.47 + v, t * 0.40 + v]);
+      }
+    }
+  }
 });
 T('stone_bricks', d => {
-  d.fill([122, 122, 122], 8);
-  for (const y of [0, 8]) d.rect(0, y, 16, 1, [80, 80, 80], 5);
-  d.rect(7, 1, 1, 7, [80, 80, 80], 5); d.rect(3, 9, 1, 7, [80, 80, 80], 5); d.rect(11, 9, 1, 7, [80, 80, 80], 5);
+  mottle(d, [124, 124, 124], 18, 4.0, 3, 0x6E1);
+  const seam = [86, 86, 86];
+  for (let x = 0; x < 16; x++) { d.px(x, 7, seam); d.px(x, 15, seam); }
+  for (let y = 0; y < 8; y++) d.px(7, y, seam);
+  for (let y = 8; y < 16; y++) { d.px(3, y, seam); d.px(11, y, seam); }
+  // one weathered brick, as they always have
+  const rng = mulberry32(0x6E2);
+  for (let k = 0; k < 6; k++) d.px(9 + ((rng() * 5) | 0), 1 + ((rng() * 5) | 0), [102, 102, 102]);
 });
 T('lava', d => { d.fill([207, 92, 20], 26); d.speckle([255, 200, 60], 36, 20); d.speckle([120, 30, 10], 26, 10); });
 T('ice', d => { d.fill([160, 200, 250], 8, 220); d.px(3,3,[230,244,255]); d.px(4,4,[230,244,255]); d.px(11,9,[230,244,255]); d.px(12,10,[230,244,255]); });

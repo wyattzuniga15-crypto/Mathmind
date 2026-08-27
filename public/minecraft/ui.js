@@ -156,6 +156,7 @@ class Inventory {
     UI.refreshHotbar();
   }
   damageHeld(game) {
+    if (game && game.creative) return;      // creative tools never wear out
     const s = this.slots[this.sel];
     if (!s || !s.dur) return;
     s.dur--;

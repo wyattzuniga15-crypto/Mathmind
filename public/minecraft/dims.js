@@ -38,6 +38,7 @@ Object.assign(Game, {
     p.vx = p.vy = p.vz = 0;
     p.fallStart = null;
     p.portalT = 0; p.portalCool = 2.5;
+    p.portalArmed = false;   // you arrive standing in the portal; step out to re-arm it
     for (const c of this.world.chunks.values()) c.dirty = true;
 
     if (dim === 'end') this.startEndFight();
@@ -57,7 +58,9 @@ Object.assign(Game, {
     const id = this.world.getBlock(p.x, p.y + 0.8, p.z);
     const def = id ? Blocks[id] : null;
     const inPortal = def && def.portal;
-    if (!inPortal || p.portalCool > 0) {
+    // stepping clear of the portal arms it again, so you don't bounce straight back
+    if (!inPortal) p.portalArmed = true;
+    if (!inPortal || p.portalCool > 0 || p.portalArmed === false) {
       p.portalT = Math.max(0, (p.portalT || 0) - dt * 2);
       return;
     }
