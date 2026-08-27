@@ -174,6 +174,49 @@ GLYPHS["dungeon_maker"] = (lambda: (
                disc(g, 4, 8, 1, GLOW), disc(g, 11, 8, 1, GLOW),
                rect(g, 6, 1, 9, 5, DARK), g)[-1])(blank()))()
 
+RED = (214, 62, 62, 255); YEL = (248, 214, 76, 255); PUR = (168, 96, 214, 255)
+MOSS = (108, 130, 84, 255); ROCK = (132, 132, 134, 255)
+
+GLYPHS["firework_show"] = (lambda: (
+    lambda g: (rect(g, 7, 9, 8, 15, GRIP),
+               [diag(g, 7+dx*2, 7+dy*2, 4, dx, dy, [RED, YEL, PUR, COLD][i % 4])
+                for i, (dx, dy) in enumerate(((1,0),(-1,0),(0,-1),(1,-1),(-1,-1),(1,1),(-1,1)))],
+               disc(g, 7, 6, 2, WHITE), g)[-1])(blank()))()
+GLYPHS["disco_floor"] = (lambda: (
+    lambda g: ([rect(g, i*4, j*4, i*4+3, j*4+3,
+                     [RED, YEL, PUR, COLD, GREEN, HOT, PINK, GOLD][(i+j*2) % 8])
+                for i in range(4) for j in range(4)], g)[-1])(blank()))()
+GLYPHS["confetti_cannon"] = (lambda: (
+    lambda g: (rect(g, 1, 9, 7, 13, DARK), rect(g, 7, 8, 9, 14, STEEL),
+               [rect(g, 9+i, 1+(i*3) % 8, 10+i, 2+(i*3) % 8, [RED, YEL, PUR, COLD, PINK][i % 5])
+                for i in range(6)], g)[-1])(blank()))()
+GLYPHS["bouncy_ground"] = (lambda: (
+    lambda g: (rect(g, 0, 10, 15, 15, GREEN), rect(g, 1, 11, 14, 14, ACID),
+               disc(g, 7, 4, 3, GREEN), [rect(g, 4+i*3, 8, 5+i*3, 9, ACID) for i in range(3)],
+               g)[-1])(blank()))()
+GLYPHS["rainbow_trail"] = (lambda: (
+    lambda g: ([disc(g, 7, 15, 14-i*2, [RED, HOT, YEL, GREEN, COLD, PUR][i], 13-i*2)
+                for i in range(6)], g)[-1])(blank()))()
+GLYPHS["pet_rock"] = (lambda: (
+    lambda g: (disc(g, 7, 9, 6, ROCK), disc(g, 5, 7, 2, MOSS), disc(g, 10, 11, 2, MOSS),
+               rect(g, 5, 8, 6, 9, BLACK), rect(g, 9, 8, 10, 9, BLACK), g)[-1])(blank()))()
+GLYPHS["snowball_gun"] = (lambda: (
+    lambda g: (rect(g, 2, 6, 11, 9, STEEL), rect(g, 3, 10, 6, 14, GRIP),
+               disc(g, 13, 7, 2, WHITE), [disc(g, 13, 7, 2, SNOW)], g)[-1])(blank()))()
+GLYPHS["chicken_rain"] = (lambda: (
+    lambda g: ([disc(g, 3+i*5, 3+(i % 2)*6, 2, WHITE) for i in range(3)],
+               [rect(g, 4+i*5, 3+(i % 2)*6, 5+i*5, 3+(i % 2)*6, HOT) for i in range(3)],
+               [rect(g, 2+i*5, 6+(i % 2)*6, 2+i*5, 8+(i % 2)*6, HOT) for i in range(3)],
+               g)[-1])(blank()))()
+GLYPHS["boombox"] = (lambda: (
+    lambda g: (rect(g, 0, 4, 15, 13, DARK), disc(g, 4, 8, 3, STEEL), disc(g, 11, 8, 3, STEEL),
+               disc(g, 4, 8, 1, BLACK), disc(g, 11, 8, 1, BLACK),
+               rect(g, 5, 1, 10, 2, STEEL), g)[-1])(blank()))()
+GLYPHS["party_mode"] = (lambda: (
+    lambda g: (rect(g, 3, 9, 12, 14, PINK), rect(g, 3, 11, 12, 12, WHITE),
+               rect(g, 7, 4, 8, 8, WHITE), disc(g, 7, 3, 2, GLOW),
+               [disc(g, 1+i*6, 6, 1, [RED, YEL, PUR][i]) for i in range(3)], g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):

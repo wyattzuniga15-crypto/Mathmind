@@ -1,6 +1,16 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.FireworkShowItem;
+import com.orbital.arsenal.items.DiscoFloorItem;
+import com.orbital.arsenal.items.ConfettiCannonItem;
+import com.orbital.arsenal.items.BouncyGroundItem;
+import com.orbital.arsenal.items.RainbowTrailItem;
+import com.orbital.arsenal.items.PetRockItem;
+import com.orbital.arsenal.items.SnowballGunItem;
+import com.orbital.arsenal.items.ChickenRainItem;
+import com.orbital.arsenal.items.BoomboxItem;
+import com.orbital.arsenal.items.PartyModeItem;
 import com.orbital.arsenal.items.ForestGrowerItem;
 import com.orbital.arsenal.items.MountainMakerItem;
 import com.orbital.arsenal.items.CanyonCarverItem;
@@ -189,6 +199,16 @@ public final class ModItems {
     public static Item TIME_OF_DAY;
     public static Item METEOR_CRATER;
     public static Item DUNGEON_MAKER;
+    public static Item FIREWORK_SHOW;
+    public static Item DISCO_FLOOR;
+    public static Item CONFETTI_CANNON;
+    public static Item BOUNCY_GROUND;
+    public static Item RAINBOW_TRAIL;
+    public static Item PET_ROCK;
+    public static Item SNOWBALL_GUN;
+    public static Item CHICKEN_RAIN;
+    public static Item BOOMBOX;
+    public static Item PARTY_MODE;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -314,6 +334,16 @@ public final class ModItems {
         TIME_OF_DAY = register("time_of_day", TimeOfDayItem::new);
         METEOR_CRATER = register("meteor_crater", MeteorCraterItem::new);
         DUNGEON_MAKER = register("dungeon_maker", DungeonMakerItem::new);
+        FIREWORK_SHOW = register("firework_show", FireworkShowItem::new);
+        DISCO_FLOOR = register("disco_floor", DiscoFloorItem::new);
+        CONFETTI_CANNON = register("confetti_cannon", ConfettiCannonItem::new);
+        BOUNCY_GROUND = register("bouncy_ground", BouncyGroundItem::new);
+        RAINBOW_TRAIL = register("rainbow_trail", RainbowTrailItem::new);
+        PET_ROCK = register("pet_rock", PetRockItem::new);
+        SNOWBALL_GUN = register("snowball_gun", SnowballGunItem::new);
+        CHICKEN_RAIN = register("chicken_rain", ChickenRainItem::new);
+        BOOMBOX = register("boombox", BoomboxItem::new);
+        PARTY_MODE = register("party_mode", PartyModeItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -405,6 +435,16 @@ public final class ModItems {
             entries.add(TIME_OF_DAY);
             entries.add(METEOR_CRATER);
             entries.add(DUNGEON_MAKER);
+            entries.add(FIREWORK_SHOW);
+            entries.add(DISCO_FLOOR);
+            entries.add(CONFETTI_CANNON);
+            entries.add(BOUNCY_GROUND);
+            entries.add(RAINBOW_TRAIL);
+            entries.add(PET_ROCK);
+            entries.add(SNOWBALL_GUN);
+            entries.add(CHICKEN_RAIN);
+            entries.add(BOOMBOX);
+            entries.add(PARTY_MODE);
         });
         return registered;
     }

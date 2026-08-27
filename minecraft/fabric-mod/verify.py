@@ -159,6 +159,47 @@ def main():
         if result.returncode != 0:
             problems.append("journal run-length round-trip failed")
 
+    # --- the hundred items agree with each other ---
+    #
+    # The per-item checks below catch a missing file. They cannot catch an item
+    # registered twice, a texture left behind by an item that was renamed, or a
+    # class nothing registers — and with a hundred items, all three are the
+    # failures that actually happen.
+    lang_file = ROOT / "src/main/resources/assets/orbital/lang/en_us.json"
+    mod_file = ROOT / "src/main/java/com/orbital/arsenal/ModItems.java"
+    if lang_file.exists() and mod_file.exists():
+        lang = json.loads(lang_file.read_text())
+        ids = sorted(k.split(".")[-1] for k in lang if k.startswith("item.orbital."))
+        mod = mod_file.read_text()
+        registered = re.findall(r'register\("([a-z_0-9]+)"', mod)
+        fields = re.findall(r"public static Item (\w+);", mod)
+        added = re.findall(r"entries\.add\((\w+)\);", mod)
+
+        for name, seen in (("registration", registered), ("field", fields),
+                           ("creative-tab entry", added)):
+            twice = sorted({v for v in seen if seen.count(v) > 1})
+            check(not twice, f"duplicate {name}: {twice}")
+        check(set(registered) == set(ids),
+              "registered ids and lang entries disagree: "
+              f"{sorted(set(registered) ^ set(ids))}")
+        check(set(fields) == set(added),
+              f"items never shown in the creative tab: {sorted(set(fields) - set(added))}")
+
+        # Constructed by lambda as well as by reference: the rewind clocks take
+        # arguments, so a ::new-only scan reports them as dead code.
+        used = set(re.findall(r"(\w+Item)::new", mod)) | set(re.findall(r"new (\w+Item)\(", mod))
+        on_disk = {p.stem for p in (ROOT / "src/main/java/com/orbital/arsenal/items").glob("*Item.java")}
+        check(on_disk <= used, f"item classes nothing registers: {sorted(on_disk - used)}")
+
+        # Files left behind by an item that was renamed or dropped.
+        for folder, suffix in (("src/main/resources/assets/orbital/items", ".json"),
+                               ("src/main/resources/assets/orbital/textures/item", ".png"),
+                               ("src/main/resources/assets/orbital/models/item", ".json")):
+            for stray in sorted((ROOT / folder).glob("*" + suffix)):
+                check(stray.stem in ids, f"orphan file, no such item: {folder}/{stray.name}")
+
+        print(f"  {len(ids)} items agree across registry, lang, models, textures and recipes")
+
     # --- sounds are used the way the real jar declares them ---
     #
     # Whether a SoundEvents constant is bare or a RegistryEntry.Reference is

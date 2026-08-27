@@ -88,5 +88,15 @@
   "item.orbital.weather_control": "Weather Control",
   "item.orbital.time_of_day": "Sun Dial",
   "item.orbital.meteor_crater": "Meteor Crater",
-  "item.orbital.dungeon_maker": "Dungeon Maker"
+  "item.orbital.dungeon_maker": "Dungeon Maker",
+  "item.orbital.firework_show": "Firework Show",
+  "item.orbital.disco_floor": "Disco Floor",
+  "item.orbital.confetti_cannon": "Confetti Cannon",
+  "item.orbital.bouncy_ground": "Bouncy Ground",
+  "item.orbital.rainbow_trail": "Rainbow Trail",
+  "item.orbital.pet_rock": "Pet Rock",
+  "item.orbital.snowball_gun": "Snowball Gun",
+  "item.orbital.chicken_rain": "Chicken Rain",
+  "item.orbital.boombox": "Boombox",
+  "item.orbital.party_mode": "Party Mode"
 }

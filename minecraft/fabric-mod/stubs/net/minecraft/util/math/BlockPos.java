@@ -18,5 +18,7 @@ public class BlockPos {
     public static BlockPos ofFloored(Vec3d v) { return null; }
     public static BlockPos fromLong(long packed) { return null; }
     public long asLong() { return 0L; }
+    @Override public boolean equals(Object other) { return this == other; }
+    @Override public int hashCode() { return 0; }
     public static class Mutable extends BlockPos { public Mutable set(int x, int y, int z) { return this; } }
 }
