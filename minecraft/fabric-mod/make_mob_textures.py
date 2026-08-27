@@ -76,6 +76,50 @@ def titan(x, y, w, h, face):
     return (clamp(r), clamp(g), clamp(b), 255)
 
 
+
+def dragon(x, y, w, h, face):
+    """Dark green scale, lighter along the back, warm on the belly."""
+    down = y / max(1, h - 1)
+    if face == "bottom":
+        r, g, b = 176, 140, 84
+    elif face == "top":
+        r, g, b = 52, 96, 58
+    else:
+        r = 40 + 130 * (down ** 2)
+        g = 92 - 20 * (down ** 2)
+        b = 54 + 20 * (down ** 2)
+    # Scales: a diamond lattice, which reads at this size where dots do not.
+    if (x + y) % 6 == 0 or (x - y) % 6 == 0:
+        r, g, b = r * 1.16, g * 1.16, b * 1.1
+    return (clamp(r), clamp(g), clamp(b), 255)
+
+
+def spider(x, y, w, h, face):
+    """Gunmetal plate with a hot lamp line."""
+    down = y / max(1, h - 1)
+    r, g, b = 74 - 18 * down, 78 - 18 * down, 88 - 20 * down
+    if y % 5 == 0:
+        r, g, b = r * 0.7, g * 0.7, b * 0.7
+    # Anything short and wide is the eye bar; light it.
+    if h <= 5:
+        r, g, b = 240, 92 + 40 * down, 40
+    if face in ("top", "bottom"):
+        r, g, b = r * 1.12, g * 1.12, b * 1.12
+    return (clamp(r), clamp(g), clamp(b), 255)
+
+
+def golem(x, y, w, h, face):
+    """Grey stone, mottled, with the small core glowing."""
+    down = y / max(1, h - 1)
+    r = g = b = 128 - 34 * down
+    grain = ((x * 13 + y * 29) % 31) - 15
+    r, g, b = r + grain, g + grain, b + grain * 0.9
+    # The core is the only cuboid this small; make it the light source.
+    if w <= 8 and h <= 8:
+        r, g, b = 90 + 60 * down, 210, 240
+    return (clamp(r), clamp(g), clamp(b), 255)
+
+
 # Numbers lifted straight from the models: (u, v, width, height, depth).
 SHEETS = {
     "sky_whale": (256, 192, whale, [
@@ -90,6 +134,36 @@ SHEETS = {
     # (2d + 2w) across and (d + h) down. Placed by hand, the right leg sat
     # four pixels inside the left one — the same class of mistake that once
     # left the Chronarch's crown floating above its head.
+    # Every layout below comes from a packing pass that places the cuboids
+    # first and proves nothing overlaps, rather than numbers chosen by eye.
+    "dragon": (256, 256, dragon, [
+        (0, 0, 34, 22, 22),      # body
+        (114, 0, 12, 12, 12),    # neck
+        (164, 0, 16, 14, 20),    # head
+        (0, 46, 14, 5, 16),      # jaw
+        (62, 46, 26, 12, 12),    # tail
+        (140, 46, 20, 6, 6),     # tail tip
+        (0, 72, 46, 3, 30),      # left wing
+        (0, 107, 46, 3, 30),     # right wing
+        (154, 107, 8, 20, 8),    # left leg
+        (188, 107, 8, 20, 8),    # right leg
+    ]),
+    "mecha_spider": (256, 192, spider, [
+        (0, 0, 28, 16, 34),      # body
+        (126, 0, 16, 12, 14),    # head
+        (188, 0, 18, 4, 4),      # eye bar
+        (0, 52, 6, 30, 6), (26, 52, 6, 30, 6), (52, 52, 6, 30, 6),
+        (78, 52, 6, 30, 6), (104, 52, 6, 30, 6), (130, 52, 6, 30, 6),
+    ]),
+    "golem": (256, 160, golem, [
+        (0, 0, 30, 30, 22),      # torso
+        (106, 0, 16, 16, 16),    # head
+        (172, 0, 8, 8, 8),       # core
+        (206, 0, 12, 34, 12),    # left arm
+        (0, 54, 12, 34, 12),     # right arm
+        (50, 54, 12, 22, 12),    # left leg
+        (100, 54, 12, 22, 12),   # right leg
+    ]),
     "titan": (256, 128, titan, [
         (0, 0, 32, 34, 20),      # torso
         (106, 0, 14, 14, 14),    # head

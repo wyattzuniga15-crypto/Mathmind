@@ -1,6 +1,9 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.DragonEggItem;
+import com.orbital.arsenal.items.SpiderCoreItem;
+import com.orbital.arsenal.items.GolemHeartItem;
 import com.orbital.arsenal.items.SkyWhaleEggItem;
 import com.orbital.arsenal.items.TitanSealItem;
 import com.orbital.arsenal.items.FireworkShowItem;
@@ -213,6 +216,9 @@ public final class ModItems {
     public static Item PARTY_MODE;
     public static Item SKY_WHALE_EGG;
     public static Item TITAN_SEAL;
+    public static Item DRAGON_EGG_ORB;
+    public static Item SPIDER_CORE;
+    public static Item GOLEM_HEART;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -350,6 +356,9 @@ public final class ModItems {
         PARTY_MODE = register("party_mode", PartyModeItem::new);
         SKY_WHALE_EGG = register("sky_whale_egg", SkyWhaleEggItem::new);
         TITAN_SEAL = register("titan_seal", TitanSealItem::new);
+        DRAGON_EGG_ORB = register("dragon_egg_orb", DragonEggItem::new);
+        SPIDER_CORE = register("spider_core", SpiderCoreItem::new);
+        GOLEM_HEART = register("golem_heart", GolemHeartItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -453,6 +462,9 @@ public final class ModItems {
             entries.add(PARTY_MODE);
             entries.add(SKY_WHALE_EGG);
             entries.add(TITAN_SEAL);
+            entries.add(DRAGON_EGG_ORB);
+            entries.add(SPIDER_CORE);
+            entries.add(GOLEM_HEART);
         });
         return registered;
     }

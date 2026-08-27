@@ -22,6 +22,12 @@ public class OrbitalArsenalClient implements ClientModInitializer {
             Identifier.of(OrbitalArsenal.MOD_ID, "sky_whale"), "main");
     public static final EntityModelLayer TITAN_LAYER = new EntityModelLayer(
             Identifier.of(OrbitalArsenal.MOD_ID, "titan"), "main");
+    public static final EntityModelLayer DRAGON_LAYER = new EntityModelLayer(
+            Identifier.of(OrbitalArsenal.MOD_ID, "dragon"), "main");
+    public static final EntityModelLayer MECHA_SPIDER_LAYER = new EntityModelLayer(
+            Identifier.of(OrbitalArsenal.MOD_ID, "mecha_spider"), "main");
+    public static final EntityModelLayer GOLEM_LAYER = new EntityModelLayer(
+            Identifier.of(OrbitalArsenal.MOD_ID, "golem"), "main");
 
     @Override
     public void onInitializeClient() {
@@ -33,5 +39,11 @@ public class OrbitalArsenalClient implements ClientModInitializer {
 
         EntityModelLayerRegistry.registerModelLayer(TITAN_LAYER, TitanModel::getTexturedModelData);
         EntityRendererRegistry.register(ModEntities.TITAN, TitanRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(DRAGON_LAYER, DragonModel::getTexturedModelData);
+        EntityRendererRegistry.register(ModEntities.DRAGON, DragonRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(MECHA_SPIDER_LAYER, MechaSpiderModel::getTexturedModelData);
+        EntityRendererRegistry.register(ModEntities.MECHA_SPIDER, MechaSpiderRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(GOLEM_LAYER, GolemModel::getTexturedModelData);
+        EntityRendererRegistry.register(ModEntities.GOLEM, GolemRenderer::new);
     }
 }

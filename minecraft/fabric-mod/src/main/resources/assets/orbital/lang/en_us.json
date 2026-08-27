@@ -103,5 +103,11 @@
   "item.orbital.titan_seal": "Titan Seal",
   "entity.orbital.chronarch": "Chronarch",
   "entity.orbital.sky_whale": "Sky Whale",
-  "entity.orbital.titan": "Titan"
+  "entity.orbital.titan": "Titan",
+  "item.orbital.dragon_egg_orb": "Dragon Egg",
+  "item.orbital.spider_core": "Spider Core",
+  "item.orbital.golem_heart": "Golem Heart",
+  "entity.orbital.dragon": "Dragon",
+  "entity.orbital.mecha_spider": "Mecha Spider",
+  "entity.orbital.golem": "Stone Golem"
 }

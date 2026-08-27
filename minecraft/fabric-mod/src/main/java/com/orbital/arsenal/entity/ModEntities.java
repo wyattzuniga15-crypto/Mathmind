@@ -25,6 +25,19 @@ public final class ModEntities {
             RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "titan"));
     public static EntityType<TitanEntity> TITAN;
 
+    public static final RegistryKey<EntityType<?>> DRAGON_KEY = RegistryKey.of(
+            RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "dragon"));
+    public static EntityType<DragonEntity> DRAGON;
+
+    public static final RegistryKey<EntityType<?>> MECHA_SPIDER_KEY = RegistryKey.of(
+            RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "mecha_spider"));
+    public static EntityType<MechaSpiderEntity> MECHA_SPIDER;
+
+    public static final RegistryKey<EntityType<?>> GOLEM_KEY = RegistryKey.of(
+            RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "golem"));
+    public static EntityType<GolemEntity> GOLEM;
+
+
     private ModEntities() {}
 
     public static void register() {
@@ -48,5 +61,27 @@ public final class ModEntities {
                         .dimensions(2.4F, 7.0F)
                         .build(TITAN_KEY));
         FabricDefaultAttributeRegistry.register(TITAN, TitanEntity.createTitanAttributes());
+
+        DRAGON = Registry.register(Registries.ENTITY_TYPE, DRAGON_KEY,
+                EntityType.Builder.create(DragonEntity::new, SpawnGroup.MONSTER)
+                        .dimensions(4.0F, 2.6F)
+                        .build(DRAGON_KEY));
+        FabricDefaultAttributeRegistry.register(DRAGON,
+                DragonEntity.createDragonAttributes());
+
+        MECHA_SPIDER = Registry.register(Registries.ENTITY_TYPE, MECHA_SPIDER_KEY,
+                EntityType.Builder.create(MechaSpiderEntity::new, SpawnGroup.MONSTER)
+                        .dimensions(3.2F, 2.0F)
+                        .build(MECHA_SPIDER_KEY));
+        FabricDefaultAttributeRegistry.register(MECHA_SPIDER,
+                MechaSpiderEntity.createMechaSpiderAttributes());
+
+        GOLEM = Registry.register(Registries.ENTITY_TYPE, GOLEM_KEY,
+                EntityType.Builder.create(GolemEntity::new, SpawnGroup.MONSTER)
+                        .dimensions(2.2F, 3.6F)
+                        .build(GOLEM_KEY));
+        FabricDefaultAttributeRegistry.register(GOLEM,
+                GolemEntity.createGolemAttributes());
+
     }
 }

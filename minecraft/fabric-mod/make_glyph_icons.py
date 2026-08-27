@@ -229,6 +229,20 @@ GLYPHS["titan_seal"] = (lambda: (
                rect(g, 5, 11, 7, 15, BRONZE), rect(g, 8, 11, 10, 15, BRONZE),
                rect(g, 6, 6, 9, 7, GLOW), g)[-1])(blank()))()
 
+SCALE = (58, 118, 66, 255); GUN = (86, 90, 100, 255); STONE = (128, 128, 132, 255)
+
+GLYPHS["dragon_egg_orb"] = (lambda: (
+    lambda g: (disc(g, 7, 9, 6, SCALE), disc(g, 7, 9, 4, HOT),
+               [rect(g, 5+i*2, 3+(i%2), 6+i*2, 4+(i%2), SCALE) for i in range(3)],
+               disc(g, 7, 9, 1, GLOW), g)[-1])(blank()))()
+GLYPHS["spider_core"] = (lambda: (
+    lambda g: (rect(g, 4, 5, 11, 10, GUN), rect(g, 5, 6, 10, 7, HOT),
+               [diag(g, 3, 5+i*2, 3, -1, 1, GUN) for i in range(3)],
+               [diag(g, 12, 5+i*2, 3, 1, 1, GUN) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["golem_heart"] = (lambda: (
+    lambda g: (rect(g, 3, 3, 12, 12, STONE), rect(g, 5, 5, 10, 10, DARK),
+               disc(g, 7, 7, 3, COLD), disc(g, 7, 7, 1, WHITE), g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):
