@@ -40,5 +40,17 @@
   "item.orbital.chronarch_heart": "Chronarch's Heart",
   "item.orbital.deep_rewind_clock": "Deep Rewind Clock",
   "item.orbital.long_rewind_clock": "Long Rewind Clock",
-  "item.orbital.genesis_clock": "Genesis Clock"
+  "item.orbital.genesis_clock": "Genesis Clock",
+  "item.orbital.giant_chicken": "Giant Chicken",
+  "item.orbital.giant_boot": "Giant Boot",
+  "item.orbital.giant_hammer": "Giant Hammer",
+  "item.orbital.giant_skull": "Giant Skull",
+  "item.orbital.giant_mushroom": "Giant Mushroom",
+  "item.orbital.giant_sword": "Giant Sword",
+  "item.orbital.giant_bell": "Giant Bell",
+  "item.orbital.giant_trophy": "Giant Trophy",
+  "item.orbital.giant_dice": "Giant Dice",
+  "item.orbital.giant_donut": "Giant Doughnut",
+  "item.orbital.giant_rocket": "Giant Rocket",
+  "item.orbital.giant_teapot": "Giant Teapot"
 }

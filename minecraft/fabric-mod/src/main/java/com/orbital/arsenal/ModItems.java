@@ -1,6 +1,18 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.GiantChickenItem;
+import com.orbital.arsenal.items.GiantBootItem;
+import com.orbital.arsenal.items.GiantHammerItem;
+import com.orbital.arsenal.items.GiantSkullItem;
+import com.orbital.arsenal.items.GiantMushroomItem;
+import com.orbital.arsenal.items.GiantSwordItem;
+import com.orbital.arsenal.items.GiantBellItem;
+import com.orbital.arsenal.items.GiantTrophyItem;
+import com.orbital.arsenal.items.GiantDiceItem;
+import com.orbital.arsenal.items.GiantDonutItem;
+import com.orbital.arsenal.items.GiantRocketItem;
+import com.orbital.arsenal.items.GiantTeapotItem;
 import com.orbital.arsenal.items.VolcanoSeedItem;
 import com.orbital.arsenal.items.GravityFlipItem;
 import com.orbital.arsenal.items.SkyIslandItem;
@@ -93,6 +105,18 @@ public final class ModItems {
     public static Item DEEP_REWIND_CLOCK;
     public static Item LONG_REWIND_CLOCK;
     public static Item GENESIS_CLOCK;
+    public static Item GIANT_CHICKEN;
+    public static Item GIANT_BOOT;
+    public static Item GIANT_HAMMER;
+    public static Item GIANT_SKULL;
+    public static Item GIANT_MUSHROOM;
+    public static Item GIANT_SWORD;
+    public static Item GIANT_BELL;
+    public static Item GIANT_TROPHY;
+    public static Item GIANT_DICE;
+    public static Item GIANT_DONUT;
+    public static Item GIANT_ROCKET;
+    public static Item GIANT_TEAPOT;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -169,6 +193,18 @@ public final class ModItems {
                 settings -> new RewindClockItem(settings, Journal.TEN_MINUTES, "10 minutes", CLOCK_COOLDOWN));
         GENESIS_CLOCK = register("genesis_clock",
                 settings -> new RewindClockItem(settings, Journal.EVERYTHING, "everything", CLOCK_COOLDOWN));
+        GIANT_CHICKEN = register("giant_chicken", GiantChickenItem::new);
+        GIANT_BOOT = register("giant_boot", GiantBootItem::new);
+        GIANT_HAMMER = register("giant_hammer", GiantHammerItem::new);
+        GIANT_SKULL = register("giant_skull", GiantSkullItem::new);
+        GIANT_MUSHROOM = register("giant_mushroom", GiantMushroomItem::new);
+        GIANT_SWORD = register("giant_sword", GiantSwordItem::new);
+        GIANT_BELL = register("giant_bell", GiantBellItem::new);
+        GIANT_TROPHY = register("giant_trophy", GiantTrophyItem::new);
+        GIANT_DICE = register("giant_dice", GiantDiceItem::new);
+        GIANT_DONUT = register("giant_donut", GiantDonutItem::new);
+        GIANT_ROCKET = register("giant_rocket", GiantRocketItem::new);
+        GIANT_TEAPOT = register("giant_teapot", GiantTeapotItem::new);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
@@ -213,6 +249,18 @@ public final class ModItems {
             entries.add(DEEP_REWIND_CLOCK);
             entries.add(LONG_REWIND_CLOCK);
             entries.add(GENESIS_CLOCK);
+            entries.add(GIANT_CHICKEN);
+            entries.add(GIANT_BOOT);
+            entries.add(GIANT_HAMMER);
+            entries.add(GIANT_SKULL);
+            entries.add(GIANT_MUSHROOM);
+            entries.add(GIANT_SWORD);
+            entries.add(GIANT_BELL);
+            entries.add(GIANT_TROPHY);
+            entries.add(GIANT_DICE);
+            entries.add(GIANT_DONUT);
+            entries.add(GIANT_ROCKET);
+            entries.add(GIANT_TEAPOT);
         });
         return registered;
     }

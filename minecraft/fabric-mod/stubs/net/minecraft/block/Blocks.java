@@ -8,6 +8,9 @@ public class Blocks {
     public static final Block FARMLAND = new Block();
     public static final Block PACKED_MUD = new Block();
     public static final Block COARSE_DIRT = new Block();
+    public static final Block BROWN_CONCRETE = new Block();
+    public static final Block PINK_CONCRETE = new Block();
+    public static final Block BONE_BLOCK = new Block();
     public static final Block SAND = new Block();
     public static final Block SNOW_BLOCK = new Block();
     public static final Block NETHERRACK = new Block();
