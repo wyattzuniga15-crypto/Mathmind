@@ -40,6 +40,10 @@ public class Blocks {
     public static final Block STONE_BRICKS = new Block();
     public static final Block DEEPSLATE_BRICKS = new Block();
     public static final Block OAK_PLANKS = new Block();
+    public static final Block SMOOTH_STONE = new Block();
+    public static final Block PRISMARINE_BRICKS = new Block();
+    public static final Block PRISMARINE = new Block();
+    public static final Block BLUE_CONCRETE = new Block();
     public static final Block COBBLESTONE = new Block();
     public static final Block OAK_STAIRS = new Block();
     public static final Block ANVIL = new Block();

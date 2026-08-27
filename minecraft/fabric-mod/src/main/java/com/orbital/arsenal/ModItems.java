@@ -1,6 +1,21 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.TunnelBorerItem;
+import com.orbital.arsenal.items.RampartItem;
+import com.orbital.arsenal.items.MoatItem;
+import com.orbital.arsenal.items.ArenaItem;
+import com.orbital.arsenal.items.VaultItem;
+import com.orbital.arsenal.items.SkiSlopeItem;
+import com.orbital.arsenal.items.WaterslideItem;
+import com.orbital.arsenal.items.AquariumItem;
+import com.orbital.arsenal.items.StatueItem;
+import com.orbital.arsenal.items.MenagerieItem;
+import com.orbital.arsenal.items.FirefliesItem;
+import com.orbital.arsenal.items.BalloonReleaseItem;
+import com.orbital.arsenal.items.GiantHotAirBalloonItem;
+import com.orbital.arsenal.items.GiantChessKnightItem;
+import com.orbital.arsenal.items.GiantLightBulbItem;
 import com.orbital.arsenal.items.KrakenPearlItem;
 import com.orbital.arsenal.items.PhoenixAshItem;
 import com.orbital.arsenal.items.VeinMinerItem;
@@ -309,6 +324,21 @@ public final class ModItems {
     public static Item CABIN;
     public static Item KRAKEN_PEARL;
     public static Item PHOENIX_ASH;
+    public static Item GIANT_HOT_AIR_BALLOON;
+    public static Item GIANT_CHESS_KNIGHT;
+    public static Item GIANT_LIGHT_BULB;
+    public static Item TUNNEL_BORER;
+    public static Item RAMPART;
+    public static Item MOAT;
+    public static Item ARENA;
+    public static Item VAULT;
+    public static Item SKI_SLOPE;
+    public static Item WATERSLIDE;
+    public static Item AQUARIUM;
+    public static Item STATUE;
+    public static Item MENAGERIE;
+    public static Item FIREFLIES;
+    public static Item BALLOON_RELEASE;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -494,6 +524,21 @@ public final class ModItems {
         CABIN = register("cabin", CabinItem::new);
         KRAKEN_PEARL = register("kraken_pearl", KrakenPearlItem::new);
         PHOENIX_ASH = register("phoenix_ash", PhoenixAshItem::new);
+        GIANT_HOT_AIR_BALLOON = register("giant_hot_air_balloon", GiantHotAirBalloonItem::new);
+        GIANT_CHESS_KNIGHT = register("giant_chess_knight", GiantChessKnightItem::new);
+        GIANT_LIGHT_BULB = register("giant_light_bulb", GiantLightBulbItem::new);
+        TUNNEL_BORER = register("tunnel_borer", TunnelBorerItem::new);
+        RAMPART = register("rampart", RampartItem::new);
+        MOAT = register("moat", MoatItem::new);
+        ARENA = register("arena", ArenaItem::new);
+        VAULT = register("vault", VaultItem::new);
+        SKI_SLOPE = register("ski_slope", SkiSlopeItem::new);
+        WATERSLIDE = register("waterslide", WaterslideItem::new);
+        AQUARIUM = register("aquarium", AquariumItem::new);
+        STATUE = register("statue", StatueItem::new);
+        MENAGERIE = register("menagerie", MenagerieItem::new);
+        FIREFLIES = register("fireflies", FirefliesItem::new);
+        BALLOON_RELEASE = register("balloon_release", BalloonReleaseItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -645,6 +690,21 @@ public final class ModItems {
             entries.add(CABIN);
             entries.add(KRAKEN_PEARL);
             entries.add(PHOENIX_ASH);
+            entries.add(GIANT_HOT_AIR_BALLOON);
+            entries.add(GIANT_CHESS_KNIGHT);
+            entries.add(GIANT_LIGHT_BULB);
+            entries.add(TUNNEL_BORER);
+            entries.add(RAMPART);
+            entries.add(MOAT);
+            entries.add(ARENA);
+            entries.add(VAULT);
+            entries.add(SKI_SLOPE);
+            entries.add(WATERSLIDE);
+            entries.add(AQUARIUM);
+            entries.add(STATUE);
+            entries.add(MENAGERIE);
+            entries.add(FIREFLIES);
+            entries.add(BALLOON_RELEASE);
         });
         return registered;
     }

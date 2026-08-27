@@ -7,6 +7,7 @@ import net.minecraft.world.World;
 public class EntityType<T extends Entity> {
     public static final EntityType<MobEntity> CAT = new EntityType<>();
     public static final EntityType<MobEntity> COW = new EntityType<>();
+    public static final EntityType<MobEntity> COD = new EntityType<>();
     public static final EntityType<MobEntity> CHICKEN = new EntityType<>();
     public static final EntityType<MobEntity> IRON_GOLEM = new EntityType<>();
     public static final EntityType<Entity> LIGHTNING_BOLT = new EntityType<>();

@@ -55,7 +55,8 @@ CATEGORY = {
         "giant_duck", "giant_gramophone", "giant_guitar", "giant_hammer",
         "giant_hourglass", "giant_ice_cream", "giant_key", "giant_lighthouse",
         "giant_mushroom", "giant_rocket", "giant_skull", "giant_sword", "giant_teapot",
-        "giant_trophy", "giant_windmill", "grand_piano")},
+        "giant_trophy", "giant_windmill", "grand_piano",
+        "giant_hot_air_balloon", "giant_chess_knight", "giant_light_bulb")},
     # Terraforming
     "terraformer": "terrain", "mountain_maker": "terrain", "canyon_carver": "terrain",
     "lake_maker": "terrain", "ice_age": "terrain", "forest_grower": "terrain",
@@ -63,7 +64,7 @@ CATEGORY = {
     "repair": "terrain", "skylight": "terrain", "overgrowth": "terrain",
     "crystal_growth": "terrain", "volcano_seed": "terrain", "sky_island": "terrain",
     "weather_control": "terrain", "time_of_day": "terrain", "mineshaft": "terrain",
-    "farm_plot": "terrain",
+    "farm_plot": "terrain", "tunnel_borer": "terrain",
     # Builders
     "bridge_builder": "builders", "tower_builder": "builders", "road_builder": "builders",
     "maze_maker": "builders", "dungeon_maker": "builders", "block_printer": "builders",
@@ -71,7 +72,9 @@ CATEGORY = {
     "pyramid": "builders", "cabin": "builders", "glass_dome": "builders",
     "rail_layer": "builders", "portal_frame": "builders", "elevator": "builders",
     "trampoline": "builders", "bouncy_ground": "builders", "beacon_marker": "builders",
-    "torch_bomb": "builders",
+    "torch_bomb": "builders", "rampart": "builders", "moat": "builders",
+    "arena": "builders", "vault": "builders", "ski_slope": "builders",
+    "waterslide": "builders", "aquarium": "builders", "statue": "builders",
     # Gadgets
     "portal_gun": "gadgets", "teleport_staff": "gadgets", "grappling_hook": "gadgets",
     "jetpack": "gadgets", "speed_boots": "gadgets", "water_walking": "gadgets",
@@ -90,10 +93,11 @@ CATEGORY = {
     "sky_whale_egg": "creatures", "titan_seal": "creatures", "dragon_egg_orb": "creatures",
     "spider_core": "creatures", "golem_heart": "creatures", "kraken_pearl": "creatures",
     "phoenix_ash": "creatures", "growing_cat": "creatures", "chicken_rain": "creatures",
-    "pet_rock": "creatures",
+    "pet_rock": "creatures", "menagerie": "creatures",
     # For fun
     "firework_show": "fun", "disco_floor": "fun", "confetti_cannon": "fun",
     "rainbow_trail": "fun", "boombox": "fun", "party_mode": "fun",
+    "fireflies": "fun", "balloon_release": "fun",
 }
 
 MOBS = [

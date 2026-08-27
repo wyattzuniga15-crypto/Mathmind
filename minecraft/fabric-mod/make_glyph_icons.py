@@ -433,6 +433,70 @@ GLYPHS["phoenix_ash"] = (lambda: (
                 for dx, dy in ((1, -1), (-1, -1), (0, -1))],
                disc(g, 7, 9, 2, WHITE), g)[-1])(blank()))()
 
+ICEB = (188, 228, 244, 255); WATERD = (52, 106, 190, 255); OBSID = (48, 34, 62, 255)
+FLESH = (206, 168, 132, 255)
+
+GLYPHS["tunnel_borer"] = (lambda: (
+    lambda g: (rect(g, 0, 0, 15, 15, GREY),
+               [disc(g, 5, 8, 7-i, DARK if i % 2 == 0 else BLACK) for i in range(3)],
+               rect(g, 11, 4, 12, 7, BARK), rect(g, 11, 3, 12, 4, GLOW),
+               diag(g, 1, 8, 6, 1, 0, STEEL, 1), g)[-1])(blank()))()
+GLYPHS["rampart"] = (lambda: (
+    lambda g: (rect(g, 0, 6, 15, 15, GREY),
+               [rect(g, i*4, 2, i*4+2, 6, GREY) for i in range(4)],
+               [rect(g, 0, 6+i*3, 15, 6+i*3, DARK) for i in range(4)],
+               rect(g, 0, 12, 15, 15, DARK), g)[-1])(blank()))()
+GLYPHS["moat"] = (lambda: (
+    lambda g: (disc(g, 7, 7, 8, GREY), disc(g, 7, 7, 7, WATERD),
+               disc(g, 7, 7, 4, LEAF), rect(g, 6, 0, 9, 4, GREY),
+               g)[-1])(blank()))()
+GLYPHS["arena"] = (lambda: (
+    lambda g: (disc(g, 7, 8, 8, STONE), disc(g, 7, 8, 6, GREY),
+               disc(g, 7, 8, 4, STONE), disc(g, 7, 8, 3, SANDY),
+               g)[-1])(blank()))()
+GLYPHS["vault"] = (lambda: (
+    lambda g: (rect(g, 1, 1, 14, 15, OBSID), rect(g, 3, 3, 12, 13, PUR),
+               rect(g, 4, 4, 11, 12, VOID),
+               rect(g, 5, 6, 10, 11, BARK), rect(g, 5, 8, 10, 8, GRIP),
+               rect(g, 7, 8, 8, 10, GOLD), g)[-1])(blank()))()
+GLYPHS["ski_slope"] = (lambda: (
+    lambda g: (rect(g, 0, 0, 15, 15, SKY),
+               [rect(g, 0, 3+i, 15-i, 3+i, ICEB) for i in range(12)],
+               [rect(g, 15-i, 3+i, 15, 3+i, T) for i in range(12)],
+               [rect(g, 0, 4+i, 14-i, 5+i, SNOW) for i in range(0, 12, 4)],
+               g)[-1])(blank()))()
+GLYPHS["waterslide"] = (lambda: (
+    lambda g: ([disc(g, 7, 3+i*5, 6, COLD, 4) for i in range(3)],
+               [disc(g, 7, 3+i*5, 5, WATERD, 4) for i in range(3)],
+               rect(g, 0, 0, 15, 2, T), g)[-1])(blank()))()
+GLYPHS["aquarium"] = (lambda: (
+    lambda g: (rect(g, 1, 2, 14, 14, COLD), rect(g, 2, 4, 13, 13, WATERD),
+               rect(g, 1, 13, 14, 15, GREY), rect(g, 1, 2, 14, 3, STEEL),
+               rect(g, 5, 7, 9, 9, HOT), rect(g, 9, 7, 11, 9, GLOW),
+               rect(g, 5, 7, 6, 7, BLACK), g)[-1])(blank()))()
+GLYPHS["statue"] = (lambda: (
+    lambda g: (rect(g, 1, 13, 14, 15, GREY), rect(g, 2, 11, 13, 13, STONE),
+               rect(g, 6, 1, 9, 4, SANDY), rect(g, 5, 5, 10, 9, STONE),
+               rect(g, 3, 5, 4, 9, SANDY), rect(g, 11, 5, 12, 9, SANDY),
+               rect(g, 6, 9, 7, 11, STONE), rect(g, 8, 9, 9, 11, STONE),
+               g)[-1])(blank()))()
+GLYPHS["menagerie"] = (lambda: (
+    lambda g: (disc(g, 4, 5, 3, WHALE), disc(g, 11, 4, 3, SCALE),
+               disc(g, 4, 11, 3, STONE), disc(g, 11, 11, 3, HOT),
+               rect(g, 7, 7, 8, 8, GLOW), rect(g, 3, 4, 4, 5, BLACK),
+               rect(g, 10, 3, 11, 4, BLACK), g)[-1])(blank()))()
+GLYPHS["fireflies"] = (lambda: (
+    lambda g: (rect(g, 0, 0, 15, 15, VOID),
+               [disc(g, 2+(i*5) % 13, 2+(i*7) % 13, 1, GLOW) for i in range(9)],
+               [rect(g, 2+(i*5) % 13, 2+(i*7) % 13, 2+(i*5) % 13, 2+(i*7) % 13, WHITE)
+                for i in range(9)], g)[-1])(blank()))()
+GLYPHS["balloon_release"] = (lambda: (
+    lambda g: (rect(g, 0, 14, 15, 15, LEAF),
+               [rect(g, 2+i*5, 6+(i % 2)*3, 2+i*5, 14, WHITE) for i in range(3)],
+               [disc(g, 2+i*5, 4+(i % 2)*3, 2, [RED, YEL, BLUE][i]) for i in range(3)],
+               [disc(g, 9+i*4, 2+(i % 2)*4, 2, [PINK, GREEN][i]) for i in range(2)],
+               g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):

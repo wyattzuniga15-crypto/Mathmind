@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "S S",
+    "AAA"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:smooth_stone"
+    },
+    "A": {
+      "item": "minecraft:sand"
+    }
+  },
+  "result": {
+    "id": "orbital:arena",
+    "count": 1
+  }
+}

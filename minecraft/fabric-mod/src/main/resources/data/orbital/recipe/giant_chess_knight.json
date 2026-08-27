@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " DD",
+    "DDD",
+    " DD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:deepslate_tiles"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_chess_knight",
+    "count": 1
+  }
+}

@@ -156,5 +156,20 @@
   "item.orbital.kraken_pearl": "Kraken Pearl",
   "item.orbital.phoenix_ash": "Phoenix Ash",
   "entity.orbital.kraken": "Kraken",
-  "entity.orbital.phoenix": "Phoenix"
+  "entity.orbital.phoenix": "Phoenix",
+  "item.orbital.giant_hot_air_balloon": "Giant Hot Air Balloon",
+  "item.orbital.giant_chess_knight": "Giant Chess Knight",
+  "item.orbital.giant_light_bulb": "Giant Light Bulb",
+  "item.orbital.tunnel_borer": "Tunnel Borer",
+  "item.orbital.rampart": "Rampart",
+  "item.orbital.moat": "Moat",
+  "item.orbital.arena": "Arena",
+  "item.orbital.vault": "Vault",
+  "item.orbital.ski_slope": "Ski Slope",
+  "item.orbital.waterslide": "Waterslide",
+  "item.orbital.aquarium": "Aquarium",
+  "item.orbital.statue": "Statue Of You",
+  "item.orbital.menagerie": "Menagerie",
+  "item.orbital.fireflies": "Fireflies",
+  "item.orbital.balloon_release": "Balloon Release"
 }

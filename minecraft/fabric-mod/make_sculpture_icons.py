@@ -252,6 +252,48 @@ def windmill(x, y, z):
                 if off <= 0.42 and rr > 4.0: return LB
     return None
 
+BL = (72, 108, 196, 255); YE = (240, 208, 72, 255); DP = (58, 56, 66, 255)
+
+# Batch L, mirroring gen_sculptures.py block for block.
+
+def hot_air_balloon(x, y, z):
+    if 2 <= y <= 18:
+        t = (y - 2) / 16.0
+        r = 11.0 * math.sin(math.pi * (0.18 + 0.72 * t))
+        d = math.sqrt(x*x + z*z)
+        if r - 1.5 <= d <= r:
+            return (R, W, YE, BL)[int((math.atan2(z, x) + math.pi) / (math.pi / 2.0)) % 4]
+    if abs(x) == 4 and abs(z) == 4 and -6 <= y < 2: return N
+    if -12 <= y <= -6 and max(abs(x), abs(z)) <= 5 \
+            and (y == -12 or max(abs(x), abs(z)) >= 4): return N
+    return None
+
+def chess_knight(x, y, z):
+    d = math.sqrt(x*x + z*z)
+    if -18 <= y <= -13 and d <= 9.0 - (y + 18) * 0.5: return DP
+    if abs(z) > 5: return None
+    lean = (y + 13) * 0.30
+    if -13 < y <= 5 and abs(x + lean - 1.0) <= 4.0 - (y + 13) * 0.08: return DP
+    if 5 < y <= 13 and -8 <= x <= 0 and abs(z) <= 4: return DP
+    if 6 <= y <= 11 and -13 <= x < -8 and abs(z) <= 3: return DP
+    for ez in (-2, 2):
+        if 13 < y <= 17 and -5 <= x <= -2 and abs(z - ez) <= 1: return DP
+    return None
+
+def light_bulb(x, y, z):
+    d = math.sqrt(x*x + z*z)
+    if -2 <= y <= 18:
+        r = 11.0 * math.sin(math.pi * (0.12 + 0.8 * (y + 2) / 20.0))
+        if r - 1.5 <= d <= r: return GL
+        if d < r - 1.5:
+            if abs(x) <= 1 and 2 <= y <= 10 and abs(z) <= 1: return G
+            if 9 <= y <= 11 and abs(x) <= 5 and abs(z) <= 1 and (x + y) % 3 == 0: return G
+            return None
+    if -8 <= y < -2 and post(x, z, 0, 0, 5.0): return I
+    if -16 <= y < -8 and post(x, z, 0, 0, 6.0 - ((y + 16) % 3) * 0.9): return I
+    if -19 <= y < -16 and post(x, z, 0, 0, 3.0): return K
+    return None
+
 SHAPES = {
     "giant_chicken": (chicken, 12), "giant_boot": (boot, 14),
     "giant_hammer": (hammer, 16),   "giant_skull": (skull, 10),
@@ -264,6 +306,9 @@ SHAPES = {
     "giant_guitar": (guitar, 20),   "giant_lighthouse": (lighthouse, 20),
     "giant_key": (key, 18),         "giant_ice_cream": (ice_cream, 22),
     "giant_windmill": (windmill, 20),
+    "giant_hot_air_balloon": (hot_air_balloon, 20),
+    "giant_chess_knight": (chess_knight, 22),
+    "giant_light_bulb": (light_bulb, 22),
 }
 
 TRANSPARENT = (0, 0, 0, 0)

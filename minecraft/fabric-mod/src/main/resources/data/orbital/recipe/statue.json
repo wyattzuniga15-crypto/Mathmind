@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " H ",
+    "SSS",
+    " S "
+  ],
+  "key": {
+    "H": {
+      "item": "minecraft:player_head"
+    },
+    "S": {
+      "item": "minecraft:stone_bricks"
+    }
+  },
+  "result": {
+    "id": "orbital:statue",
+    "count": 1
+  }
+}

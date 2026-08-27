@@ -291,6 +291,55 @@ jobs:
           done
           exit 0
 
+      # An ingredient id that does not exist makes the whole recipe fail to
+      # load. Minecraft logs one line about it at startup and carries on, so
+      # the only symptom a player sees is an item that cannot be crafted in
+      # survival, with nothing on screen to say why. The ids look plausible by
+      # eye — that is the problem — so ask the jar which ones are real.
+      - name: Check every recipe ingredient is a real item
+        if: always()
+        working-directory: minecraft/fabric-mod
+        run: |
+          set +e
+          jar="${MC_JAR:-}"
+          if [ -z "$jar" ] || [ ! -f "$jar" ]; then
+            echo "::warning::could not find the Minecraft jar — this check did NOT run"
+            exit 0
+          fi
+          javap -cp "$jar" net.minecraft.item.Items > /tmp/items.txt 2>&1
+          # Anchored on the declared type, not on "a run of capitals": a
+          # looser pattern would pick up capitals from anywhere in the output
+          # and quietly make the check pass for ids it never really saw.
+          real=$(grep -oE 'Item [A-Z][A-Z_0-9]*;' /tmp/items.txt \
+                 | sed -E 's/^Item //; s/;$//' | tr 'A-Z' 'a-z' | sort -u)
+          if [ -z "$real" ]; then
+            echo "::warning::javap returned no item fields — this check did NOT run"
+            exit 0
+          fi
+          echo "$real" > /tmp/real-items.txt
+          echo "$(wc -l < /tmp/real-items.txt) items in this Minecraft"
+          used=$(python3 - <<'PY'
+          import json, glob
+          seen = set()
+          for f in glob.glob("src/main/resources/data/orbital/recipe/*.json"):
+              d = json.load(open(f))
+              for v in d["key"].values():
+                  seen.add((v["item"] if isinstance(v, dict) else v).split(":")[-1])
+          print("\n".join(sorted(seen)))
+          PY
+          )
+          bad=0
+          for name in $used; do
+            grep -qx "$name" /tmp/real-items.txt || {
+              echo "::error::recipe ingredient minecraft:$name is not an item in this version"
+              grep -n "\"minecraft:$name\"" -r src/main/resources/data/orbital/recipe \
+                | head -3 | sed 's|^|    used by |'
+              bad=$((bad + 1))
+            }
+          done
+          echo "$(echo "$used" | wc -w) distinct ingredients checked, $bad unknown"
+          [ "$bad" -eq 0 ] || exit 1
+
       - name: Show what was produced
         if: always()
         working-directory: minecraft/fabric-mod
