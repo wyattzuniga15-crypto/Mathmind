@@ -38,7 +38,10 @@ public class ElevatorItem extends Item {
         BlockState pad = Blocks.QUARTZ_BLOCK.getDefaultState();
         user.sendMessage(Text.literal("§f⇧ Going up."), true);
         Scheduler.repeat(() -> {
-            if (up[0] >= RISE) {
+            // Stop if the rider is gone. setPosition on a player the server
+            // has already replaced moves a corpse, every tick, for the rest of
+            // the ride.
+            if (up[0] >= RISE || user.isRemoved()) {
                 return false;
             }
             // Lift the player with the platform explicitly. Standing on a block

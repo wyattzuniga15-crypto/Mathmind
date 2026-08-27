@@ -71,6 +71,9 @@ public class TornadoItem extends Item {
         serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN,
                 SoundCategory.MASTER, 4.0F, 0.4F);
 
+        // The funnel's base is fixed where it started; taking it from the
+        // player each tick made the whole tornado rise and fall with them.
+        double baseY = user.getY();
         Scheduler.repeat(() -> {
             if (++age[0] > LIFETIME) {
                 return false;
@@ -84,7 +87,7 @@ public class TornadoItem extends Item {
             int cz = (int) Math.floor(z[0]);
             // Walk down for the surface rather than asking the heightmap:
             // that accessor has been renamed across versions and this has not.
-            int ground = surface(serverWorld, cx, cz, (int) user.getY());
+            int ground = surface(serverWorld, cx, cz, (int) baseY);
 
             // Tear blocks loose and fling them, rather than deleting them:
             // the debris in the air is what reads as a tornado.

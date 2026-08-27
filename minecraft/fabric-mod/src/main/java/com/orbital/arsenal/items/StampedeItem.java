@@ -39,6 +39,11 @@ public class StampedeItem extends Item {
         user.sendMessage(Text.literal("§6🐄 Move."), true);
         int[] sent = {0};
         Scheduler.repeat(() -> {
+            // Spawned relative to the player, so with no player there is
+            // nowhere to spawn them relative to.
+            if (user.isRemoved()) {
+                return false;
+            }
             ThreadLocalRandom dice = ThreadLocalRandom.current();
             for (int n = 0; n < PER_TICK && sent[0] < HERD; n++, sent[0]++) {
                 Entity cow = EntityType.COW.create(serverWorld, SpawnReason.EVENT);

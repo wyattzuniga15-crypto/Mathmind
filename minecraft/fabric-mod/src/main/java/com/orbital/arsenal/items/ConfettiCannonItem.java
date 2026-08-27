@@ -34,7 +34,8 @@ public class ConfettiCannonItem extends Item {
                 SoundCategory.PLAYERS, 1.5F, 2.0F);
         int[] age = {0};
         Scheduler.repeat(() -> {
-            if (++age[0] > PUFFS) {
+            // Sprayed from the player's hands, so there have to be hands.
+            if (++age[0] > PUFFS || user.isRemoved()) {
                 return false;
             }
             // Sprayed over two seconds rather than all at once: one frame of

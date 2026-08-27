@@ -42,13 +42,21 @@ public class RoadBuilderItem extends Item {
         double uz = aim.z / flat;
         int[] step = {1};
         user.sendMessage(Text.literal("§7▬ Building a road…"), true);
+        // Read once. Taking it fresh each step made the road follow the player
+        // rather than run from where they were standing when they used it.
+        double fromX = user.getX();
+        double fromZ = user.getZ();
+        int fromY = (int) Math.floor(user.getY());
         Scheduler.repeat(() -> {
+            if (user.isRemoved()) {
+                return false;
+            }
             for (int n = 0; n < 4 && step[0] <= LENGTH; n++, step[0]++) {
-                int rx = (int) (user.getX() + ux * step[0]);
-                int rz = (int) (user.getZ() + uz * step[0]);
+                int rx = (int) (fromX + ux * step[0]);
+                int rz = (int) (fromZ + uz * step[0]);
                 // Follows the ground rather than holding one height, so it goes over
                 // hills instead of tunnelling through them or bridging past them.
-                int ground = Area.surface(serverWorld, rx, rz, (int) user.getY());
+                int ground = Area.surface(serverWorld, rx, rz, fromY);
                 for (int side = -WIDE; side <= WIDE; side++) {
                     int sx = rx + (int) (-uz * side);
                     int sz = rz + (int) (ux * side);

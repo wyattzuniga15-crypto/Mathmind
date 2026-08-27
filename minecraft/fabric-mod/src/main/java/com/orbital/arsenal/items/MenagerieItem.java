@@ -40,7 +40,9 @@ public class MenagerieItem extends Item {
             if (++age[0] % 20 != 0) {
                 return true;
             }
-            if (which[0] >= 8) {
+            // Eight large mobs placed around a player who has left is eight large mobs
+            // standing in an empty field.
+            if (which[0] >= 8 || user.isRemoved()) {
                 return false;
             }
             double a = which[0] * Math.PI / 4.0;

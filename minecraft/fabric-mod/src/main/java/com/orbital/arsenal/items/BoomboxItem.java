@@ -41,7 +41,8 @@ public class BoomboxItem extends Item {
         float[] scale = {0.5F, 0.56F, 0.63F, 0.75F, 0.84F, 1.0F, 1.12F, 1.26F};
         int[] beat = {0};
         Scheduler.repeat(() -> {
-            if (++beat[0] > BARS * 8) {
+            // The music plays wherever you are, so it has to stop when you are nowhere.
+            if (++beat[0] > BARS * 8 || user.isRemoved()) {
                 return false;
             }
             if (beat[0] % 8 != 0) {

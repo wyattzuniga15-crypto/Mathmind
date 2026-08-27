@@ -473,6 +473,34 @@ def main():
                   f"field manual would not document it")
         print(f"  all {len(ids)} items are filed under a manual section")
 
+    # --- nothing steers by a player it no longer has ---
+    #
+    # A PlayerEntity is replaced on death and on a dimension change. A lambda
+    # that captured the old one keeps reading positions off a corpse — the
+    # effect plays out where the player used to be, for as long as it was
+    # scheduled — and one of them, the elevator, called setPosition on it every
+    # tick for the rest of the ride.
+    #
+    # Only the uses that matter: reading the player's position, or moving them.
+    # An item whose scheduled lambda only sends a message is not on this list,
+    # because a message to a player who has gone is nothing at all, and a rule
+    # that flagged those too would be twenty warnings nobody reads.
+    STEERS = re.compile(r"\buser\.(getX|getY|getZ|getBlockPos|getRotationVec"
+                        r"|setPosition|addVelocity|setVelocity)\(")
+    steering = 0
+    for src in sorted((ROOT / "src/main/java/com/orbital/arsenal/items").glob("*.java")):
+        text = src.read_text()
+        for body in re.findall(r"Scheduler\.(?:repeat|after)\([^)]*?\(\) -> \{(.*?)\n        \}\)",
+                               text, re.S):
+            if not STEERS.search(body):
+                continue
+            steering += 1
+            check("user.isRemoved()" in body,
+                  f"{src.name} reads or moves the player from inside a scheduled "
+                  f"task without checking user.isRemoved() — after a death or a "
+                  f"dimension change it would be steering by a corpse")
+    print(f"  {steering} scheduled tasks steer by the player, all of them guarded")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:

@@ -39,7 +39,9 @@ public class CarpetBombItem extends Item {
         user.sendMessage(Text.literal("§c▬▬ Carpet"), true);
         int[] step = {0};
         Scheduler.repeat(() -> {
-            if (step[0] >= RUNS) {
+            // The run walks out from wherever the player is standing; with no player it
+            // walks out from a corpse.
+            if (step[0] >= RUNS || user.isRemoved()) {
                 return false;
             }
             // One pair a tick, walking outward. Dropped all at once it is a very

@@ -42,10 +42,18 @@ public class BridgeBuilderItem extends Item {
         int deck = (int) Math.floor(user.getY()) - 1;
         int[] step = {1};
         user.sendMessage(Text.literal("§7═ Bridging…"), true);
+        // The start is read once, here, not inside the loop. Reading it every
+        // step meant walking while it built dragged the far end along with you,
+        // and walking backwards shortened the bridge you were standing on.
+        double fromX = user.getX();
+        double fromZ = user.getZ();
         Scheduler.repeat(() -> {
+            if (user.isRemoved()) {
+                return false;
+            }
             for (int n = 0; n < 6 && step[0] <= LENGTH; n++, step[0]++) {
-                int bx = (int) (user.getX() + ux * step[0]);
-                int bz = (int) (user.getZ() + uz * step[0]);
+                int bx = (int) (fromX + ux * step[0]);
+                int bz = (int) (fromZ + uz * step[0]);
                 // Held at one height on purpose — a bridge that followed the ground
                 // would be a road, and would sink into the gap it is meant to cross.
                 for (int side = -2; side <= 2; side++) {
