@@ -10,6 +10,8 @@ import net.minecraft.world.World;
 public class ServerWorld extends World {
     public void playSound(Entity except, BlockPos pos, SoundEvent sound, SoundCategory cat, float vol, float pitch) {}
     public void spawnEntity(Entity e) {}
+    public void setWeather(int clear, int rain, boolean raining, boolean thunder) {}
+    public void setTimeOfDay(long time) {}
     public java.util.List<net.minecraft.server.network.ServerPlayerEntity> getPlayers() {
         return java.util.List.of();
     }

@@ -76,5 +76,17 @@
   "item.orbital.elevator": "Elevator",
   "item.orbital.ore_finder": "Ore Finder",
   "item.orbital.supply_drop": "Supply Drop",
-  "item.orbital.homing_compass": "Homing Compass"
+  "item.orbital.homing_compass": "Homing Compass",
+  "item.orbital.forest_grower": "Forest Grower",
+  "item.orbital.mountain_maker": "Mountain Maker",
+  "item.orbital.canyon_carver": "Canyon Carver",
+  "item.orbital.ice_age": "Ice Age",
+  "item.orbital.maze_maker": "Maze Maker",
+  "item.orbital.road_builder": "Road Builder",
+  "item.orbital.bridge_builder": "Bridge Builder",
+  "item.orbital.tower_builder": "Tower Builder",
+  "item.orbital.weather_control": "Weather Control",
+  "item.orbital.time_of_day": "Sun Dial",
+  "item.orbital.meteor_crater": "Meteor Crater",
+  "item.orbital.dungeon_maker": "Dungeon Maker"
 }

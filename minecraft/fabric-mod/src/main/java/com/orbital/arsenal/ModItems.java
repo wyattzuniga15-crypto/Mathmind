@@ -1,6 +1,18 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.ForestGrowerItem;
+import com.orbital.arsenal.items.MountainMakerItem;
+import com.orbital.arsenal.items.CanyonCarverItem;
+import com.orbital.arsenal.items.IceAgeItem;
+import com.orbital.arsenal.items.MazeMakerItem;
+import com.orbital.arsenal.items.RoadBuilderItem;
+import com.orbital.arsenal.items.BridgeBuilderItem;
+import com.orbital.arsenal.items.TowerBuilderItem;
+import com.orbital.arsenal.items.WeatherControlItem;
+import com.orbital.arsenal.items.TimeOfDayItem;
+import com.orbital.arsenal.items.MeteorCraterItem;
+import com.orbital.arsenal.items.DungeonMakerItem;
 import com.orbital.arsenal.items.TeleportStaffItem;
 import com.orbital.arsenal.items.WallPhaseItem;
 import com.orbital.arsenal.items.TimeBubbleItem;
@@ -165,6 +177,18 @@ public final class ModItems {
     public static Item ORE_FINDER;
     public static Item SUPPLY_DROP;
     public static Item HOMING_COMPASS;
+    public static Item FOREST_GROWER;
+    public static Item MOUNTAIN_MAKER;
+    public static Item CANYON_CARVER;
+    public static Item ICE_AGE;
+    public static Item MAZE_MAKER;
+    public static Item ROAD_BUILDER;
+    public static Item BRIDGE_BUILDER;
+    public static Item TOWER_BUILDER;
+    public static Item WEATHER_CONTROL;
+    public static Item TIME_OF_DAY;
+    public static Item METEOR_CRATER;
+    public static Item DUNGEON_MAKER;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -278,6 +302,18 @@ public final class ModItems {
         ORE_FINDER = register("ore_finder", OreFinderItem::new);
         SUPPLY_DROP = register("supply_drop", SupplyDropItem::new);
         HOMING_COMPASS = register("homing_compass", HomingCompassItem::new);
+        FOREST_GROWER = register("forest_grower", ForestGrowerItem::new);
+        MOUNTAIN_MAKER = register("mountain_maker", MountainMakerItem::new);
+        CANYON_CARVER = register("canyon_carver", CanyonCarverItem::new);
+        ICE_AGE = register("ice_age", IceAgeItem::new);
+        MAZE_MAKER = register("maze_maker", MazeMakerItem::new);
+        ROAD_BUILDER = register("road_builder", RoadBuilderItem::new);
+        BRIDGE_BUILDER = register("bridge_builder", BridgeBuilderItem::new);
+        TOWER_BUILDER = register("tower_builder", TowerBuilderItem::new);
+        WEATHER_CONTROL = register("weather_control", WeatherControlItem::new);
+        TIME_OF_DAY = register("time_of_day", TimeOfDayItem::new);
+        METEOR_CRATER = register("meteor_crater", MeteorCraterItem::new);
+        DUNGEON_MAKER = register("dungeon_maker", DungeonMakerItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -357,6 +393,18 @@ public final class ModItems {
             entries.add(ORE_FINDER);
             entries.add(SUPPLY_DROP);
             entries.add(HOMING_COMPASS);
+            entries.add(FOREST_GROWER);
+            entries.add(MOUNTAIN_MAKER);
+            entries.add(CANYON_CARVER);
+            entries.add(ICE_AGE);
+            entries.add(MAZE_MAKER);
+            entries.add(ROAD_BUILDER);
+            entries.add(BRIDGE_BUILDER);
+            entries.add(TOWER_BUILDER);
+            entries.add(WEATHER_CONTROL);
+            entries.add(TIME_OF_DAY);
+            entries.add(METEOR_CRATER);
+            entries.add(DUNGEON_MAKER);
         });
         return registered;
     }

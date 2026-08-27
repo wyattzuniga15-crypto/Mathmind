@@ -127,6 +127,53 @@ GLYPHS["homing_compass"] = (lambda: (
     lambda g: (disc(g, 7, 7, 7, GOLD, 5), disc(g, 7, 7, 5, WHITE),
                diag(g, 7, 3, 5, 0, 1, HOT), diag(g, 5, 5, 3, 1, 1, HOT), g)[-1])(blank()))()
 
+GREY = (150, 150, 156, 255); SNOW = (240, 248, 252, 255); LEAF = (96, 168, 78, 255)
+BARK = (118, 84, 52, 255);   SKY = (128, 196, 240, 255)
+
+GLYPHS["forest_grower"] = (lambda: (
+    lambda g: ([disc(g, 3+i*5, 6, 3, LEAF) for i in range(3)],
+               [rect(g, 3+i*5, 9, 3+i*5, 14, BARK) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["mountain_maker"] = (lambda: (
+    lambda g: ([rect(g, 7-i, 6+i, 8+i, 6+i, GREY) for i in range(9)],
+               [rect(g, 7-i, 6+i, 8+i, 6+i, SNOW) for i in range(2)], g)[-1])(blank()))()
+GLYPHS["canyon_carver"] = (lambda: (
+    lambda g: (rect(g, 0, 4, 15, 15, GREY),
+               [rect(g, 6-i//3, 4+i, 9+i//3, 4+i, T) for i in range(12)], g)[-1])(blank()))()
+GLYPHS["ice_age"] = (lambda: (
+    lambda g: (rect(g, 0, 9, 15, 15, SNOW), rect(g, 0, 11, 15, 15, COLD),
+               [diag(g, 2+i*5, 1, 5, 0, 1, SNOW) for i in range(3)],
+               [rect(g, 1+i*5, 3, 4+i*5, 3, SNOW) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["maze_maker"] = (lambda: (
+    lambda g: (rect(g, 1, 1, 14, 14, GREY),
+               [rect(g, 3+i*4, 1, 3+i*4, 10, T) for i in range(3)],
+               [rect(g, 1, 3+i*4, 12, 3+i*4, T) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["road_builder"] = (lambda: (
+    lambda g: (rect(g, 0, 8, 15, 15, GREY),
+               [rect(g, 1+i*5, 11, 4+i*5, 12, GLOW) for i in range(3)],
+               rect(g, 0, 8, 15, 8, DARK), g)[-1])(blank()))()
+GLYPHS["bridge_builder"] = (lambda: (
+    lambda g: (rect(g, 0, 7, 15, 9, BARK), rect(g, 0, 5, 15, 5, BARK),
+               [rect(g, 1+i*4, 5, 1+i*4, 7, BARK) for i in range(4)],
+               rect(g, 0, 13, 3, 15, GREY), rect(g, 12, 13, 15, 15, GREY), g)[-1])(blank()))()
+GLYPHS["tower_builder"] = (lambda: (
+    lambda g: (rect(g, 5, 3, 10, 15, GREY), rect(g, 4, 1, 11, 3, DARK),
+               [rect(g, 6, 6+i*4, 9, 7+i*4, T) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["weather_control"] = (lambda: (
+    lambda g: (disc(g, 6, 5, 4, WHITE), disc(g, 10, 6, 3, WHITE),
+               rect(g, 3, 6, 12, 8, WHITE),
+               [rect(g, 3+i*3, 10, 3+i*3, 14, BLUE) for i in range(4)], g)[-1])(blank()))()
+GLYPHS["time_of_day"] = (lambda: (
+    lambda g: (disc(g, 7, 7, 5, GOLD), disc(g, 7, 7, 3, GLOW),
+               [diag(g, 7+dx*7, 7+dy*7, 1, dx, dy, GOLD)
+                for dx, dy in ((1,0),(-1,0),(0,1),(0,-1))], g)[-1])(blank()))()
+GLYPHS["meteor_crater"] = (lambda: (
+    lambda g: (disc(g, 7, 9, 7, GREY), disc(g, 7, 9, 5, DARK), disc(g, 7, 9, 2, HOT),
+               diag(g, 12, 0, 4, -1, 1, HOT, 2), g)[-1])(blank()))()
+GLYPHS["dungeon_maker"] = (lambda: (
+    lambda g: (rect(g, 1, 5, 14, 14, GREY), rect(g, 3, 7, 12, 12, DARK),
+               disc(g, 4, 8, 1, GLOW), disc(g, 11, 8, 1, GLOW),
+               rect(g, 6, 1, 9, 5, DARK), g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):
