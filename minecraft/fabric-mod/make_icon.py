@@ -739,6 +739,119 @@ _GADGET_ART = {
 GADGETS = {name: [[_GADGET_KEY[c] for c in row] for row in rows]
            for name, rows in _GADGET_ART.items()}
 
+# The five world-benders: a smoking cone, an arrow that has turned over,
+# a disc floating above its own hole, a strip of three climates, a filled
+# basin seen from above.
+_nN = (78, 62, 62, 255)      # basalt
+_nR = (222, 96, 42, 255)     # lava
+_nS = (150, 150, 156, 255)   # smoke / stone rim
+_nE = (146, 226, 178, 255)   # ender green
+_nQ = (232, 230, 220, 255)   # quartz
+_nG = (120, 200, 110, 255)   # grass
+_nD = (140, 106, 74, 255)    # dirt underside
+_nC = (196, 214, 236, 255)   # cloud
+_nW = (238, 244, 250, 255)   # snow
+_nB = (58, 128, 214, 255)    # water
+
+_WORLD_KEY = {".": _t, "N": _nN, "R": _nR, "S": _nS, "E": _nE, "Q": _nQ,
+              "G": _nG, "D": _nD, "C": _nC, "W": _nW, "B": _nB}
+
+_WORLD_ART = {
+    "volcano_seed": [
+        "................",
+        "................",
+        ".......SS.......",
+        "......S..S......",
+        "......RRRR......",
+        ".....RNNNNR.....",
+        "....NNRRRRNN....",
+        "....NNNNNNNN....",
+        "...NNNNNNNNNN...",
+        "...NNNNNNNNNN...",
+        "..NNNNNNNNNNNN..",
+        "..NNNNNNNNNNNN..",
+        ".NNNNNNNNNNNNNN.",
+        ".NNNNNNNNNNNNNN.",
+        "NNNNNNNNNNNNNNNN",
+        "................",
+    ],
+    "gravity_flip": [
+        "................",
+        ".......EE.......",
+        "......EEEE......",
+        ".....EEEEEE.....",
+        "....EE.EE.EE....",
+        ".......EE.......",
+        ".......EE.......",
+        "................",
+        "....SSSSSSSS....",
+        "....SSSSSSSS....",
+        "................",
+        ".......EE.......",
+        ".......EE.......",
+        "....EE.EE.EE....",
+        ".....EEEEEE.....",
+        "................",
+    ],
+    "sky_island": [
+        "................",
+        "....QQQQQQQQ....",
+        "...QGGGGGGGGQ...",
+        "..QGGGGGGGGGGQ..",
+        "..QQQQQQQQQQQQ..",
+        "..DDDDDDDDDDDD..",
+        "...DDDDDDDDDD...",
+        "....DDDDDDDD....",
+        ".....DDDDDD.....",
+        "......DDDD......",
+        ".......DD.......",
+        "................",
+        "................",
+        ".......CC.......",
+        "......CCCC......",
+        "................",
+    ],
+    "terraformer": [
+        "................",
+        "......DDDD......",
+        ".....DDDDDD.....",
+        "......DDDD......",
+        "................",
+        "..SSSSSSSSSSSS..",
+        "..SSSSSSSSSSSS..",
+        "..WWWWWWWWWWWW..",
+        "..WWWWWWWWWWWW..",
+        "..NNNNNNNNNNNN..",
+        "..NNNNNNNNNNNN..",
+        "..SSSSSSSSSSSS..",
+        "..SSSSSSSSSSSS..",
+        "................",
+        "................",
+        "................",
+    ],
+    "lake_maker": [
+        "................",
+        "................",
+        "..SS........SS..",
+        ".SBBS......SBBS.",
+        ".SBBBSSSSSSBBBS.",
+        "..SBBBBBBBBBBS..",
+        "...SBBBBBBBBS...",
+        "....SBBBBBBS....",
+        ".....SBBBBS.....",
+        "......SBBS......",
+        ".......SS.......",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+}
+
+WORLDBENDERS = {name: [[_WORLD_KEY[c] for c in row] for row in rows]
+                for name, rows in _WORLD_ART.items()}
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
@@ -747,6 +860,7 @@ if __name__ == "__main__":
                           *sorted(SCULPTURES.items()),
                           *sorted(WEAPONS.items()),
                           *sorted(GADGETS.items()),
+                          *sorted(WORLDBENDERS.items()),
                           ("time_stop_clock", STOP_CLOCK),
                           ("slow_time_clock", SLOW_CLOCK),
                           ("echo_ghost", GHOST),

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "QQQ",
+    "QFQ",
+    "QQQ"
+  ],
+  "key": {
+    "Q": {
+      "item": "minecraft:quartz_block"
+    },
+    "F": {
+      "item": "minecraft:phantom_membrane"
+    }
+  },
+  "result": {
+    "id": "orbital:sky_island",
+    "count": 1
+  }
+}

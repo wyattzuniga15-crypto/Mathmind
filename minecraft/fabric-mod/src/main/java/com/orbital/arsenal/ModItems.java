@@ -1,6 +1,11 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.VolcanoSeedItem;
+import com.orbital.arsenal.items.GravityFlipItem;
+import com.orbital.arsenal.items.SkyIslandItem;
+import com.orbital.arsenal.items.TerraformerItem;
+import com.orbital.arsenal.items.LakeMakerItem;
 import com.orbital.arsenal.items.GravityGunItem;
 import com.orbital.arsenal.items.GrapplingHookItem;
 import com.orbital.arsenal.items.ShrinkRayItem;
@@ -69,6 +74,11 @@ public final class ModItems {
     public static Item SHRINK_RAY;
     public static Item DOPPELGANGER;
     public static Item JETPACK;
+    public static Item VOLCANO_SEED;
+    public static Item GRAVITY_FLIP;
+    public static Item SKY_ISLAND;
+    public static Item TERRAFORMER;
+    public static Item LAKE_MAKER;
     public static Item TIME_STOP_CLOCK;
     public static Item SLOW_TIME_CLOCK;
     public static Item ECHO_GHOST;
@@ -133,6 +143,11 @@ public final class ModItems {
         SHRINK_RAY = register("shrink_ray", ShrinkRayItem::new);
         DOPPELGANGER = register("doppelganger", DoppelgangerItem::new);
         JETPACK = register("jetpack", JetpackItem::new);
+        VOLCANO_SEED = register("volcano_seed", VolcanoSeedItem::new);
+        GRAVITY_FLIP = register("gravity_flip", GravityFlipItem::new);
+        SKY_ISLAND = register("sky_island", SkyIslandItem::new);
+        TERRAFORMER = register("terraformer", TerraformerItem::new);
+        LAKE_MAKER = register("lake_maker", LakeMakerItem::new);
         TIME_STOP_CLOCK = register("time_stop_clock", TimeStopClockItem::new);
         SLOW_TIME_CLOCK = register("slow_time_clock", SlowTimeClockItem::new);
         ECHO_GHOST = register("echo_ghost", EchoGhostItem::new);
@@ -179,6 +194,11 @@ public final class ModItems {
             entries.add(SHRINK_RAY);
             entries.add(DOPPELGANGER);
             entries.add(JETPACK);
+            entries.add(VOLCANO_SEED);
+            entries.add(GRAVITY_FLIP);
+            entries.add(SKY_ISLAND);
+            entries.add(TERRAFORMER);
+            entries.add(LAKE_MAKER);
             entries.add(TIME_STOP_CLOCK);
             entries.add(SLOW_TIME_CLOCK);
             entries.add(ECHO_GHOST);
