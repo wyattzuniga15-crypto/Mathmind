@@ -18,10 +18,20 @@ import net.minecraft.util.Identifier;
 public class OrbitalArsenalClient implements ClientModInitializer {
     public static final EntityModelLayer CHRONARCH_LAYER = new EntityModelLayer(
             Identifier.of(OrbitalArsenal.MOD_ID, "chronarch"), "main");
+    public static final EntityModelLayer SKY_WHALE_LAYER = new EntityModelLayer(
+            Identifier.of(OrbitalArsenal.MOD_ID, "sky_whale"), "main");
+    public static final EntityModelLayer TITAN_LAYER = new EntityModelLayer(
+            Identifier.of(OrbitalArsenal.MOD_ID, "titan"), "main");
 
     @Override
     public void onInitializeClient() {
         EntityModelLayerRegistry.registerModelLayer(CHRONARCH_LAYER, ChronarchModel::getTexturedModelData);
         EntityRendererRegistry.register(ModEntities.CHRONARCH, ChronarchRenderer::new);
+
+        EntityModelLayerRegistry.registerModelLayer(SKY_WHALE_LAYER, SkyWhaleModel::getTexturedModelData);
+        EntityRendererRegistry.register(ModEntities.SKY_WHALE, SkyWhaleRenderer::new);
+
+        EntityModelLayerRegistry.registerModelLayer(TITAN_LAYER, TitanModel::getTexturedModelData);
+        EntityRendererRegistry.register(ModEntities.TITAN, TitanRenderer::new);
     }
 }

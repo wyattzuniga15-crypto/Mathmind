@@ -17,6 +17,14 @@ public final class ModEntities {
 
     public static EntityType<ChronarchEntity> CHRONARCH;
 
+    public static final RegistryKey<EntityType<?>> SKY_WHALE_KEY = RegistryKey.of(
+            RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "sky_whale"));
+    public static EntityType<SkyWhaleEntity> SKY_WHALE;
+
+    public static final RegistryKey<EntityType<?>> TITAN_KEY = RegistryKey.of(
+            RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "titan"));
+    public static EntityType<TitanEntity> TITAN;
+
     private ModEntities() {}
 
     public static void register() {
@@ -26,5 +34,19 @@ public final class ModEntities {
                         .dimensions(2.6F, 3.4F)
                         .build(CHRONARCH_KEY));
         FabricDefaultAttributeRegistry.register(CHRONARCH, ChronarchEntity.createChronarchAttributes());
+
+        SKY_WHALE = Registry.register(Registries.ENTITY_TYPE, SKY_WHALE_KEY,
+                EntityType.Builder.create(SkyWhaleEntity::new, SpawnGroup.CREATURE)
+                        // Five blocks long and two tall. The hitbox has to
+                        // match the model or it is shot at where it is not.
+                        .dimensions(5.0F, 2.2F)
+                        .build(SKY_WHALE_KEY));
+        FabricDefaultAttributeRegistry.register(SKY_WHALE, SkyWhaleEntity.createSkyWhaleAttributes());
+
+        TITAN = Registry.register(Registries.ENTITY_TYPE, TITAN_KEY,
+                EntityType.Builder.create(TitanEntity::new, SpawnGroup.MONSTER)
+                        .dimensions(2.4F, 7.0F)
+                        .build(TITAN_KEY));
+        FabricDefaultAttributeRegistry.register(TITAN, TitanEntity.createTitanAttributes());
     }
 }

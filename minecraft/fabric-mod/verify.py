@@ -33,6 +33,7 @@ def check(condition, message):
 
 
 def main():
+    lang_path = ROOT / "src/main/resources/assets/orbital/lang/en_us.json"
     global checks
     # --- every JSON parses, and has nothing trailing the closing brace ---
     for path in sorted(RES.rglob("*.json")):
@@ -158,6 +159,22 @@ def main():
         print(result.stdout.rstrip())
         if result.returncode != 0:
             problems.append("journal run-length round-trip failed")
+
+    # --- every registered mob has a name ---
+    #
+    # A mob with no lang entry is not broken, which is why this went unnoticed:
+    # it spawns, it fights, it renders. It just shows "entity.orbital.chronarch"
+    # over its head instead of a name, and nothing anywhere complains.
+    mod_entities = ROOT / "src/main/java/com/orbital/arsenal/entity/ModEntities.java"
+    if mod_entities.exists() and lang_path.exists():
+        names = json.loads(lang_path.read_text())
+        for mob in sorted(set(re.findall(r'Identifier\.of\(OrbitalArsenal\.MOD_ID, "([a-z_0-9]+)"\)',
+                                         mod_entities.read_text()))):
+            check(f"entity.orbital.{mob}" in names,
+                  f"entity {mob} has no name in en_us.json — it will show its id in game")
+            texture = ROOT / f"src/main/resources/assets/orbital/textures/entity/{mob}.png"
+            check(texture.exists(), f"entity {mob} has no texture at {texture.name}")
+        print("  every registered mob has a name and a texture")
 
     # --- nothing holds a player object across ticks ---
     #

@@ -217,6 +217,18 @@ GLYPHS["party_mode"] = (lambda: (
                rect(g, 7, 4, 8, 8, WHITE), disc(g, 7, 3, 2, GLOW),
                [disc(g, 1+i*6, 6, 1, [RED, YEL, PUR][i]) for i in range(3)], g)[-1])(blank()))()
 
+WHALE = (58, 82, 128, 255); BELLY = (214, 220, 228, 255); BRONZE = (156, 114, 66, 255)
+
+GLYPHS["sky_whale_egg"] = (lambda: (
+    lambda g: (disc(g, 8, 8, 6, WHALE), rect(g, 2, 8, 14, 12, WHALE),
+               rect(g, 4, 10, 13, 12, BELLY), rect(g, 0, 4, 3, 12, WHALE),
+               disc(g, 12, 6, 1, BLACK), g)[-1])(blank()))()
+GLYPHS["titan_seal"] = (lambda: (
+    lambda g: (rect(g, 6, 1, 9, 4, BRONZE), rect(g, 4, 5, 11, 10, BRONZE),
+               rect(g, 1, 5, 3, 12, BRONZE), rect(g, 12, 5, 14, 12, BRONZE),
+               rect(g, 5, 11, 7, 15, BRONZE), rect(g, 8, 11, 10, 15, BRONZE),
+               rect(g, 6, 6, 9, 7, GLOW), g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):

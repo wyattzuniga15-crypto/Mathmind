@@ -98,5 +98,10 @@
   "item.orbital.snowball_gun": "Snowball Gun",
   "item.orbital.chicken_rain": "Chicken Rain",
   "item.orbital.boombox": "Boombox",
-  "item.orbital.party_mode": "Party Mode"
+  "item.orbital.party_mode": "Party Mode",
+  "item.orbital.sky_whale_egg": "Sky Whale Call",
+  "item.orbital.titan_seal": "Titan Seal",
+  "entity.orbital.chronarch": "Chronarch",
+  "entity.orbital.sky_whale": "Sky Whale",
+  "entity.orbital.titan": "Titan"
 }

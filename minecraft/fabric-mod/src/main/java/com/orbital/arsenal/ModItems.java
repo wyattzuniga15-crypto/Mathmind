@@ -1,6 +1,8 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.SkyWhaleEggItem;
+import com.orbital.arsenal.items.TitanSealItem;
 import com.orbital.arsenal.items.FireworkShowItem;
 import com.orbital.arsenal.items.DiscoFloorItem;
 import com.orbital.arsenal.items.ConfettiCannonItem;
@@ -209,6 +211,8 @@ public final class ModItems {
     public static Item CHICKEN_RAIN;
     public static Item BOOMBOX;
     public static Item PARTY_MODE;
+    public static Item SKY_WHALE_EGG;
+    public static Item TITAN_SEAL;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -344,6 +348,8 @@ public final class ModItems {
         CHICKEN_RAIN = register("chicken_rain", ChickenRainItem::new);
         BOOMBOX = register("boombox", BoomboxItem::new);
         PARTY_MODE = register("party_mode", PartyModeItem::new);
+        SKY_WHALE_EGG = register("sky_whale_egg", SkyWhaleEggItem::new);
+        TITAN_SEAL = register("titan_seal", TitanSealItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -445,6 +451,8 @@ public final class ModItems {
             entries.add(CHICKEN_RAIN);
             entries.add(BOOMBOX);
             entries.add(PARTY_MODE);
+            entries.add(SKY_WHALE_EGG);
+            entries.add(TITAN_SEAL);
         });
         return registered;
     }
