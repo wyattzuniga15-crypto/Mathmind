@@ -297,8 +297,15 @@ jobs:
       # An ingredient id that does not exist makes the whole recipe fail to
       # load. Minecraft logs one line about it at startup and carries on, so
       # the only symptom a player sees is an item that cannot be crafted in
-      # survival, with nothing on screen to say why. The ids look plausible by
-      # eye — that is the problem — so ask the jar which ones are real.
+      # survival, with nothing on screen to say why.
+      #
+      # Read the registry, not the Java class. The first two versions of this
+      # check compared ingredient ids against field names in net.minecraft.item
+      # .Items, and failed the build for a whole morning over minecraft:chain —
+      # which is a perfectly real item that simply has no constant named CHAIN.
+      # A field name is not a registry id. The vanilla language file, which
+      # ships inside the jar, has a key for every item and every block by id,
+      # and that is what a recipe actually names.
       - name: Check every recipe ingredient is a real item
         if: always()
         working-directory: minecraft/fabric-mod
@@ -309,46 +316,29 @@ jobs:
             echo "::warning::could not find the Minecraft jar — this check did NOT run"
             exit 0
           fi
-          javap -cp "$jar" net.minecraft.item.Items > /tmp/items.txt 2>&1
-          # Every constant Items declares, whatever its declared type. The
-          # first version anchored on the literal type name "Item " and came
-          # back one short — it reported minecraft:chain, a real ingredient, as
-          # not existing. A check that calls a real thing fake is the same
-          # failure as one that passes a fake thing, pointing the other way.
-          real=$(grep -oE 'public static final [^ ]+ [A-Z][A-Z_0-9]*;' /tmp/items.txt \
-                 | sed -E 's/.* //; s/;$//' | tr 'A-Z' 'a-z' | sort -u)
-          if [ -z "$real" ]; then
-            echo "::warning::javap returned no item fields — this check did NOT run"
+          unzip -p "$jar" assets/minecraft/lang/en_us.json > /tmp/vanilla-lang.json 2>/dev/null
+          if [ ! -s /tmp/vanilla-lang.json ]; then
+            echo "::warning::no vanilla language file in the jar — this check did NOT run"
             exit 0
           fi
-          echo "$real" > /tmp/real-items.txt
-          echo "$(wc -l < /tmp/real-items.txt) items in this Minecraft"
-          used=$(python3 - <<'PY'
-          import json, glob
-          seen = set()
-          for f in glob.glob("src/main/resources/data/orbital/recipe/*.json"):
-              d = json.load(open(f))
-              for v in d["key"].values():
-                  seen.add((v["item"] if isinstance(v, dict) else v).split(":")[-1])
-          print("\n".join(sorted(seen)))
+          python3 - <<'PY'
+          import glob, json, sys
+          lang = json.load(open("/tmp/vanilla-lang.json"))
+          real = {k.split(".", 2)[2] for k in lang
+                  if k.startswith(("item.minecraft.", "block.minecraft."))}
+          print(f"{len(real)} item and block ids in this Minecraft")
+          bad = []
+          for path in sorted(glob.glob("src/main/resources/data/orbital/recipe/*.json")):
+              for value in json.load(open(path))["key"].values():
+                  name = (value["item"] if isinstance(value, dict) else value).split(":")[-1]
+                  if name not in real:
+                      bad.append((name, path))
+          for name, path in bad:
+              print(f"::error::recipe ingredient minecraft:{name} is not a real id "
+                    f"— used by {path}")
+          print(f"{len(bad)} unknown ingredients")
+          sys.exit(1 if bad else 0)
           PY
-          )
-          bad=0
-          for name in $used; do
-            grep -qx "$name" /tmp/real-items.txt || {
-              echo "::error::recipe ingredient minecraft:$name is not an item in this version"
-              grep -n "\"minecraft:$name\"" -r src/main/resources/data/orbital/recipe \
-                | head -3 | sed 's|^|    used by |'
-              # What Items actually says about that name, so a miss carries its
-              # own evidence instead of costing another round to find out.
-              up=$(echo "$name" | tr 'a-z' 'A-Z')
-              echo "    javap says:"
-              grep -i "[ .]$up;" /tmp/items.txt | head -3 | sed 's|^|      |'
-              bad=$((bad + 1))
-            }
-          done
-          echo "$(echo "$used" | wc -w) distinct ingredients checked, $bad unknown"
-          [ "$bad" -eq 0 ] || exit 1
 
       - name: Show what was produced
         if: always()
