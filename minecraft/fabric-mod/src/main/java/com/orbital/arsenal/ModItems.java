@@ -1,6 +1,11 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.GravityGunItem;
+import com.orbital.arsenal.items.GrapplingHookItem;
+import com.orbital.arsenal.items.ShrinkRayItem;
+import com.orbital.arsenal.items.DoppelgangerItem;
+import com.orbital.arsenal.items.JetpackItem;
 import com.orbital.arsenal.items.RailgunItem;
 import com.orbital.arsenal.items.TornadoItem;
 import com.orbital.arsenal.items.FreezeRayItem;
@@ -59,6 +64,11 @@ public final class ModItems {
     public static Item FREEZE_RAY;
     public static Item METEOR_STORM;
     public static Item LIGHTNING_CALLER;
+    public static Item GRAVITY_GUN;
+    public static Item GRAPPLING_HOOK;
+    public static Item SHRINK_RAY;
+    public static Item DOPPELGANGER;
+    public static Item JETPACK;
     public static Item TIME_STOP_CLOCK;
     public static Item SLOW_TIME_CLOCK;
     public static Item ECHO_GHOST;
@@ -118,6 +128,11 @@ public final class ModItems {
         FREEZE_RAY = register("freeze_ray", FreezeRayItem::new);
         METEOR_STORM = register("meteor_storm", MeteorStormItem::new);
         LIGHTNING_CALLER = register("lightning_caller", LightningCallerItem::new);
+        GRAVITY_GUN = register("gravity_gun", GravityGunItem::new);
+        GRAPPLING_HOOK = register("grappling_hook", GrapplingHookItem::new);
+        SHRINK_RAY = register("shrink_ray", ShrinkRayItem::new);
+        DOPPELGANGER = register("doppelganger", DoppelgangerItem::new);
+        JETPACK = register("jetpack", JetpackItem::new);
         TIME_STOP_CLOCK = register("time_stop_clock", TimeStopClockItem::new);
         SLOW_TIME_CLOCK = register("slow_time_clock", SlowTimeClockItem::new);
         ECHO_GHOST = register("echo_ghost", EchoGhostItem::new);
@@ -159,6 +174,11 @@ public final class ModItems {
             entries.add(FREEZE_RAY);
             entries.add(METEOR_STORM);
             entries.add(LIGHTNING_CALLER);
+            entries.add(GRAVITY_GUN);
+            entries.add(GRAPPLING_HOOK);
+            entries.add(SHRINK_RAY);
+            entries.add(DOPPELGANGER);
+            entries.add(JETPACK);
             entries.add(TIME_STOP_CLOCK);
             entries.add(SLOW_TIME_CLOCK);
             entries.add(ECHO_GHOST);

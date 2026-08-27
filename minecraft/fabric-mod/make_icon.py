@@ -629,6 +629,116 @@ _WEAPON_ART = {
 WEAPONS = {name: [[_WEAPON_KEY[c] for c in row] for row in rows]
            for name, rows in _WEAPON_ART.items()}
 
+# The five gadgets. A gun with a glowing lens, a hook on a line, a beam
+# emitter, two figures side by side, and a pack with its exhaust lit.
+_dI = (172, 178, 190, 255)   # casing
+_dE = (86, 92, 106, 255)     # casing, shadowed
+_dG = (140, 240, 190, 255)   # gravity lens
+_dC = (206, 150, 250, 255)   # shrink beam
+_dA = (86, 92, 106, 255)     # emitter body
+_dS = (206, 198, 176, 255)   # rope
+_dY = (255, 202, 90, 255)    # exhaust
+_dR = (238, 110, 52, 255)    # exhaust, hot
+
+_GADGET_KEY = {".": _t, "I": _dI, "E": _dE, "G": _dG, "C": _dC,
+               "A": _dA, "S": _dS, "Y": _dY, "R": _dR}
+
+_GADGET_ART = {
+    "gravity_gun": [
+        "................",
+        "................",
+        "......IIIII.....",
+        ".....IEEEEEI....",
+        "....IEGGGGGEI...",
+        "...IEGGGGGGGEI..",
+        "....IEGGGGGEI...",
+        ".....IEEEEEI....",
+        "......IIIII.....",
+        "......III.......",
+        ".....III........",
+        "....III.........",
+        "...III..........",
+        "...II...........",
+        "................",
+        "................",
+    ],
+    "grappling_hook": [
+        "................",
+        ".....IIII.......",
+        "....II..II......",
+        "...II....II.....",
+        "...II....II.....",
+        "....II..II......",
+        ".....IIII.......",
+        "......SS........",
+        ".....S..S.......",
+        "....S....S......",
+        "...S......S.....",
+        "..S........S....",
+        "..S.........S...",
+        ".S...........S..",
+        ".S............S.",
+        "................",
+    ],
+    "shrink_ray": [
+        "................",
+        "..............CC",
+        "...IIIIIIIII.CC.",
+        "..IAAAAAAAAAIC..",
+        ".IACCCCCCCCCAI..",
+        "..IAAAAAAAAAI...",
+        "...IIIIIIIII....",
+        "..II............",
+        ".II.............",
+        "..I.............",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+    "doppelganger": [
+        "................",
+        "...III....III...",
+        "..IIIII..IIIII..",
+        "..IIIII..IIIII..",
+        "..IIIII..IIIII..",
+        "...III....III...",
+        "..IIIIII.IIIIII.",
+        ".IIIIIII.IIIIIII",
+        ".IIIIIII.IIIIIII",
+        "..IIIII...IIIII.",
+        "..III......III..",
+        "..III......III..",
+        "..III......III..",
+        "..II........II..",
+        "..II........II..",
+        "................",
+    ],
+    "jetpack": [
+        "................",
+        "......IIII......",
+        ".....IIIIII.....",
+        ".....IIIIII.....",
+        "....IIIIIIII....",
+        "....IIIIIIII....",
+        "....IIIIIIII....",
+        "....IIIIIIII....",
+        ".....IIIIII.....",
+        ".....II..II.....",
+        "....YY....YY....",
+        "....YY....YY....",
+        "...YRY....YRY...",
+        "...YRY....YRY...",
+        "....R......R....",
+        "................",
+    ],
+}
+
+GADGETS = {name: [[_GADGET_KEY[c] for c in row] for row in rows]
+           for name, rows in _GADGET_ART.items()}
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
@@ -636,6 +746,7 @@ if __name__ == "__main__":
                           ("growing_cat", GROWING_CAT),
                           *sorted(SCULPTURES.items()),
                           *sorted(WEAPONS.items()),
+                          *sorted(GADGETS.items()),
                           ("time_stop_clock", STOP_CLOCK),
                           ("slow_time_clock", SLOW_CLOCK),
                           ("echo_ghost", GHOST),
