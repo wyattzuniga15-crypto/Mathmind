@@ -517,10 +517,18 @@ than pushing against a value the game refuses.
 
 `EntityAttributes.SCALE` is the one name here that was a guess — the class lost
 its `GENERIC_` prefix at 1.21.2 and `SCALE` only exists at all from 1.20.5, so
-a name that is right on one version fails to build on another. The workflow now
-checks every attribute the mod names against the real jar and, on a miss,
-prints every name that version does have. One round trip carries the answer
-rather than just the complaint.
+a name that is right on one version fails to build on another. The compile
+settles it either way; the workflow additionally names every attribute the mod
+uses against the real jar and, on a miss, prints every name that version does
+have, so one round trip carries the answer rather than just the complaint.
+
+That check, and the sound check beside it, shipped broken. Both re-derived the
+path to the Minecraft jar with a narrower glob than the step above them, found
+nothing, printed one unread line and exited **0** — reporting success for a
+release without having looked at anything. The step that resolves the jar
+properly now publishes the path for them, and a check that cannot run raises a
+warning instead of passing quietly. A check that silently passes when it cannot
+run is worse than no check, because it is believed.
 
 ## Running the companion for free
 

@@ -176,6 +176,10 @@ jobs:
                   done | head -1)
           fi
           echo "using: $jar"
+          # Publish it: the checks below were re-deriving this with only the
+          # first, narrower glob, which found nothing — so they exited early
+          # and reported success without ever looking at anything.
+          [ -n "$jar" ] && echo "MC_JAR=$jar" >> "$GITHUB_ENV"
           [ -z "$jar" ] && exit 0
 
           for cls in \
@@ -224,9 +228,14 @@ jobs:
         working-directory: minecraft/fabric-mod
         run: |
           set +e
-          jar=$(find ~/.gradle/caches/fabric-loom .gradle -name '*.jar' 2>/dev/null \
-                | grep -iE 'minecraft.*(named|mapped)' | head -1)
-          [ -z "$jar" ] && echo "no remapped jar yet" && exit 0
+          jar="${MC_JAR:-}"
+          # A check that cannot run must not look like a check that passed.
+          # This one silently reported success for a whole release because it
+          # could not find the jar and said so in a line nobody reads.
+          if [ -z "$jar" ] || [ ! -f "$jar" ]; then
+            echo "::warning::could not find the Minecraft jar — this check did NOT run"
+            exit 0
+          fi
           used=$(grep -rhoE 'EntityAttributes\.[A-Z_0-9]+' src/main/java | sort -u | cut -d. -f2)
           [ -z "$used" ] && echo "the mod names no attributes" && exit 0
           javap -cp "$jar" net.minecraft.entity.attribute.EntityAttributes > /tmp/attrs.txt 2>&1
@@ -251,9 +260,14 @@ jobs:
         working-directory: minecraft/fabric-mod
         run: |
           set +e
-          jar=$(find ~/.gradle/caches/fabric-loom .gradle -name '*.jar' 2>/dev/null \
-                | grep -iE 'minecraft.*(named|mapped)' | head -1)
-          [ -z "$jar" ] && echo "no remapped jar yet" && exit 0
+          jar="${MC_JAR:-}"
+          # A check that cannot run must not look like a check that passed.
+          # This one silently reported success for a whole release because it
+          # could not find the jar and said so in a line nobody reads.
+          if [ -z "$jar" ] || [ ! -f "$jar" ]; then
+            echo "::warning::could not find the Minecraft jar — this check did NOT run"
+            exit 0
+          fi
           used=$(grep -rhoE 'SoundEvents\.[A-Z_0-9]+' src/main/java | sort -u | cut -d. -f2)
           [ -z "$used" ] && echo "the mod names no sounds" && exit 0
           javap -cp "$jar" net.minecraft.sound.SoundEvents > /tmp/sounds.txt 2>&1
