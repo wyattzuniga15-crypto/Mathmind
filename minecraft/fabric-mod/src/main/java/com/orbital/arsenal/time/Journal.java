@@ -179,8 +179,36 @@ public final class Journal {
     public static void clear(ServerWorld world, BlockPos pos, BlockState was, BlockState to) {
         record(world, pos, was);
         suppressed = true;
-        world.setBlockState(pos, to, 2);
-        suppressed = false;
+        try {
+            world.setBlockState(pos, to, 2);
+        } finally {
+            // try/finally, not a plain pair of assignments. If setBlockState
+            // throws — and it can, at a chunk boundary or a world edge — the
+            // flag would stay raised and the mixin would stop recording
+            // anything at all. Every clock in the mod would then quietly do
+            // nothing, with no error and no way to tell from inside the game.
+            suppressed = false;
+        }
+    }
+
+    /**
+     * Run {@code work} without filing any of it.
+     *
+     * For changes whose net effect on the world is nothing: a sculpture is
+     * assembled a block at a time in mid-air and immediately released, so
+     * every one of those blocks is filed twice — once placed, once removed —
+     * and a giant cake alone puts five thousand entries into the record for a
+     * shape that was never part of the world. That is the record's capacity
+     * spent on nothing, crowding out the craters it exists to undo.
+     */
+    public static void unrecorded(Runnable work) {
+        boolean before = suppressed;
+        suppressed = true;
+        try {
+            work.run();
+        } finally {
+            suppressed = before;
+        }
     }
 
     private static void trim(Log log) {

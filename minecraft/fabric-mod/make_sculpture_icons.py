@@ -125,7 +125,7 @@ def rocket(x, y, z):
 
 def teapot(x, y, z):
     if y >= -4 and blob(x,y,z,0,0,0,8,6,8): return W
-    if y > 6 and post(x,z,0,0,2.5-(y-6)*0.3): return W
+    if 6 < y <= 14 and post(x,z,0,0,2.5-(y-6)*0.3): return W
     if abs(z) <= 2 and x > 4:
         d = math.sqrt((x-9.0)**2 + (y-1.0)**2)
         if 2.0 <= d <= 4.0: return W

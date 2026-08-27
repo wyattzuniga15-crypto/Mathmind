@@ -104,26 +104,32 @@ public class CatBazookaItem extends Item {
         Vec3d shove = aim.multiply(MUZZLE_SPEED);
         BlockPos.Mutable pos = new BlockPos.Mutable();
 
-        for (int x = -12; x <= 12; x++) {
-            for (int y = -8; y <= 9; y++) {
-                for (int z = -6; z <= 6; z++) {
-                    Block block = paint(x, y, z);
-                    if (block == null) {
-                        continue;
-                    }
-                    BlockState state = block.getDefaultState();
-                    pos.set(cx + x, cy + y, cz + z);
-                    BlockPos at = pos.toImmutable();
-                    world.setBlockState(at, state, 2);
-                    FallingBlockEntity part = FallingBlockEntity.spawnFromBlock(world, at, state);
-                    if (part != null) {
-                        part.dropItem = false;
-                        part.setVelocity(shove);
-                        parts.add(part);
+        // Assembled in mid-air and released on the same tick, so none of it
+        // is part of the world for longer than that. Filing it would spend
+        // thousands of entries per drop on a shape nobody can undo.
+        Journal.unrecorded(() -> {
+            for (int x = -12; x <= 12; x++) {
+                for (int y = -8; y <= 9; y++) {
+                    for (int z = -6; z <= 6; z++) {
+                        Block block = paint(x, y, z);
+                        if (block == null) {
+                            continue;
+                        }
+                        BlockState state = block.getDefaultState();
+                        pos.set(cx + x, cy + y, cz + z);
+                        BlockPos at = pos.toImmutable();
+                        world.setBlockState(at, state, 2);
+                        FallingBlockEntity part = FallingBlockEntity.spawnFromBlock(world, at, state);
+                        if (part != null) {
+                            part.dropItem = false;
+                            part.setVelocity(shove);
+                            parts.add(part);
+                        }
                     }
                 }
             }
-        }
+        });
+
         return parts;
     }
 

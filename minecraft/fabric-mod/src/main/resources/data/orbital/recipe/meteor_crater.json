@@ -2,13 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "MMM",
+    "MSM",
     "MTM",
-    "MMM"
+    "MSM"
   ],
   "key": {
     "M": {
       "item": "minecraft:magma_block"
+    },
+    "S": {
+      "item": "minecraft:stone"
     },
     "T": {
       "item": "minecraft:tnt"

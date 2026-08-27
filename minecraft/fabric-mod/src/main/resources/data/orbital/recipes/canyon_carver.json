@@ -3,12 +3,15 @@
   "category": "misc",
   "pattern": [
     "III",
-    "IPI",
+    "SPS",
     "III"
   ],
   "key": {
     "I": {
       "item": "minecraft:iron_block"
+    },
+    "S": {
+      "item": "minecraft:stone"
     },
     "P": {
       "item": "minecraft:diamond_pickaxe"

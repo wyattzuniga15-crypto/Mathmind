@@ -160,6 +160,30 @@ def main():
         if result.returncode != 0:
             problems.append("journal run-length round-trip failed")
 
+    # --- no two items share a recipe ---
+    #
+    # Two shaped recipes with the same ingredients in the same arrangement do
+    # not conflict loudly: one of them simply never appears, and the item it
+    # belongs to becomes uncraftable with no error anywhere. Two pairs had
+    # collided before anyone laid them side by side.
+    shapes = {}
+    recipe_dir = ROOT / "src/main/resources/data/orbital/recipe"
+    if recipe_dir.exists():
+        for recipe_file in sorted(recipe_dir.glob("*.json")):
+            recipe = json.loads(recipe_file.read_text())
+            if recipe.get("type") != "minecraft:crafting_shaped":
+                continue
+            key = {k: (v["item"] if isinstance(v, dict) else v)
+                   for k, v in recipe.get("key", {}).items()}
+            # The letters are arbitrary; the arrangement of ingredients is not.
+            grid = tuple("".join(key.get(ch, " ") + "|" for ch in row.ljust(3)[:3])
+                         for row in recipe["pattern"])
+            check(grid not in shapes,
+                  f"{recipe_file.stem} has the same recipe as {shapes.get(grid)} — "
+                  f"one of the two will be uncraftable")
+            shapes.setdefault(grid, recipe_file.stem)
+        print(f"  {len(shapes)} recipes, all distinct")
+
     # --- every registered mob has a name ---
     #
     # A mob with no lang entry is not broken, which is why this went unnoticed:

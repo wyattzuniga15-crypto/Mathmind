@@ -90,36 +90,42 @@ public class PotatoBombItem extends Item {
         int cz = (int) Math.floor(target.z);
         BlockPos.Mutable pos = new BlockPos.Mutable();
 
-        for (int x = -RX; x <= RX; x++) {
-            for (int y = -RY; y <= RY; y++) {
-                for (int z = -RZ; z <= RZ; z++) {
-                    double shape = (double) (x * x) / (RX * RX)
-                            + (double) (y * y) / (RY * RY)
-                            + (double) (z * z) / (RZ * RZ);
-                    // A plain ellipsoid reads as an egg. The wobble is what
-                    // makes it lumpy enough to be a potato.
-                    double lump = Math.sin(x * 0.8) * 0.05
-                            + Math.cos(z * 1.1) * 0.05
-                            + Math.sin(y * 1.4 + x * 0.3) * 0.04;
-                    if (shape > 1.0 + lump) {
-                        continue;
-                    }
-                    // Darker patches for the eyes of the potato.
-                    boolean eye = (x * 7 + y * 13 + z * 5) % 17 == 0;
-                    BlockState state = (eye ? Blocks.COARSE_DIRT : Blocks.PACKED_MUD)
-                            .getDefaultState();
+        // Assembled in mid-air and released on the same tick, so none of it
+        // is part of the world for longer than that. Filing it would spend
+        // thousands of entries per drop on a shape nobody can undo.
+        Journal.unrecorded(() -> {
+            for (int x = -RX; x <= RX; x++) {
+                for (int y = -RY; y <= RY; y++) {
+                    for (int z = -RZ; z <= RZ; z++) {
+                        double shape = (double) (x * x) / (RX * RX)
+                                + (double) (y * y) / (RY * RY)
+                                + (double) (z * z) / (RZ * RZ);
+                        // A plain ellipsoid reads as an egg. The wobble is what
+                        // makes it lumpy enough to be a potato.
+                        double lump = Math.sin(x * 0.8) * 0.05
+                                + Math.cos(z * 1.1) * 0.05
+                                + Math.sin(y * 1.4 + x * 0.3) * 0.04;
+                        if (shape > 1.0 + lump) {
+                            continue;
+                        }
+                        // Darker patches for the eyes of the potato.
+                        boolean eye = (x * 7 + y * 13 + z * 5) % 17 == 0;
+                        BlockState state = (eye ? Blocks.COARSE_DIRT : Blocks.PACKED_MUD)
+                                .getDefaultState();
 
-                    pos.set(cx + x, cy + y, cz + z);
-                    BlockPos at = pos.toImmutable();
-                    world.setBlockState(at, state, 2);
-                    FallingBlockEntity block = FallingBlockEntity.spawnFromBlock(world, at, state);
-                    if (block != null) {
-                        block.dropItem = false;
-                        parts.add(block);
+                        pos.set(cx + x, cy + y, cz + z);
+                        BlockPos at = pos.toImmutable();
+                        world.setBlockState(at, state, 2);
+                        FallingBlockEntity block = FallingBlockEntity.spawnFromBlock(world, at, state);
+                        if (block != null) {
+                            block.dropItem = false;
+                            parts.add(block);
+                        }
                     }
                 }
             }
-        }
+        });
+
         return parts;
     }
 

@@ -46,7 +46,11 @@ public class GiantTeapotItem extends Item {
         if (y >= -4 && Sculpture.blob(x, y, z, 0, 0, 0, 8, 6, 8)) {
             return Blocks.WHITE_CONCRETE;
         }
-        if (y > 6 && Sculpture.post(x, z, 0, 0, 2.5 - (y - 6) * 0.3)) {
+        // Bounded at the point of the cone. The radius 2.5 - (y-6)*0.3 goes
+        // negative above y=14, and post() squares it — so without this the
+        // knob closes to nothing and then reopens, growing forever as a
+        // phantom column above the teapot.
+        if (y > 6 && y <= 14 && Sculpture.post(x, z, 0, 0, 2.5 - (y - 6) * 0.3)) {
             return Blocks.WHITE_CONCRETE;
         }
         // Spout and handle are arcs — a ring in the XY plane, thin in Z.

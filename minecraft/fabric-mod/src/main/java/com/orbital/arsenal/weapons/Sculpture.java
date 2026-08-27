@@ -47,6 +47,19 @@ public final class Sculpture {
 
     /** If it somehow never touches down, go off anyway rather than hanging. */
     private static final int MAX_FALL = 600;
+
+    /**
+     * How far past the declared reach to look for the shape.
+     *
+     * The reach is a hint, not a boundary — a shape is a function, and nothing
+     * stops it returning a block just outside the box someone guessed at. When
+     * that happened the block was simply never asked for: the Giant Skull lost
+     * ninety blocks off the top of its head and the teapot lost the end of its
+     * spout, silently, because a sculpture that is slightly wrong still looks
+     * like a sculpture. Scanning wider costs a few thousand arithmetic calls
+     * and removes the whole class of mistake.
+     */
+    private static final int MARGIN = 4;
     private static final int CARVE_PER_TICK = 12_000;
 
     /**
@@ -63,28 +76,34 @@ public final class Sculpture {
         int cz = (int) Math.floor(target.z);
         BlockPos.Mutable pos = new BlockPos.Mutable();
 
-        for (int x = -reach; x <= reach; x++) {
-            for (int y = -reach; y <= reach; y++) {
-                for (int z = -reach; z <= reach; z++) {
-                    Block block = shape.at(x, y, z);
-                    if (block == null) {
-                        continue;
-                    }
-                    BlockState state = block.getDefaultState();
-                    pos.set(cx + x, cy + y, cz + z);
-                    BlockPos spot = pos.toImmutable();
-                    // A block has to exist somewhere before it can be made to
-                    // fall. The placement lasts one tick, high enough up that
-                    // there is nothing to disturb.
-                    world.setBlockState(spot, state, 2);
-                    FallingBlockEntity part = FallingBlockEntity.spawnFromBlock(world, spot, state);
-                    if (part != null) {
-                        part.dropItem = false;
-                        parts.add(part);
+        // Assembled in mid-air and released on the same tick, so none of it
+        // is part of the world for longer than that. Filing it would spend
+        // thousands of entries per drop on a shape nobody can undo.
+        Journal.unrecorded(() -> {
+            int span = reach + MARGIN;
+            for (int x = -span; x <= span; x++) {
+                for (int y = -span; y <= span; y++) {
+                    for (int z = -span; z <= span; z++) {
+                        Block block = shape.at(x, y, z);
+                        if (block == null) {
+                            continue;
+                        }
+                        BlockState state = block.getDefaultState();
+                        pos.set(cx + x, cy + y, cz + z);
+                        BlockPos spot = pos.toImmutable();
+                        // A block has to exist somewhere before it can be made to
+                        // fall. The placement lasts one tick, high enough up that
+                        // there is nothing to disturb.
+                        world.setBlockState(spot, state, 2);
+                        FallingBlockEntity part = FallingBlockEntity.spawnFromBlock(world, spot, state);
+                        if (part != null) {
+                            part.dropItem = false;
+                            parts.add(part);
+                        }
                     }
                 }
             }
-        }
+        });
 
         user.sendMessage(Text.literal("§6▼ " + name + " — " + parts.size() + " blocks"), true);
         world.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN,
