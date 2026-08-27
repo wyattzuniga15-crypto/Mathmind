@@ -6,10 +6,13 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Sweeping a region of the world, a few thousand blocks at a time.
@@ -126,6 +129,24 @@ public final class Area {
         Box box = new Box(at.x - reach, at.y - reach, at.z - reach,
                 at.x + reach, at.y + reach, at.z + reach);
         return world.getOtherEntities(except, box);
+    }
+
+    /**
+     * Every living thing near a point except the players.
+     *
+     * An area effect that removes what it catches must not be handed another
+     * player: discard() on a ServerPlayerEntity takes them out of the world
+     * without telling their client, which desyncs the session rather than
+     * killing them.
+     */
+    public static Iterable<Entity> mobs(ServerWorld world, Entity except, Vec3d at, double reach) {
+        List<Entity> found = new ArrayList<>();
+        for (Entity thing : living(world, except, at, reach)) {
+            if (!(thing instanceof PlayerEntity)) {
+                found.add(thing);
+            }
+        }
+        return found;
     }
 
     /** Shove everything near a point away from it. */

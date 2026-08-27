@@ -333,6 +333,38 @@ def main():
                   f"Schemas registers Tools.{name}, which does not exist")
         print(f"  {len(declared)} companion tools reach every provider")
 
+    # --- no area effect hands another player to discard() ---
+    #
+    # Area.living returns every entity in reach except the one you name, and
+    # on a server that includes the other players. discard() on a
+    # ServerPlayerEntity removes them from the world without telling their
+    # client: they do not die, they desync. Anything that removes what it
+    # catches has to draw from Area.mobs instead.
+    for src in sorted((ROOT / "src/main/java/com/orbital/arsenal/items").glob("*.java")):
+        text = src.read_text()
+        if ".discard()" in text:
+            check("Area.living(" not in text,
+                  f"{src.name} calls discard() on entities from Area.living — "
+                  f"that would remove other players from the world; use Area.mobs")
+
+    # --- the per-tick write guard is still wired up ---
+    #
+    # A counter that is never incremented never warns, and one that is never
+    # reset warns forever and then gets ignored. Both fail silently, which is
+    # the failure mode this guard exists to catch in the first place.
+    journal_src = ROOT / "src/main/java/com/orbital/arsenal/time/Journal.java"
+    if journal_src.exists():
+        text = journal_src.read_text()
+        body = re.search(r"public static void record\(.*?\n    \}", text, re.S)
+        check(body and "++writtenThisTick" in body.group(0),
+              "Journal.record no longer counts writes — the per-tick budget warning "
+              "can never fire")
+        body = re.search(r"public static void tick\(\).*?\n    \}", text, re.S)
+        check(body and "writtenThisTick = 0" in body.group(0) and "warnedThisTick = false" in body.group(0),
+              "Journal.tick no longer resets the per-tick write counter — the warning "
+              "would fire once and never again")
+        print("  the per-tick write budget counts and resets")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:

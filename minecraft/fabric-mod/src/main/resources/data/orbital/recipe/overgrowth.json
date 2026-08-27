@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "VVV",
+    "VBV",
+    "VVV"
+  ],
+  "key": {
+    "V": {
+      "item": "minecraft:vine"
+    },
+    "B": {
+      "item": "minecraft:bone_meal"
+    }
+  },
+  "result": {
+    "id": "orbital:overgrowth",
+    "count": 1
+  }
+}

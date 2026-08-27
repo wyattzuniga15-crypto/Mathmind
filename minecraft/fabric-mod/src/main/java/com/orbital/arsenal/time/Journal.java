@@ -1,5 +1,6 @@
 package com.orbital.arsenal.time;
 
+import com.orbital.arsenal.OrbitalArsenal;
 import com.orbital.arsenal.Scheduler;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -152,6 +153,20 @@ public final class Journal {
     private static final Map<ServerWorld, Log> LOGS = new IdentityHashMap<>();
     private static int now = 0;
 
+    /**
+     * How many block writes in one tick is too many.
+     *
+     * Area spreads its sweeps over ticks under exactly this budget, but an item
+     * that loops over a region itself bypasses that, and the symptom in game is
+     * a freeze with nothing in the log to say why. Static analysis could not
+     * tell the difference — a check on nested loops flagged nine items of which
+     * seven were fine — so count the real writes instead and let an over-budget
+     * tick name itself.
+     */
+    private static final int TICK_BUDGET = 9_000;
+    private static int writtenThisTick = 0;
+    private static boolean warnedThisTick = false;
+
     private Journal() {}
 
     /** File one change. `was` is the state standing there before it. */
@@ -164,6 +179,12 @@ public final class Journal {
         if (log.current == null || log.current.tick != now) {
             log.current = new Frame(now);
             log.frames.addLast(log.current);
+        }
+        if (++writtenThisTick > TICK_BUDGET && !warnedThisTick) {
+            warnedThisTick = true;
+            OrbitalArsenal.LOGGER.warn(
+                    "over {} block changes in one tick — something is sweeping a region "
+                    + "without a budget, and the server will stutter", TICK_BUDGET);
         }
         int px = pos.getX();
         int py = pos.getY();
@@ -228,6 +249,9 @@ public final class Journal {
 
     public static void tick() {
         now++;
+
+        writtenThisTick = 0;
+        warnedThisTick = false;
         for (Log log : LOGS.values()) {
             trim(log);
         }

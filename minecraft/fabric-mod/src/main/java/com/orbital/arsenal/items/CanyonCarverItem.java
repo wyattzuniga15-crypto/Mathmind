@@ -44,7 +44,11 @@ public class CanyonCarverItem extends Item {
         BlockPos.Mutable pos = new BlockPos.Mutable();
         user.sendMessage(Text.literal("§8⌁ Carving…"), true);
         Scheduler.repeat(() -> {
-            for (int n = 0; n < 4 && step[0] < LENGTH; n++, step[0]++) {
+            // One step a tick, not four. Each step scans a disc twenty-five
+            // across and some thirty-seven deep — about seventeen thousand
+            // blocks — and four of those in a single tick is a visible freeze.
+            // At one a tick the canyon takes eight seconds, and you watch it go.
+            for (int n = 0; n < 1 && step[0] < LENGTH; n++, step[0]++) {
                 // Wanders as it goes, so it is a canyon rather than a trench.
                 heading[0] += (ThreadLocalRandom.current().nextDouble() - 0.5) * 0.16;
                 x[0] += Math.cos(heading[0]);

@@ -60,6 +60,8 @@ public class OrbitalLaserItem extends Item {
         int age;
         int lastUse;
         boolean stopping;
+        int cutX = Integer.MIN_VALUE;
+        int cutZ = Integer.MIN_VALUE;
     }
 
     public OrbitalLaserItem(Settings settings) {
@@ -100,7 +102,17 @@ public class OrbitalLaserItem extends Item {
                 return false;
             }
             Vec3d at = Strikes.aim(user, RANGE);
-            cut(serverWorld, at);
+            // Only cut when the beam has actually moved. Holding it still on one
+            // spot re-scanned a hundred and fifty layers of a fifteen-wide disc
+            // every tick for twenty seconds, all of it already air after the
+            // first pass.
+            int aimX = (int) Math.floor(at.x);
+            int aimZ = (int) Math.floor(at.z);
+            if (aimX != beam.cutX || aimZ != beam.cutZ) {
+                beam.cutX = aimX;
+                beam.cutZ = aimZ;
+                cut(serverWorld, at);
+            }
             draw(serverWorld, at);
             if (beam.age % BLAST_EVERY == 0) {
                 // Not for the blocks — the column has already taken those. This

@@ -243,6 +243,110 @@ GLYPHS["golem_heart"] = (lambda: (
     lambda g: (rect(g, 3, 3, 12, 12, STONE), rect(g, 5, 5, 10, 10, DARK),
                disc(g, 7, 7, 3, COLD), disc(g, 7, 7, 1, WHITE), g)[-1])(blank()))()
 
+SANDY = (226, 210, 158, 255); CYAN = (120, 226, 220, 255)
+HILLS = [11, 9, 7, 6, 6, 7, 9, 10, 9, 7, 5, 4, 5, 7, 9, 11]
+
+GLYPHS["beacon_marker"] = (lambda: (
+    lambda g: (rect(g, 3, 12, 12, 15, DARK), rect(g, 4, 13, 11, 14, CYAN),
+               rect(g, 6, 0, 9, 12, WHITE), rect(g, 7, 0, 8, 12, COLD), g)[-1])(blank()))()
+GLYPHS["black_ice"] = (lambda: (
+    lambda g: (rect(g, 0, 6, 15, 15, BLACK), rect(g, 1, 7, 14, 14, VOID),
+               [diag(g, 2+i*4, 8, 5, 1, 1, COLD) for i in range(3)],
+               rect(g, 0, 6, 15, 6, COLD), g)[-1])(blank()))()
+GLYPHS["carpet_bomb"] = (lambda: (
+    lambda g: ([disc(g, 2+i*5, 12, 2+i, HOT) for i in range(3)],
+               [disc(g, 2+i*5, 12, 1+i, GLOW) for i in range(3)],
+               [disc(g, 3+i*5, 4-i, 1, DARK) for i in range(3)],
+               [rect(g, 3+i*5, 2-i, 3+i*5, 3-i, STEEL) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["cloner"] = (lambda: (
+    lambda g: (rect(g, 1, 4, 7, 11, STONE), rect(g, 2, 5, 6, 10, GREY),
+               rect(g, 8, 4, 14, 11, VOID),
+               [rect(g, 9+(i*2) % 5, 5+i, 10+(i*2) % 5, 5+i, PINK) for i in range(6)],
+               g)[-1])(blank()))()
+GLYPHS["crystal_growth"] = (lambda: (
+    lambda g: (rect(g, 0, 13, 15, 15, DARK),
+               [rect(g, 2+i*4, 13-(4+(i*3) % 6), 4+i*4, 13, PUR) for i in range(4)],
+               [rect(g, 3+i*4, 13-(4+(i*3) % 6), 3+i*4, 13, PINK) for i in range(4)],
+               g)[-1])(blank()))()
+GLYPHS["decoy"] = (lambda: (
+    lambda g: (rect(g, 6, 1, 9, 4, BONE), rect(g, 7, 5, 8, 12, BARK),
+               rect(g, 2, 6, 13, 7, BARK), rect(g, 4, 13, 11, 15, GREY),
+               rect(g, 6, 2, 6, 3, BLACK), rect(g, 9, 2, 9, 3, BLACK), g)[-1])(blank()))()
+GLYPHS["excavator"] = (lambda: (
+    lambda g: (rect(g, 0, 4, 15, 15, GREY), rect(g, 0, 4, 15, 5, LEAF),
+               rect(g, 2, 6, 13, 15, DARK), rect(g, 4, 8, 11, 15, BLACK),
+               rect(g, 6, 10, 9, 15, T), g)[-1])(blank()))()
+GLYPHS["featherfall"] = (lambda: (
+    lambda g: ([rect(g, 10-i, 3+i, 13-i//2, 3+i, WHITE) for i in range(9)],
+               diag(g, 12, 2, 12, -1, 1, BONE), diag(g, 11, 3, 12, -1, 1, GREY),
+               g)[-1])(blank()))()
+GLYPHS["fossilise"] = (lambda: (
+    lambda g: (rect(g, 5, 1, 10, 6, STONE), rect(g, 4, 7, 11, 12, STONE),
+               rect(g, 4, 13, 6, 15, STONE), rect(g, 9, 13, 11, 15, STONE),
+               rect(g, 6, 3, 6, 4, BLACK), rect(g, 9, 3, 9, 4, BLACK),
+               [rect(g, 5+i*2, 8+i*2, 8+i*2, 8+i*2, GREY) for i in range(3)],
+               g)[-1])(blank()))()
+GLYPHS["foundation"] = (lambda: (
+    lambda g: (rect(g, 0, 7, 15, 15, GREY), rect(g, 0, 7, 15, 8, STONE),
+               [rect(g, i*4, 9, i*4, 15, DARK) for i in range(4)],
+               [rect(g, 0, 9+i*3, 15, 9+i*3, DARK) for i in range(3)], g)[-1])(blank()))()
+GLYPHS["glass_cannon"] = (lambda: (
+    lambda g: (disc(g, 7, 7, 7, COLD), disc(g, 7, 7, 5, WHITE),
+               [diag(g, 7, 7, 7 if dx*dy == 0 else 5, dx, dy, DARK)
+                for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy], g)[-1])(blank()))()
+GLYPHS["hologram"] = (lambda: (
+    lambda g: (rect(g, 2, 5, 10, 6, CYAN), rect(g, 2, 13, 10, 14, CYAN),
+               rect(g, 2, 5, 3, 14, CYAN), rect(g, 9, 5, 10, 14, CYAN),
+               diag(g, 4, 4, 4, 1, -1, CYAN), diag(g, 11, 13, 4, 1, -1, CYAN),
+               rect(g, 6, 1, 14, 2, CYAN), rect(g, 13, 1, 14, 10, CYAN),
+               g)[-1])(blank()))()
+GLYPHS["landscaper"] = (lambda: (
+    lambda g: ([rect(g, x, HILLS[x], x, 15, BARK) for x in range(16)],
+               [rect(g, x, HILLS[x], x, HILLS[x]+1, LEAF) for x in range(16)],
+               g)[-1])(blank()))()
+GLYPHS["midas_touch"] = (lambda: (
+    lambda g: (disc(g, 7, 5, 5, GLOW), disc(g, 7, 5, 3, GOLD),
+               rect(g, 6, 9, 9, 13, GOLD),
+               [rect(g, i*4, 12, i*4+3, 15, GOLD if i % 2 == 0 else GLOW) for i in range(4)],
+               g)[-1])(blank()))()
+GLYPHS["overgrowth"] = (lambda: (
+    lambda g: (rect(g, 3, 6, 12, 14, GREY), rect(g, 4, 7, 11, 13, STONE),
+               rect(g, 3, 6, 12, 8, MOSS),
+               [disc(g, 2+i*5, 4, 3, LEAF) for i in range(3)],
+               [rect(g, 4+i*4, 9, 5+i*4, 11+i % 2, MOSS) for i in range(3)],
+               g)[-1])(blank()))()
+GLYPHS["quicksand"] = (lambda: (
+    lambda g: (rect(g, 0, 6, 15, 15, SANDY),
+               [rect(g, 3+i, 7+i, 12-i, 7+i, GRIP) for i in range(5)],
+               rect(g, 6, 3, 9, 7, BONE), disc(g, 7, 2, 2, BONE), g)[-1])(blank()))()
+GLYPHS["repair"] = (lambda: (
+    lambda g: (rect(g, 0, 6, 15, 15, GREY), rect(g, 4, 8, 11, 15, DARK),
+               [rect(g, 4, 9+i*2, 11, 9+i*2, STONE) for i in range(4)],
+               rect(g, 0, 6, 15, 7, LEAF), g)[-1])(blank()))()
+GLYPHS["skylight"] = (lambda: (
+    lambda g: (rect(g, 0, 0, 15, 3, SKY), disc(g, 12, 2, 2, GLOW),
+               rect(g, 0, 4, 15, 15, GREY),
+               [rect(g, 0, 6+i*3, 15, 6+i*3, DARK) for i in range(4)],
+               rect(g, 5, 4, 10, 15, T), g)[-1])(blank()))()
+GLYPHS["stampede"] = (lambda: (
+    lambda g: (rect(g, 6, 6, 15, 12, WHITE), rect(g, 6, 6, 9, 9, BLACK),
+               rect(g, 11, 8, 13, 10, BLACK), rect(g, 7, 13, 8, 15, WHITE),
+               rect(g, 12, 13, 13, 15, WHITE),
+               rect(g, 5, 2, 9, 6, WHITE), rect(g, 4, 3, 4, 4, BONE),
+               rect(g, 6, 4, 6, 5, BLACK),
+               [rect(g, 0, 7+i*3, 3, 7+i*3, GREY) for i in range(3)],
+               g)[-1])(blank()))()
+GLYPHS["trampoline"] = (lambda: (
+    lambda g: (rect(g, 1, 10, 14, 14, GREEN), rect(g, 2, 11, 13, 13, ACID),
+               rect(g, 0, 14, 2, 15, DARK), rect(g, 13, 14, 15, 15, DARK),
+               rect(g, 6, 3, 9, 9, WHITE),
+               [rect(g, 4+i, 3-i, 11-i, 3-i, WHITE) for i in range(4)], g)[-1])(blank()))()
+GLYPHS["vaporise"] = (lambda: (
+    lambda g: (rect(g, 0, 11, 7, 15, BLUE), rect(g, 8, 11, 15, 15, HOT),
+               rect(g, 0, 11, 7, 11, COLD), rect(g, 8, 11, 15, 11, GLOW),
+               [disc(g, 3+i*4, 7, 2, WHITE) for i in range(3)],
+               [disc(g, 5+i*5, 3, 2, SNOW) for i in range(2)], g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):

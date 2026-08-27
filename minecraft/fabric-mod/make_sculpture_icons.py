@@ -134,6 +134,50 @@ def teapot(x, y, z):
         if 2.5 <= d <= 4.5: return W
     return None
 
+GL = (206, 232, 238, 255); SD = (226, 210, 158, 255); DI = (120, 226, 220, 255)
+
+# The four below mirror the paint() methods in their Java items block for
+# block. If one drifts, the icon stops being a picture of the sculpture, so
+# they are worth reading side by side rather than "roughly the same shape".
+
+def crown(x, y, z):
+    d = math.sqrt(x*x + z*z)
+    band = 8.0 <= d <= 10.0
+    if 0 <= y <= 5 and band: return G
+    if 5 < y <= 15 and band:
+        a = math.atan2(z, x)
+        for k in range(8):
+            want = k*math.pi/4.0
+            off = abs(math.atan2(math.sin(a-want), math.cos(a-want)))
+            if off <= 0.30*(1.0 - (y-5)/10.0):
+                return DI if y > 12 else G
+    return None
+
+def gramophone(x, y, z):
+    if slab(x,y,z,-8,8,-6,-3,-8,8): return N
+    if post(x,z,0,0,1.0) and -3 < y <= 6: return I
+    for t in range(13):
+        f = t/12.0
+        hx = 9.0*f; hy = 6.0 + 8.0*f; r = 1.0 + 6.0*f
+        if abs(y-hy) <= 1 and abs(math.sqrt((x-hx)**2 + z*z) - r) <= 1.2: return G
+    return None
+
+def hourglass(x, y, z):
+    if abs(y) > 14: return None
+    r = 2.0 + 7.0*(abs(y)/14.0)
+    d = math.sqrt(x*x + z*z)
+    if abs(y) == 14 and d <= r: return N
+    if r-1.5 <= d <= r: return GL
+    if -13 <= y < -6 and d <= r-1.5: return SD
+    return None
+
+def anchor(x, y, z):
+    if post(x,z,0,0,1.6) and -8 <= y <= 14: return I
+    if abs(z) <= 1.6 and abs(y-11) <= 1.6 and abs(x) <= 8: return I
+    arm = math.sqrt(x*x + (y+8.0)**2)
+    if 9.0 <= arm <= 11.0 and y < -2 and abs(z) <= 1.6: return I
+    return None
+
 SHAPES = {
     "giant_chicken": (chicken, 12), "giant_boot": (boot, 14),
     "giant_hammer": (hammer, 16),   "giant_skull": (skull, 10),
@@ -141,6 +185,8 @@ SHAPES = {
     "giant_bell": (bell, 14),       "giant_trophy": (trophy, 12),
     "giant_dice": (dice, 10),       "giant_donut": (donut, 14),
     "giant_rocket": (rocket, 22),   "giant_teapot": (teapot, 14),
+    "giant_crown": (crown, 16),     "giant_gramophone": (gramophone, 20),
+    "giant_hourglass": (hourglass, 16), "giant_anchor": (anchor, 18),
 }
 
 TRANSPARENT = (0, 0, 0, 0)
