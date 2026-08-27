@@ -353,14 +353,32 @@ jobs:
             echo "::warning::could not find the Minecraft jar — this check did NOT run"
             exit 0
           fi
-          echo "--- Item, anything mentioning tooltip ---"
-          javap -cp "$jar" net.minecraft.item.Item | grep -i tooltip \
-            || echo "Item declares no tooltip method at all"
-          echo "--- Item.TooltipContext ---"
-          javap -cp "$jar" 'net.minecraft.item.Item$TooltipContext' | head -12
-          echo "--- TooltipAppender, if there is one ---"
-          javap -cp "$jar" net.minecraft.item.tooltip.TooltipAppender 2>/dev/null | head -8 \
-            || echo "no TooltipAppender"
+          # Written to a file and committed, not just printed. The same reason
+          # known_sound_types.json exists: what the build reports about the
+          # real API is worth keeping, and digging it back out of a log tail
+          # costs a round trip every time it is needed.
+          out=minecraft/fabric-mod/known_tooltip_api.txt
+          {
+            echo "# What this Minecraft really declares around item tooltips."
+            echo "# Written by the workflow from javap against the remapped jar."
+            echo "# Do not edit by hand — rerun the build."
+            echo
+            echo "--- net.minecraft.item.Item, anything mentioning tooltip ---"
+            javap -cp "$jar" net.minecraft.item.Item | grep -i tooltip \
+              || echo "Item declares no tooltip method at all"
+            echo
+            echo "--- net.minecraft.item.Item.TooltipContext ---"
+            javap -cp "$jar" 'net.minecraft.item.Item$TooltipContext' | head -12
+            echo
+            echo "--- net.minecraft.item.tooltip.TooltipAppender ---"
+            javap -cp "$jar" net.minecraft.item.tooltip.TooltipAppender 2>/dev/null | head -10 \
+              || echo "this version has no TooltipAppender"
+            echo
+            echo "--- net.minecraft.component.type.TooltipDisplayComponent ---"
+            javap -cp "$jar" net.minecraft.component.type.TooltipDisplayComponent 2>/dev/null \
+              | head -10 || echo "this version has no TooltipDisplayComponent"
+          } > "$out" 2>&1
+          cat "$out"
           exit 0
 
       - name: Show what was produced
@@ -416,6 +434,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f minecraft/fabric-mod/dist
+          # And whatever the probes learned about the real API, so it does not
+          # have to be dug back out of a log every time it is wanted.
+          git add -f minecraft/fabric-mod/known_tooltip_api.txt 2>/dev/null || true
           # [skip ci] or committing here would trigger this workflow again.
           git diff --cached --quiet || git commit -m "Publish built mod jar [skip ci]"
           git push
