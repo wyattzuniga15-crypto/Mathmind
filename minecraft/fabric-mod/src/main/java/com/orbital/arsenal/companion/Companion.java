@@ -25,7 +25,11 @@ import net.minecraft.util.math.Vec3d;
  * cannot fail.
  */
 public final class Companion {
-    private static final Map<ServerPlayerEntity, Companion> BY_PLAYER = new HashMap<>();
+    // Keyed by UUID: a ServerPlayerEntity is replaced on respawn and on every
+    // dimension change, so an entity-keyed map loses the entry when the player
+    // dies, and holds the dead entity — and the world behind it — for the life
+    // of the server.
+    private static final Map<java.util.UUID, Companion> BY_PLAYER = new HashMap<>();
 
     private static final double SPEED = 0.55;      // blocks per tick
     private static final double FOLLOW_GAP = 3.5;  // how close it trails you
@@ -42,7 +46,7 @@ public final class Companion {
     }
 
     public static Companion of(ServerPlayerEntity player) {
-        return BY_PLAYER.get(player);
+        return BY_PLAYER.get(player.getUuid());
     }
 
     /** Summon one, replacing any the player already has. */
@@ -61,12 +65,12 @@ public final class Companion {
         world.spawnEntity(body);
 
         Companion companion = new Companion(player, body);
-        BY_PLAYER.put(player, companion);
+        BY_PLAYER.put(player.getUuid(), companion);
         return companion;
     }
 
     public static void dismiss(ServerPlayerEntity player) {
-        Companion existing = BY_PLAYER.remove(player);
+        Companion existing = BY_PLAYER.remove(player.getUuid());
         if (existing != null) {
             existing.body.discard();
         }
@@ -146,7 +150,7 @@ public final class Companion {
             Companion companion = entry.getValue();
             // A logged-out owner or a body that has gone leaves nothing to
             // drive, and holding the reference would leak the player object.
-            if (entry.getKey().isRemoved() || companion.body.isRemoved()) {
+            if (companion.owner.isRemoved() || companion.body.isRemoved()) {
                 companion.body.discard();
                 return true;
             }

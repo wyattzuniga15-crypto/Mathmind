@@ -159,6 +159,24 @@ def main():
         if result.returncode != 0:
             problems.append("journal run-length round-trip failed")
 
+    # --- nothing holds a player object across ticks ---
+    #
+    # A PlayerEntity is replaced on every respawn and every dimension change,
+    # and nothing removes it from a static map on disconnect. So a map keyed by
+    # one loses its entry the moment the player dies, and holds the old entity
+    # — and through it the whole world — for as long as the server runs. Seven
+    # of these had accumulated before anyone looked. A UUID is stable across
+    # both and holds nothing.
+    holders = []
+    for src in sorted((ROOT / "src/main/java").rglob("*.java")):
+        for match in re.finditer(r"static\s+(?:final\s+)?(?:Map|Set|List)<\s*(?:Server)?PlayerEntity[,>]",
+                                 src.read_text()):
+            holders.append(f"{src.name}: {match.group(0).strip()}")
+    check(not holders,
+          "static collections keyed by a player entity leak it after "
+          f"disconnect — key by UUID instead: {holders}")
+    print("  no static collection holds a player entity")
+
     # --- the hundred items agree with each other ---
     #
     # The per-item checks below catch a missing file. They cannot catch an item

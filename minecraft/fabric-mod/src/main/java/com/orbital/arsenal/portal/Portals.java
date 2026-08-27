@@ -1,5 +1,6 @@
 package com.orbital.arsenal.portal;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import net.minecraft.entity.Entity;
@@ -48,13 +49,19 @@ public final class Portals {
         Portal orange;
     }
 
-    private static final Map<PlayerEntity, Pair> PAIRS = new IdentityHashMap<>();
+    // Keyed by UUID rather than by the player object. A PlayerEntity is
+    // replaced on every respawn and every dimension change, so an
+    // identity-keyed map silently loses the entry the moment you die — and
+    // because nothing removes entries on disconnect, it also holds the old
+    // entity, and through it the whole world, for as long as the server runs.
+    // A UUID is stable across both and holds nothing.
+    private static final Map<java.util.UUID, Pair> PAIRS = new HashMap<>();
     private static final Map<Entity, Integer> SETTLING = new IdentityHashMap<>();
 
     private Portals() {}
 
     public static void place(PlayerEntity owner, boolean orange, Portal portal) {
-        Pair pair = PAIRS.computeIfAbsent(owner, key -> new Pair());
+        Pair pair = PAIRS.computeIfAbsent(owner.getUuid(), key -> new Pair());
         if (orange) {
             pair.orange = portal;
         } else {
@@ -68,12 +75,12 @@ public final class Portals {
     }
 
     public static boolean linked(PlayerEntity owner) {
-        Pair pair = PAIRS.get(owner);
+        Pair pair = PAIRS.get(owner.getUuid());
         return pair != null && pair.blue != null && pair.orange != null;
     }
 
     public static void clear(PlayerEntity owner) {
-        PAIRS.remove(owner);
+        PAIRS.remove(owner.getUuid());
     }
 
     private static int now = 0;
@@ -90,11 +97,14 @@ public final class Portals {
         });
 
         PAIRS.entrySet().removeIf(entry -> {
-            PlayerEntity owner = entry.getKey();
-            if (owner.isRemoved()) {
+            Pair pair = entry.getValue();
+            // Nothing to ask an owner about any more — the key is a UUID, not
+            // an entity. A pair with neither end placed is finished, which is
+            // the same condition by a different route and does not depend on
+            // the player still being loaded.
+            if (pair.blue == null && pair.orange == null) {
                 return true;
             }
-            Pair pair = entry.getValue();
             if (now % DRAW_EVERY == 0) {
                 draw(pair.blue, ParticleTypes.SOUL_FIRE_FLAME, now);
                 draw(pair.orange, ParticleTypes.FLAME, now);

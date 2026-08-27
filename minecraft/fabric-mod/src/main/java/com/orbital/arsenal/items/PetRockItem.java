@@ -22,7 +22,13 @@ import net.minecraft.world.World;
 /** A rock that follows you everywhere. It is not good for anything. */
 public class PetRockItem extends Item {
     /** Where each player's rock currently sits. */
-    private static final Map<PlayerEntity, BlockPos> ROCKS = new HashMap<>();
+    // Keyed by UUID rather than by the player object. A PlayerEntity is
+    // replaced on every respawn and every dimension change, so an
+    // identity-keyed map silently loses the entry the moment you die — and
+    // because nothing removes entries on disconnect, it also holds the old
+    // entity, and through it the whole world, for as long as the server runs.
+    // A UUID is stable across both and holds nothing.
+    private static final Map<java.util.UUID, BlockPos> ROCKS = new HashMap<>();
     private static final int COOLDOWN = 40;
 
     public PetRockItem(Settings settings) {
@@ -34,9 +40,9 @@ public class PetRockItem extends Item {
         if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.SUCCESS;
         }
-        if (ROCKS.containsKey(user)) {
+        if (ROCKS.containsKey(user.getUuid())) {
             // Second click: leave it where it stands.
-            BlockPos resting = ROCKS.remove(user);
+            BlockPos resting = ROCKS.remove(user.getUuid());
             BlockState was = serverWorld.getBlockState(resting);
             if (was.isOf(Blocks.MOSSY_COBBLESTONE)) {
                 Journal.clear(serverWorld, resting, was, Blocks.AIR.getDefaultState());
@@ -46,9 +52,9 @@ public class PetRockItem extends Item {
         }
 
         user.sendMessage(Text.literal("§7\u1FAA8 It is a rock. It follows you."), true);
-        ROCKS.put(user, BlockPos.ofFloored(user.getX(), user.getY(), user.getZ()));
+        ROCKS.put(user.getUuid(), BlockPos.ofFloored(user.getX(), user.getY(), user.getZ()));
         Scheduler.repeat(() -> {
-            BlockPos wasAt = ROCKS.get(user);
+            BlockPos wasAt = ROCKS.get(user.getUuid());
             if (wasAt == null || user.isRemoved()) {
                 return false;
             }
@@ -66,7 +72,7 @@ public class PetRockItem extends Item {
             BlockState target = serverWorld.getBlockState(goesTo);
             if (target.isAir()) {
                 Journal.clear(serverWorld, goesTo, target, Blocks.MOSSY_COBBLESTONE.getDefaultState());
-                ROCKS.put(user, goesTo);
+                ROCKS.put(user.getUuid(), goesTo);
             }
             return true;
         });

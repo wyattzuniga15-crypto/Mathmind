@@ -3,7 +3,7 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.weapons.Strikes;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -48,7 +48,13 @@ public class OrbitalLaserItem extends Item {
      * Who is firing. Keyed on the player object rather than a UUID because
      * identity is all this needs, and it is cleared on shutdown either way.
      */
-    private static final Map<PlayerEntity, Beam> FIRING = new IdentityHashMap<>();
+    // Keyed by UUID rather than by the player object. A PlayerEntity is
+    // replaced on every respawn and every dimension change, so an
+    // identity-keyed map silently loses the entry the moment you die — and
+    // because nothing removes entries on disconnect, it also holds the old
+    // entity, and through it the whole world, for as long as the server runs.
+    // A UUID is stable across both and holds nothing.
+    private static final Map<java.util.UUID, Beam> FIRING = new HashMap<>();
 
     private static final class Beam {
         int age;
@@ -66,7 +72,7 @@ public class OrbitalLaserItem extends Item {
             return ActionResult.SUCCESS;
         }
 
-        Beam running = FIRING.get(user);
+        Beam running = FIRING.get(user.getUuid());
         if (running != null) {
             // Holding right-click re-fires use() about every four ticks, so a
             // second call is not necessarily a second click. Spacing tells them
@@ -82,7 +88,7 @@ public class OrbitalLaserItem extends Item {
         }
 
         Beam beam = new Beam();
-        FIRING.put(user, beam);
+        FIRING.put(user.getUuid(), beam);
         user.sendMessage(Text.literal("§b▼ ORBITAL LASER ONLINE — right-click again to cease fire"), true);
         serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM,
                 SoundCategory.MASTER, 6.0F, 1.8F);
@@ -146,7 +152,7 @@ public class OrbitalLaserItem extends Item {
     }
 
     private void shutdown(ServerWorld world, PlayerEntity user, Hand hand) {
-        FIRING.remove(user);
+        FIRING.remove(user.getUuid());
         user.sendMessage(Text.literal("§7▼ laser offline"), true);
         world.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
                 SoundCategory.MASTER, 1.0F, 0.5F);

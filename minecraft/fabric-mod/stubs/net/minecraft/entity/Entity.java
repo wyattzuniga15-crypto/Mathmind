@@ -28,6 +28,7 @@ public class Entity {
     public void setNoGravity(boolean noGravity) {}
     public void setInvulnerable(boolean invulnerable) {}
     public void discard() {}
+    public java.util.UUID getUuid() { return null; }
     public void addCommandTag(String tag) {}
     public java.util.Set<String> getCommandTags() { return java.util.Set.of(); }
     public void setYaw(float yaw) {}

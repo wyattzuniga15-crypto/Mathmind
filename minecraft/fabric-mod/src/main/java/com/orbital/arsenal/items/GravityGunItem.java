@@ -34,7 +34,13 @@ import net.minecraft.world.World;
  */
 public class GravityGunItem extends Item {
     /** What each player is holding. One thing each, deliberately. */
-    private static final Map<PlayerEntity, Entity> HELD = new HashMap<>();
+    // Keyed by UUID rather than by the player object. A PlayerEntity is
+    // replaced on every respawn and every dimension change, so an
+    // identity-keyed map silently loses the entry the moment you die — and
+    // because nothing removes entries on disconnect, it also holds the old
+    // entity, and through it the whole world, for as long as the server runs.
+    // A UUID is stable across both and holds nothing.
+    private static final Map<java.util.UUID, Entity> HELD = new HashMap<>();
 
     private static final double GRAB_RANGE = 40.0;
     private static final double CARRY = 4.0;
@@ -50,7 +56,7 @@ public class GravityGunItem extends Item {
             return ActionResult.SUCCESS;
         }
 
-        Entity holding = HELD.get(user);
+        Entity holding = HELD.get(user.getUuid());
         if (holding != null && !holding.isRemoved()) {
             fling(serverWorld, user, holding);
             return ActionResult.SUCCESS;
@@ -99,13 +105,13 @@ public class GravityGunItem extends Item {
     }
 
     private void hold(ServerWorld world, PlayerEntity user, Entity thing, String note) {
-        HELD.put(user, thing);
+        HELD.put(user.getUuid(), thing);
         user.sendMessage(Text.literal(note + " §7Click again to throw."), true);
         world.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
                 SoundCategory.PLAYERS, 1.0F, 0.6F);
 
         Scheduler.repeat(() -> {
-            Entity still = HELD.get(user);
+            Entity still = HELD.get(user.getUuid());
             if (still != thing || thing.isRemoved() || user.isRemoved()) {
                 return false;
             }
@@ -123,7 +129,7 @@ public class GravityGunItem extends Item {
     }
 
     private void fling(ServerWorld world, PlayerEntity user, Entity thing) {
-        HELD.remove(user);
+        HELD.remove(user.getUuid());
         Vec3d aim = user.getRotationVec(1.0F).normalize().multiply(THROW_SPEED);
         thing.setVelocity(aim);
         user.sendMessage(Text.literal("§e✊ Thrown."), true);

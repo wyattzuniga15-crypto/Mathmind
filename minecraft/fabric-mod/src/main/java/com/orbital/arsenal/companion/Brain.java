@@ -40,8 +40,12 @@ public final class Brain {
 
     /** Short rolling memory so it can follow a back-and-forth. */
     private static final int REMEMBERED_TURNS = 6;
-    private static final Map<ServerPlayerEntity, Deque<String[]>> HISTORY = new HashMap<>();
-    private static final Set<ServerPlayerEntity> BUSY = new HashSet<>();
+    // Keyed by UUID: a ServerPlayerEntity is replaced on respawn and on every
+    // dimension change, so an entity-keyed map loses the entry when the player
+    // dies, and holds the dead entity — and the world behind it — for the life
+    // of the server.
+    private static final Map<java.util.UUID, Deque<String[]>> HISTORY = new HashMap<>();
+    private static final Set<java.util.UUID> BUSY = new HashSet<>();
 
     private static CompanionConfig config;
 
@@ -61,8 +65,8 @@ public final class Brain {
     }
 
     public static void forget(ServerPlayerEntity player) {
-        HISTORY.remove(player);
-        BUSY.remove(player);
+        HISTORY.remove(player.getUuid());
+        BUSY.remove(player.getUuid());
     }
 
     /** Ask the companion something. Returns immediately; the reply arrives later. */
@@ -73,7 +77,7 @@ public final class Brain {
                             + "§f/ai provider ollama§c to run one free on this computer."), false);
             return;
         }
-        if (!BUSY.add(player)) {
+        if (!BUSY.add(player.getUuid())) {
             player.sendMessage(Text.literal("§7(still thinking about the last one)"), false);
             return;
         }
@@ -96,7 +100,7 @@ public final class Brain {
             }
             String finished = reply;
             server.execute(() -> {
-                BUSY.remove(player);
+                BUSY.remove(player.getUuid());
                 player.sendMessage(Text.literal(finished), false);
             });
         });
@@ -104,7 +108,7 @@ public final class Brain {
 
     private static String converse(ServerPlayerEntity player, MinecraftServer server, String message) {
         Conversation.begin(player, server);
-        Deque<String[]> history = HISTORY.computeIfAbsent(player, key -> new ArrayDeque<>());
+        Deque<String[]> history = HISTORY.computeIfAbsent(player.getUuid(), key -> new ArrayDeque<>());
 
         // ClaudeLink is named only inside this branch, so choosing another
         // provider never loads it — and a bundled SDK that cannot resolve

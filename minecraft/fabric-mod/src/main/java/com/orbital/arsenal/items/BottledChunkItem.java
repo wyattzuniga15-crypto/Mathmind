@@ -3,7 +3,7 @@ package com.orbital.arsenal.items;
 import com.orbital.arsenal.Scheduler;
 import com.orbital.arsenal.time.Journal;
 import com.orbital.arsenal.weapons.Strikes;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -46,7 +46,13 @@ public class BottledChunkItem extends Item {
     private static final int COOLDOWN = 40;
 
     /** One clipboard per player. Identity is all this needs. */
-    private static final Map<PlayerEntity, BlockState[]> BOTTLES = new IdentityHashMap<>();
+    // Keyed by UUID rather than by the player object. A PlayerEntity is
+    // replaced on every respawn and every dimension change, so an
+    // identity-keyed map silently loses the entry the moment you die — and
+    // because nothing removes entries on disconnect, it also holds the old
+    // entity, and through it the whole world, for as long as the server runs.
+    // A UUID is stable across both and holds nothing.
+    private static final Map<java.util.UUID, BlockState[]> BOTTLES = new HashMap<>();
 
     public BottledChunkItem(Settings settings) {
         super(settings);
@@ -90,7 +96,7 @@ public class BottledChunkItem extends Item {
                 }
             }
         }
-        BOTTLES.put(user, held);
+        BOTTLES.put(user.getUuid(), held);
         user.sendMessage(Text.literal("§b⌸ BOTTLED — " + solid + " blocks captured"), true);
         world.playSound(null, corner, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
                 SoundCategory.MASTER, 1.0F, 1.5F);
@@ -98,7 +104,7 @@ public class BottledChunkItem extends Item {
     }
 
     private void paste(ServerWorld world, PlayerEntity user, BlockPos corner) {
-        BlockState[] held = BOTTLES.get(user);
+        BlockState[] held = BOTTLES.get(user.getUuid());
         if (held == null) {
             user.sendMessage(Text.literal("§7the bottle is empty — right-click to fill it first"), true);
             return;

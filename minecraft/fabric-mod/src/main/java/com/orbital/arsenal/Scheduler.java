@@ -53,7 +53,13 @@ public final class Scheduler {
         for (Task task : due) {
             try {
                 task.action().run();
-            } catch (RuntimeException error) {
+            } catch (Throwable error) {
+                // Throwable, not Exception. A task that raises an Error —
+                // NoClassDefFoundError from a bundled library, a
+                // StackOverflowError from a runaway shape — would otherwise
+                // escape into the tick hook and take the server tick with it,
+                // killing every weapon at once. That exact distinction is what
+                // stopped this mod loading once already.
                 OrbitalArsenal.LOGGER.error("scheduled task failed", error);
             }
         }

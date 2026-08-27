@@ -54,8 +54,12 @@ public final class Echoes {
         }
     }
 
-    private static final Map<ServerPlayerEntity, Deque<Frame>> MEMORIES = new IdentityHashMap<>();
-    private static final Map<ServerPlayerEntity, List<Ghost>> GHOSTS = new IdentityHashMap<>();
+    // Keyed by UUID: a ServerPlayerEntity is replaced on respawn and on every
+    // dimension change, so an entity-keyed map loses the entry when the player
+    // dies, and holds the dead entity — and the world behind it — for the life
+    // of the server.
+    private static final Map<java.util.UUID, Deque<Frame>> MEMORIES = new java.util.HashMap<>();
+    private static final Map<java.util.UUID, List<Ghost>> GHOSTS = new java.util.HashMap<>();
 
     private Echoes() {}
 
@@ -66,7 +70,7 @@ public final class Echoes {
      *         yet enough recorded to replay
      */
     public static int spawn(ServerPlayerEntity player) {
-        Deque<Frame> memory = MEMORIES.get(player);
+        Deque<Frame> memory = MEMORIES.get(player.getUuid());
         if (memory == null || memory.size() < 20) {
             return 0;
         }
@@ -76,7 +80,7 @@ public final class Echoes {
             return 0;
         }
 
-        List<Ghost> mine = GHOSTS.computeIfAbsent(player, key -> new ArrayList<>());
+        List<Ghost> mine = GHOSTS.computeIfAbsent(player.getUuid(), key -> new ArrayList<>());
         if (mine.size() >= MAX_GHOSTS) {
             // Oldest out first, so the army stays the size it is rather than
             // simply refusing to grow.
@@ -97,13 +101,13 @@ public final class Echoes {
 
     /** How many ghosts this player currently has walking. */
     public static int count(ServerPlayerEntity player) {
-        List<Ghost> mine = GHOSTS.get(player);
+        List<Ghost> mine = GHOSTS.get(player.getUuid());
         return mine == null ? 0 : mine.size();
     }
 
     /** Send them all away. */
     public static int dismiss(ServerPlayerEntity player) {
-        List<Ghost> mine = GHOSTS.remove(player);
+        List<Ghost> mine = GHOSTS.remove(player.getUuid());
         if (mine == null) {
             return 0;
         }
@@ -115,22 +119,29 @@ public final class Echoes {
 
     public static void tick(MinecraftServer server) {
         remember(server);
-        replay();
+        replay(server);
     }
 
     private static void remember(MinecraftServer server) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            Deque<Frame> memory = MEMORIES.computeIfAbsent(player, key -> new ArrayDeque<>());
+            Deque<Frame> memory = MEMORIES.computeIfAbsent(player.getUuid(), key -> new ArrayDeque<>());
             memory.addLast(new Frame(player.getX(), player.getY(), player.getZ(),
                     player.getYaw(), player.getPitch(), player.getHealth()));
             while (memory.size() > MEMORY) {
                 memory.removeFirst();
             }
         }
-        MEMORIES.keySet().removeIf(ServerPlayerEntity::isRemoved);
+        // Prune against who is actually online. The keys are ids now, so
+        // there is no entity to ask — and asking the entity was always the
+        // thing that leaked it.
+        java.util.Set<java.util.UUID> online = new java.util.HashSet<>();
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            online.add(player.getUuid());
+        }
+        MEMORIES.keySet().retainAll(online);
     }
 
-    private static void replay() {
+    private static void replay(MinecraftServer server) {
         if (GHOSTS.isEmpty()) {
             return;
         }
@@ -148,9 +159,15 @@ public final class Echoes {
             ghost.index = (ghost.index + 1) % ghost.path.size();
             return false;
         }));
-        GHOSTS.keySet().removeIf(player -> {
-            if (player.isRemoved()) {
-                GHOSTS.get(player).forEach(ghost -> ghost.body.discard());
+        java.util.Set<java.util.UUID> here = new java.util.HashSet<>();
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            here.add(player.getUuid());
+        }
+        GHOSTS.entrySet().removeIf(entry -> {
+            if (!here.contains(entry.getKey())) {
+                // Discard the bodies before dropping the entry, or the ghosts
+                // stay in the world with nothing left that knows about them.
+                entry.getValue().forEach(ghost -> ghost.body.discard());
                 return true;
             }
             return false;
@@ -163,7 +180,7 @@ public final class Echoes {
      * yet. This is what the Chronarch's Heart rewinds you to.
      */
     public static double[] furthestBack(ServerPlayerEntity player) {
-        Deque<Frame> memory = MEMORIES.get(player);
+        Deque<Frame> memory = MEMORIES.get(player.getUuid());
         if (memory == null || memory.size() < 20) {
             return null;
         }

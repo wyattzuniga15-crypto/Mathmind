@@ -35,8 +35,11 @@ public class EchoBeaconItem extends Item {
      * Who has it running. Identity is all this needs, and an entry is dropped
      * the moment its player is gone.
      */
-    private static final Set<ServerPlayerEntity> RUNNING =
-            Collections.newSetFromMap(new IdentityHashMap<>());
+    // Keyed by UUID: a ServerPlayerEntity is replaced on respawn and on every
+    // dimension change, so an entity-keyed map loses the entry when the player
+    // dies, and holds the dead entity — and the world behind it — for the life
+    // of the server.
+    private static final Set<java.util.UUID> RUNNING = new java.util.HashSet<>();
 
     public EchoBeaconItem(Settings settings) {
         super(settings);
@@ -48,12 +51,12 @@ public class EchoBeaconItem extends Item {
             return ActionResult.SUCCESS;
         }
 
-        if (RUNNING.remove(player)) {
+        if (RUNNING.remove(player.getUuid())) {
             player.sendMessage(Text.literal("§7◉ beacon off"), true);
             return ActionResult.SUCCESS;
         }
 
-        RUNNING.add(player);
+        RUNNING.add(player.getUuid());
         player.sendMessage(Text.literal("§5◉ ECHO BEACON — a new echo every 60s"), true);
         serverWorld.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM,
                 SoundCategory.MASTER, 2.0F, 0.9F);
@@ -69,8 +72,8 @@ public class EchoBeaconItem extends Item {
             // Both checks matter: switching the beacon off leaves this timer
             // already scheduled, and a player who logged out must not keep a
             // ghost factory running in an empty world.
-            if (!RUNNING.contains(player) || player.isRemoved()) {
-                RUNNING.remove(player);
+            if (!RUNNING.contains(player.getUuid()) || player.isRemoved()) {
+                RUNNING.remove(player.getUuid());
                 return;
             }
             int total = Echoes.spawn(player);

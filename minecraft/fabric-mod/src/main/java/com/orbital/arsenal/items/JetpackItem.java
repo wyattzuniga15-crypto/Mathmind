@@ -30,7 +30,13 @@ public class JetpackItem extends Item {
     private static final int COOLDOWN = 40;
 
     /** Who is currently flying, so a second click lands them. */
-    private static final Set<PlayerEntity> FLYING = new HashSet<>();
+    // Keyed by UUID rather than by the player object. A PlayerEntity is
+    // replaced on every respawn and every dimension change, so an
+    // identity-keyed map silently loses the entry the moment you die — and
+    // because nothing removes entries on disconnect, it also holds the old
+    // entity, and through it the whole world, for as long as the server runs.
+    // A UUID is stable across both and holds nothing.
+    private static final Set<java.util.UUID> FLYING = new HashSet<>();
 
     public JetpackItem(Settings settings) {
         super(settings);
@@ -41,8 +47,8 @@ public class JetpackItem extends Item {
         if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.SUCCESS;
         }
-        if (!FLYING.add(user)) {
-            FLYING.remove(user);
+        if (!FLYING.add(user.getUuid())) {
+            FLYING.remove(user.getUuid());
             user.sendMessage(Text.literal("§7❂ Engines off."), true);
             return ActionResult.SUCCESS;
         }
@@ -53,8 +59,8 @@ public class JetpackItem extends Item {
 
         int[] burn = {0};
         Scheduler.repeat(() -> {
-            if (!FLYING.contains(user) || ++burn[0] > FUEL || user.isRemoved()) {
-                FLYING.remove(user);
+            if (!FLYING.contains(user.getUuid()) || ++burn[0] > FUEL || user.isRemoved()) {
+                FLYING.remove(user.getUuid());
                 user.sendMessage(Text.literal("§7❂ Out of fuel."), true);
                 return false;
             }
