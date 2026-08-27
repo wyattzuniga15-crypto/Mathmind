@@ -537,6 +537,21 @@ def main():
               f"'{spell(len(ids)).capitalize()} items' — it has drifted from the count")
         print("  the manual's prose and its counter agree with the mod")
 
+    # --- nothing needs an ingredient a lone player cannot get ---
+    #
+    # Rare is fine here: a nether star should cost a wither. But a player head
+    # drops only when a charged creeper kills *another* player, so in a
+    # single-player world there is no way to get one — and two items were
+    # behind that, uncraftable in survival with nothing to say why.
+    ALONE = {"player_head"}
+    for path in sorted((ROOT / "src/main/resources/data/orbital/recipe").glob("*.json")):
+        for value in json.loads(path.read_text())["key"].values():
+            name = (value["item"] if isinstance(value, dict) else value).split(":")[-1]
+            check(name not in ALONE,
+                  f"{path.stem} needs minecraft:{name}, which cannot be obtained in a "
+                  f"single-player world — the item is uncraftable in survival")
+    print(f"  every recipe can be crafted by one player alone")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:
