@@ -419,6 +419,20 @@ GLYPHS["cabin"] = (lambda: (
                rect(g, 6, 11, 9, 15, GRIP), rect(g, 3, 9, 5, 11, COLD),
                rect(g, 10, 9, 12, 11, COLD), g)[-1])(blank()))()
 
+INK = (78, 44, 96, 255); SUCKER = (224, 188, 196, 255); EMBER = (232, 96, 40, 255)
+
+GLYPHS["kraken_pearl"] = (lambda: (
+    lambda g: (disc(g, 7, 6, 6, INK), disc(g, 7, 6, 4, PUR),
+               [rect(g, 1+i*3, 10, 2+i*3, 15-(i % 2)*3, INK) for i in range(5)],
+               [rect(g, 1+i*3, 12, 1+i*3, 12, SUCKER) for i in range(5)],
+               rect(g, 5, 5, 5, 6, BLACK), rect(g, 9, 5, 9, 6, BLACK),
+               g)[-1])(blank()))()
+GLYPHS["phoenix_ash"] = (lambda: (
+    lambda g: (disc(g, 7, 9, 7, EMBER), disc(g, 7, 9, 5, GLOW),
+               [diag(g, 7+dx*3, 5+dy*3, 4, dx, dy, GOLD)
+                for dx, dy in ((1, -1), (-1, -1), (0, -1))],
+               disc(g, 7, 9, 2, WHITE), g)[-1])(blank()))()
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in sorted(GLYPHS.items()):

@@ -1,6 +1,8 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.KrakenPearlItem;
+import com.orbital.arsenal.items.PhoenixAshItem;
 import com.orbital.arsenal.items.VeinMinerItem;
 import com.orbital.arsenal.items.UpdraftItem;
 import com.orbital.arsenal.items.RecallItem;
@@ -305,6 +307,8 @@ public final class ModItems {
     public static Item PORTAL_FRAME;
     public static Item ANVIL_RAIN;
     public static Item CABIN;
+    public static Item KRAKEN_PEARL;
+    public static Item PHOENIX_ASH;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -488,6 +492,8 @@ public final class ModItems {
         PORTAL_FRAME = register("portal_frame", PortalFrameItem::new);
         ANVIL_RAIN = register("anvil_rain", AnvilRainItem::new);
         CABIN = register("cabin", CabinItem::new);
+        KRAKEN_PEARL = register("kraken_pearl", KrakenPearlItem::new);
+        PHOENIX_ASH = register("phoenix_ash", PhoenixAshItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -637,6 +643,8 @@ public final class ModItems {
             entries.add(PORTAL_FRAME);
             entries.add(ANVIL_RAIN);
             entries.add(CABIN);
+            entries.add(KRAKEN_PEARL);
+            entries.add(PHOENIX_ASH);
         });
         return registered;
     }

@@ -152,5 +152,9 @@
   "item.orbital.mineshaft": "Mineshaft",
   "item.orbital.portal_frame": "Portal Frame",
   "item.orbital.anvil_rain": "Anvil Rain",
-  "item.orbital.cabin": "Cabin"
+  "item.orbital.cabin": "Cabin",
+  "item.orbital.kraken_pearl": "Kraken Pearl",
+  "item.orbital.phoenix_ash": "Phoenix Ash",
+  "entity.orbital.kraken": "Kraken",
+  "entity.orbital.phoenix": "Phoenix"
 }

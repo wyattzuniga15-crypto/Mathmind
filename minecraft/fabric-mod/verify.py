@@ -403,6 +403,62 @@ def main():
             print(f"  {len(owned)} sculptures match the table they came from, "
                   f"{len(ELDERS)} predate it")
 
+    # --- every model's cuboids match the texture sheet drawn for it ---
+    #
+    # A model declares where on the sheet each cuboid reads from; the sheet
+    # generator declares where it painted each one. Nothing ties the two
+    # together, so moving a box in one and not the other puts a mob's arm on
+    # its face — and it compiles, and it verifies, and you only find out when
+    # the thing is standing in front of you. The kraken shipped that way for
+    # about ten minutes: its arms read from row 58 of a sheet whose arms were
+    # painted at row 52.
+    sheets_src = ROOT / "make_mob_textures.py"
+    if sheets_src.exists():
+        text = sheets_src.read_text()
+        paired = []
+        for block in re.finditer(r'"(\w+)": \((\d+), (\d+), \w+, \[(.*?)\]\),', text, re.S):
+            mob, sheet_w, sheet_h, boxes = block.groups()
+            model = ROOT / ("src/main/java/com/orbital/arsenal/client/"
+                            + "".join(w.capitalize() for w in mob.split("_")) + "Model.java")
+            if not model.exists():
+                continue
+            paired.append(mob)
+            java = model.read_text()
+            painted = sorted(tuple(int(n) for n in m)
+                             for m in re.findall(r"\((\d+), (\d+), (\d+), (\d+), (\d+)\)", boxes))
+            read = sorted((int(u), int(v), round(float(w)), round(float(h)), round(float(d)))
+                          for u, v, w, h, d in re.findall(
+                              r"\.uv\((\d+), (\d+)\)\s*\n?\s*\.cuboid\("
+                              r"-?[\d.]+F, -?[\d.]+F, -?[\d.]+F, "
+                              r"([\d.]+)F, ([\d.]+)F, ([\d.]+)F\)", java))
+            # Models that build their cuboids in a loop name their UVs in a
+            # table instead, so pull those too.
+            for u, v in re.findall(r"\{(\d+), (\d+)\}", java):
+                pass
+            declared_uv = {(b[0], b[1]) for b in painted}
+            loop_uv = {(int(u), int(v)) for u, v in re.findall(r"\{(\d+), (\d+)\}", java)}
+            direct_uv = {(b[0], b[1]) for b in read}
+            missing = declared_uv - direct_uv - loop_uv
+            extra = (direct_uv | loop_uv) - declared_uv
+            check(not missing,
+                  f"{mob}: the sheet paints a box at {sorted(missing)[:3]} that "
+                  f"{model.name} never reads from")
+            check(not extra,
+                  f"{mob}: {model.name} reads from {sorted(extra)[:3]}, which the "
+                  f"sheet does not paint")
+            size = re.search(r"TexturedModelData\.of\(data, (\d+), (\d+)\)", java)
+            check(size and (int(size.group(1)), int(size.group(2)))
+                  == (int(sheet_w), int(sheet_h)),
+                  f"{mob}: {model.name} declares a "
+                  f"{size.group(1) if size else '?'}x{size.group(2) if size else '?'} sheet "
+                  f"but make_mob_textures paints {sheet_w}x{sheet_h} — the texture "
+                  f"is stretched over the model")
+        # Say which ones. The Chronarch's sheet is painted by its own script
+        # and is not in this table, so it is not covered here — a count with
+        # no names is how "20 sculptures match" hid eight that did not.
+        print(f"  {len(paired)} models read from the sheet painted for them "
+              f"({', '.join(paired)}); chronarch has its own script and is not checked")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:

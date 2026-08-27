@@ -38,6 +38,15 @@ public final class ModEntities {
     public static EntityType<GolemEntity> GOLEM;
 
 
+    public static final RegistryKey<EntityType<?>> KRAKEN_KEY = RegistryKey.of(
+            RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "kraken"));
+    public static EntityType<KrakenEntity> KRAKEN;
+
+    public static final RegistryKey<EntityType<?>> PHOENIX_KEY = RegistryKey.of(
+            RegistryKeys.ENTITY_TYPE, Identifier.of(OrbitalArsenal.MOD_ID, "phoenix"));
+    public static EntityType<PhoenixEntity> PHOENIX;
+
+
     private ModEntities() {}
 
     public static void register() {
@@ -82,6 +91,26 @@ public final class ModEntities {
                         .build(GOLEM_KEY));
         FabricDefaultAttributeRegistry.register(GOLEM,
                 GolemEntity.createGolemAttributes());
+
+        KRAKEN = Registry.register(Registries.ENTITY_TYPE, KRAKEN_KEY,
+                EntityType.Builder.create(KrakenEntity::new, SpawnGroup.MONSTER)
+                        // Wide for the arms, which reach past the body the
+                        // hitbox describes; four and a bit tall, which is
+                        // exactly what the model measures from mantle to the
+                        // tips of the arms.
+                        .dimensions(2.8F, 4.4F)
+                        .build(KRAKEN_KEY));
+        FabricDefaultAttributeRegistry.register(KRAKEN, KrakenEntity.createKrakenAttributes());
+
+        PHOENIX = Registry.register(Registries.ENTITY_TYPE, PHOENIX_KEY,
+                EntityType.Builder.create(PhoenixEntity::new, SpawnGroup.MONSTER)
+                        // The wingspan is three blocks; the hitbox is the body,
+                        // because a hitbox the size of the wings is unhittable
+                        // nonsense to fight.
+                        .dimensions(1.4F, 1.6F)
+                        .build(PHOENIX_KEY));
+        FabricDefaultAttributeRegistry.register(PHOENIX,
+                PhoenixEntity.createPhoenixAttributes());
 
     }
 }

@@ -121,6 +121,39 @@ def golem(x, y, w, h, face):
 
 
 # Numbers lifted straight from the models: (u, v, width, height, depth).
+
+def kraken(x, y, w, h, face):
+    """Deep purple-red, paler underneath, with suckers along the arms."""
+    down = y / max(1, h - 1)
+    r, g, b = 108 - 34 * down, 42 - 8 * down, 92 - 24 * down
+    if face == "bottom":
+        r, g, b = 208, 156, 178
+    # Suckers: two staggered rows, which is what makes a long thin box read as
+    # an arm rather than as a length of pipe.
+    if w <= 6 and (y % 4 == 1) and face in ("front", "back"):
+        if x % 3 == 1:
+            r, g, b = 224, 188, 196
+    speck = ((x * 5 + y * 11) % 17 == 0) * 16
+    return (clamp(r + speck), clamp(g + speck), clamp(b + speck), 255)
+
+
+def phoenix(x, y, w, h, face):
+    """Red at the roots running to gold at the tips, banded like feathers."""
+    along = x / max(1, w - 1)
+    # Long thin parts are wings and tail feathers, and on those the gradient
+    # runs down the length; on the body it runs top to bottom.
+    heat = along if w > h * 3 else y / max(1, h - 1)
+    r = 232 - 20 * heat
+    g = 70 + 150 * heat
+    b = 32 + 40 * heat
+    # Feather bands across the run, closer together toward the tip.
+    if (x + y) % max(2, int(7 - 4 * heat)) == 0:
+        r, g, b = r * 0.82, g * 0.82, b * 0.7
+    if face in ("top", "bottom"):
+        r, g, b = r * 1.05, g * 1.05, b
+    return (clamp(r), clamp(g), clamp(b), 255)
+
+
 SHEETS = {
     "sky_whale": (256, 192, whale, [
         (0, 0, 80, 34, 30),      # body
@@ -171,6 +204,29 @@ SHEETS = {
         (0, 56, 11, 40, 12),     # right arm
         (48, 56, 13, 40, 14),    # left leg
         (104, 56, 13, 40, 14),   # right leg
+    ]),
+    # Both layouts below are the output of the shelf packer in the scratch
+    # script that sized these models, not numbers chosen by eye.
+    "kraken": (256, 80, kraken, [
+        (0, 0, 22, 30, 22),      # mantle
+        (88, 0, 20, 12, 20),     # head
+        (168, 0, 4, 16, 4), (184, 0, 4, 16, 4), (200, 0, 4, 16, 4),
+        (216, 0, 4, 16, 4), (232, 0, 4, 16, 4),
+        (0, 52, 4, 16, 4), (16, 52, 4, 16, 4), (32, 52, 4, 16, 4),
+        (48, 52, 3, 14, 3), (60, 52, 3, 14, 3), (72, 52, 3, 14, 3),
+        (84, 52, 3, 14, 3), (96, 52, 3, 14, 3), (108, 52, 3, 14, 3),
+        (120, 52, 3, 14, 3), (132, 52, 3, 14, 3),
+        (144, 52, 4, 5, 2),      # left eye
+        (156, 52, 4, 5, 2),      # right eye
+    ]),
+    "phoenix": (256, 64, phoenix, [
+        (0, 0, 10, 10, 20),      # body
+        (60, 0, 3, 2, 24), (114, 0, 3, 2, 24), (168, 0, 3, 2, 24),
+        (222, 0, 8, 8, 8),       # head
+        (0, 30, 24, 2, 14),      # left wing
+        (76, 30, 24, 2, 14),     # right wing
+        (152, 30, 2, 8, 2), (160, 30, 2, 8, 2),
+        (168, 30, 3, 3, 6),      # beak
     ]),
 }
 

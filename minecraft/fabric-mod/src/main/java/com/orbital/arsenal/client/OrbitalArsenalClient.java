@@ -28,6 +28,10 @@ public class OrbitalArsenalClient implements ClientModInitializer {
             Identifier.of(OrbitalArsenal.MOD_ID, "mecha_spider"), "main");
     public static final EntityModelLayer GOLEM_LAYER = new EntityModelLayer(
             Identifier.of(OrbitalArsenal.MOD_ID, "golem"), "main");
+    public static final EntityModelLayer KRAKEN_LAYER = new EntityModelLayer(
+            Identifier.of(OrbitalArsenal.MOD_ID, "kraken"), "main");
+    public static final EntityModelLayer PHOENIX_LAYER = new EntityModelLayer(
+            Identifier.of(OrbitalArsenal.MOD_ID, "phoenix"), "main");
 
     @Override
     public void onInitializeClient() {
@@ -45,5 +49,9 @@ public class OrbitalArsenalClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.MECHA_SPIDER, MechaSpiderRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(GOLEM_LAYER, GolemModel::getTexturedModelData);
         EntityRendererRegistry.register(ModEntities.GOLEM, GolemRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(KRAKEN_LAYER, KrakenModel::getTexturedModelData);
+        EntityRendererRegistry.register(ModEntities.KRAKEN, KrakenRenderer::new);
+        EntityModelLayerRegistry.registerModelLayer(PHOENIX_LAYER, PhoenixModel::getTexturedModelData);
+        EntityRendererRegistry.register(ModEntities.PHOENIX, PhoenixRenderer::new);
     }
 }
