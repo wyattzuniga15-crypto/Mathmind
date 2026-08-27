@@ -203,7 +203,10 @@ jobs:
             net.minecraft.entity.attribute.DefaultAttributeContainer$Builder \
             net.minecraft.entity.mob.HostileEntity \
             net.minecraft.entity.attribute.DefaultAttributeContainer \
-            net.minecraft.entity.EntityDimensions ; do
+            net.minecraft.entity.EntityDimensions \
+            net.minecraft.item.Item \
+            net.minecraft.item.Item$TooltipContext \
+            net.minecraft.item.tooltip.TooltipType ; do
             echo "=============================================================="
             echo "### $cls"
             javap -cp "$jar" "$cls" 2>&1 | head -45
