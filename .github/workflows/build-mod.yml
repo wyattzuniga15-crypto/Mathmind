@@ -209,7 +209,7 @@ jobs:
             net.minecraft.item.tooltip.TooltipType ; do
             echo "=============================================================="
             echo "### $cls"
-            javap -cp "$jar" "$cls" 2>&1 | head -45
+            javap -cp "$jar" "$cls" 2>&1 | head -140
           done
           exit 0
 
@@ -310,11 +310,13 @@ jobs:
             exit 0
           fi
           javap -cp "$jar" net.minecraft.item.Items > /tmp/items.txt 2>&1
-          # Anchored on the declared type, not on "a run of capitals": a
-          # looser pattern would pick up capitals from anywhere in the output
-          # and quietly make the check pass for ids it never really saw.
-          real=$(grep -oE 'Item [A-Z][A-Z_0-9]*;' /tmp/items.txt \
-                 | sed -E 's/^Item //; s/;$//' | tr 'A-Z' 'a-z' | sort -u)
+          # Every constant Items declares, whatever its declared type. The
+          # first version anchored on the literal type name "Item " and came
+          # back one short — it reported minecraft:chain, a real ingredient, as
+          # not existing. A check that calls a real thing fake is the same
+          # failure as one that passes a fake thing, pointing the other way.
+          real=$(grep -oE 'public static final [^ ]+ [A-Z][A-Z_0-9]*;' /tmp/items.txt \
+                 | sed -E 's/.* //; s/;$//' | tr 'A-Z' 'a-z' | sort -u)
           if [ -z "$real" ]; then
             echo "::warning::javap returned no item fields — this check did NOT run"
             exit 0
@@ -337,6 +339,11 @@ jobs:
               echo "::error::recipe ingredient minecraft:$name is not an item in this version"
               grep -n "\"minecraft:$name\"" -r src/main/resources/data/orbital/recipe \
                 | head -3 | sed 's|^|    used by |'
+              # What Items actually says about that name, so a miss carries its
+              # own evidence instead of costing another round to find out.
+              up=$(echo "$name" | tr 'a-z' 'A-Z')
+              echo "    javap says:"
+              grep -i "[ .]$up;" /tmp/items.txt | head -3 | sed 's|^|      |'
               bad=$((bad + 1))
             }
           done
