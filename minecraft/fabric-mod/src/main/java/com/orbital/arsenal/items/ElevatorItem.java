@@ -36,6 +36,8 @@ public class ElevatorItem extends Item {
         int base = (int) Math.floor(user.getY());
         int[] up = {0};
         BlockState pad = Blocks.QUARTZ_BLOCK.getDefaultState();
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§f⇧ Going up."), true);
         Scheduler.repeat(() -> {
             // Stop if the rider is gone. setPosition on a player the server

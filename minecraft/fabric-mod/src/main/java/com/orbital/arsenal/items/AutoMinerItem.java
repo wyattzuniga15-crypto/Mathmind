@@ -36,6 +36,8 @@ public class AutoMinerItem extends Item {
         int[] y = {(int) Math.floor(user.getY()) - 1};
         int floor = serverWorld.getBottomY() + 5;
         BlockPos.Mutable pos = new BlockPos.Mutable();
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§7⛏ Digging down."), true);
         Scheduler.repeat(() -> {
             for (int n = 0; n < PER_TICK && y[0] > floor; n++, y[0]--) {

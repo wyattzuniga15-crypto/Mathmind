@@ -36,6 +36,8 @@ public class CarpetBombItem extends Item {
         }
         double ux = aim.x / flat;
         double uz = aim.z / flat;
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(),
+                SoundCategory.MASTER, 6.0F, 0.8F);
         user.sendMessage(Text.literal("§c▬▬ Carpet"), true);
         int[] step = {0};
         Scheduler.repeat(() -> {

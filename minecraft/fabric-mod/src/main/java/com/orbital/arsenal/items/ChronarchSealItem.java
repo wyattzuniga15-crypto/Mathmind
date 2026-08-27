@@ -6,6 +6,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -32,6 +34,8 @@ public class ChronarchSealItem extends Item {
             return ActionResult.SUCCESS;
         }
 
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN,
+                SoundCategory.MASTER, 5.0F, 1.0F);
         user.sendMessage(Text.literal("§5✦ THE CHRONARCH WAKES"), false);
         user.sendMessage(Text.literal(
                 "§7It will slow you, then start undoing its own wounds. "

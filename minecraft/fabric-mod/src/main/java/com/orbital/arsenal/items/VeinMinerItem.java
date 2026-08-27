@@ -12,6 +12,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -44,6 +46,8 @@ public class VeinMinerItem extends Item {
         // Breadth-first over blocks of the same kind, bounded twice: by how many
         // it will take in total and by how many it takes in one tick. A vein of
         // stone would otherwise be the whole world.
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                SoundCategory.MASTER, 1.2F, 1.4F);
         ArrayDeque<BlockPos> edge = new ArrayDeque<>();
         Set<BlockPos> seen = new HashSet<>();
         edge.add(start);

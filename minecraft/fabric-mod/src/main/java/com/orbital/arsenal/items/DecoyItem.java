@@ -40,6 +40,8 @@ public class DecoyItem extends Item {
         stand.setPosition(user.getX() + ahead.x, user.getY(), user.getZ() + ahead.z);
         stand.setCustomName(Text.literal(user.getName().getString()));
         serverWorld.spawnEntity(stand);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_CAT_HISS,
+                SoundCategory.MASTER, 2.0F, 1.0F);
         user.sendMessage(Text.literal("§7☗ It will hold their attention for a minute."), true);
         // A named armour stand is scenery: nothing in the game changes its
         // behaviour because one is standing there. So pull, every tick, anything

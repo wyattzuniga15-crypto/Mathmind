@@ -38,6 +38,8 @@ public class MountainMakerItem extends Item {
         int cx = (int) Math.floor(at.x);
         int cy = (int) Math.floor(at.y);
         int cz = (int) Math.floor(at.z);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§7⛰ Raising a mountain…"), true);
         int[] course = {0};
         BlockPos.Mutable pos = new BlockPos.Mutable();

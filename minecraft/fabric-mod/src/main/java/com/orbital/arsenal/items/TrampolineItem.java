@@ -37,6 +37,8 @@ public class TrampolineItem extends Item {
         int cz = (int) Math.floor(user.getZ());
         int ground = Area.surface(serverWorld, cx, cz, (int) user.getY());
         Vec3d pad = new Vec3d(cx, ground, cz);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§a◎ Jump."), true);
         Area.column(serverWorld, pad, RADIUS, 0, 0, (w, pos, was, dx, dy, dz) ->
                 Blocks.SLIME_BLOCK.getDefaultState(), null);

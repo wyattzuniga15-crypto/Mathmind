@@ -51,6 +51,8 @@ public class PetRockItem extends Item {
             return ActionResult.SUCCESS;
         }
 
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_CAT_PURREOW,
+                SoundCategory.MASTER, 2.0F, 0.6F);
         user.sendMessage(Text.literal("§7\u1FAA8 It is a rock. It follows you."), true);
         ROCKS.put(user.getUuid(), BlockPos.ofFloored(user.getX(), user.getY(), user.getZ()));
         Scheduler.repeat(() -> {

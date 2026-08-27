@@ -37,6 +37,8 @@ public class ForestGrowerItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 140.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§2🌲 Growing a forest…"), true);
         int[] planted = {0};
         Scheduler.repeat(() -> {

@@ -7,6 +7,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -42,6 +44,8 @@ public class TunnelBorerItem extends Item {
         int cx = (int) Math.floor(user.getX());
         int cz = (int) Math.floor(user.getZ());
         int feet = (int) Math.floor(user.getY());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§7⌷ Boring."), true);
         int[] step = {1};
         Scheduler.repeat(() -> {

@@ -36,6 +36,8 @@ public class TowerBuilderItem extends Item {
         int cz = (int) Math.floor(user.getZ());
         int base = Area.surface(serverWorld, cx, cz, (int) user.getY()) + 1;
         int[] up = {0};
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§7🗼 Building…"), true);
         Scheduler.repeat(() -> {
             for (int n = 0; n < 2 && up[0] < HEIGHT; n++, up[0]++) {

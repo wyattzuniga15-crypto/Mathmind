@@ -6,6 +6,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -32,6 +34,8 @@ public class MoatItem extends Item {
         int cx = (int) Math.floor(user.getX());
         int cz = (int) Math.floor(user.getZ());
         int rim = (int) Math.floor(user.getY()) - 1;
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§9≋ Digging."), true);
         Area.sweep(serverWorld, new Vec3d(cx, rim, cz), OUTER, DEEP + 6, OUTER,
                 (dx, dy, dz) -> dy >= -DEEP && dy <= 6,

@@ -11,6 +11,8 @@ import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -38,6 +40,8 @@ public class AquariumItem extends Item {
         int cx = (int) Math.floor(at.x);
         int cy = (int) Math.floor(at.y);
         int cz = (int) Math.floor(at.z);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK,
+                SoundCategory.MASTER, 2.5F, 1.2F);
         user.sendMessage(Text.literal("§b▢ Filling the tank."), true);
         Area.sweep(serverWorld, new Vec3d(cx, cy, cz), HALF, TALL, HALF,
                 (dx, dy, dz) -> dy >= 0 && dy <= TALL,

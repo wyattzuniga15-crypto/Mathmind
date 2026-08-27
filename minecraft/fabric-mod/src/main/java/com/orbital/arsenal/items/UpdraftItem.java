@@ -8,6 +8,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -33,6 +35,8 @@ public class UpdraftItem extends Item {
         }
         Vec3d at = Strikes.aim(user, 60.0);
         double baseY = at.y;
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                SoundCategory.MASTER, 1.2F, 1.4F);
         user.sendMessage(Text.literal("§f↑ Updraft. Thirty seconds."), true);
         int[] age = {0};
         Scheduler.repeat(() -> {

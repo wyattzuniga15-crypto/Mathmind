@@ -8,6 +8,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -40,6 +42,8 @@ public class WaterslideItem extends Item {
             user.sendMessage(Text.literal("§7Go up first — there is nothing to slide down."), true);
             return ActionResult.SUCCESS;
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§9≈ Down you go."), true);
         // Six samples per block of drop, one full turn every twelve blocks.
         // At radius nine that puts consecutive centres about three quarters of

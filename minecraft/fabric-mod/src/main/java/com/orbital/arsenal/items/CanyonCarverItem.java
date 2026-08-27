@@ -42,6 +42,8 @@ public class CanyonCarverItem extends Item {
         double[] heading = {Math.atan2(aim.z, aim.x)};
         int[] step = {0};
         BlockPos.Mutable pos = new BlockPos.Mutable();
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§8⌁ Carving…"), true);
         Scheduler.repeat(() -> {
             // One step a tick, not four. Each step scans a disc twenty-five

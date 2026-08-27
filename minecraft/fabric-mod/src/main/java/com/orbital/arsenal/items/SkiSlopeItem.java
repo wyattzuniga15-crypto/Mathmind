@@ -7,6 +7,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -43,6 +45,8 @@ public class SkiSlopeItem extends Item {
         // From your feet downward. Starting thirty blocks up put the top of the
         // run in mid-air above the player, which is a ramp to nowhere.
         int top = (int) Math.floor(user.getY());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§b⟋ Downhill from here."), true);
         int[] step = {0};
         Scheduler.repeat(() -> {

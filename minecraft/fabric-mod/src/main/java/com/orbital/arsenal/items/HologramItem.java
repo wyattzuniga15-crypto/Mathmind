@@ -31,6 +31,8 @@ public class HologramItem extends Item {
         Vec3d aim = user.getRotationVec(1.0F).normalize().multiply(SIZE);
         Vec3d at = new Vec3d(Math.floor(user.getX() + aim.x), Math.floor(user.getY()),
                 Math.floor(user.getZ() + aim.z));
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                SoundCategory.MASTER, 1.0F, 2.0F);
         user.sendMessage(Text.literal("§b⬚ " + SIZE + " blocks across. Nothing placed."), true);
         int[] age = {0};
         Scheduler.repeat(() -> {

@@ -35,6 +35,8 @@ public class CrystalGrowthItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 120.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK,
+                SoundCategory.MASTER, 3.0F, 1.8F);
         user.sendMessage(Text.literal("§d✧ Crystals."), true);
         ThreadLocalRandom dice = ThreadLocalRandom.current();
         for (int i = 0; i < SPIRES; i++) {

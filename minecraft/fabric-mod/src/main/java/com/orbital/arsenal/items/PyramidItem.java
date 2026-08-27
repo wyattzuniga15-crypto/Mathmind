@@ -7,6 +7,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -29,6 +31,8 @@ public class PyramidItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 130.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§e▲ Building."), true);
         Area.sweep(serverWorld, at, SIDE, SIDE, SIDE,
                 (dx, dy, dz) -> dy >= 0 && Math.max(Math.abs(dx), Math.abs(dz)) <= SIDE - dy,

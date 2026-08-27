@@ -32,6 +32,8 @@ public class FoundationItem extends Item {
         }
         int cy = (int) Math.floor(user.getY()) - 1;
         Vec3d here = new Vec3d(user.getX(), cy, user.getZ());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§7▤ Levelling."), true);
         // Everything above the line goes, everything at or below it becomes stone.
         // One pass, so a hillside is cut and the hollow behind it filled together.

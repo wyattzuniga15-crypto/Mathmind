@@ -31,6 +31,8 @@ public class VaporiseItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 130.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK,
+                SoundCategory.MASTER, 4.0F, 1.6F);
         user.sendMessage(Text.literal("§c♨ Boiling it off."), true);
         Area.ball(serverWorld, at, RADIUS, (w, pos, was, dx, dy, dz) ->
                 (was.isOf(Blocks.WATER) || was.isOf(Blocks.LAVA))

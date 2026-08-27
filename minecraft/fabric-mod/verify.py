@@ -501,6 +501,23 @@ def main():
                   f"dimension change it would be steering by a corpse")
     print(f"  {steering} scheduled tasks steer by the player, all of them guarded")
 
+    # --- no item is silent ---
+    #
+    # Using something and hearing nothing reads as the item not working. Fifty
+    # seven of them were like that. Every sound used comes from the nine
+    # constants a real build has reported the type of — reaching for a tenth is
+    # a guess about whether it is bare or wrapped, and that guess costs a whole
+    # build either way it falls.
+    voiceless = []
+    for src in sorted((ROOT / "src/main/java/com/orbital/arsenal/items").glob("*.java")):
+        text = src.read_text()
+        if not any(w in text for w in ("playSound", "Sculpture.boom", "Strikes.blast")):
+            voiceless.append(src.stem)
+    check(not voiceless,
+          "these items make no sound at all: " + ", ".join(voiceless[:6]))
+    if not voiceless:
+        print("  every item makes a sound")
+
     # --- the Java itself compiles against the stubs ---
     sources = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "stubs").rglob("*.java"))
     with tempfile.TemporaryDirectory() as out:

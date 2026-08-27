@@ -35,6 +35,8 @@ public class BlackIceItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 120.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK,
+                SoundCategory.MASTER, 4.0F, 0.7F);
         user.sendMessage(Text.literal("§b≈ Careful."), true);
         Area.column(serverWorld, at, RADIUS, 1, 3, (w, pos, was, dx, dy, dz) ->
                 (!was.isAir() && w.getBlockState(pos.up()).isAir())

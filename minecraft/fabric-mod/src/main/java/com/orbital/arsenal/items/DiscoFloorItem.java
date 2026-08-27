@@ -38,6 +38,8 @@ public class DiscoFloorItem extends Item {
         int ground = Area.surface(serverWorld, cx, cz, (int) user.getY());
         Block[] colours = {Blocks.RED_CONCRETE, Blocks.ORANGE_CONCRETE, Blocks.YELLOW_CONCRETE,
                 Blocks.PINK_CONCRETE, Blocks.WHITE_CONCRETE, Blocks.BLACK_CONCRETE};
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 2.0F, 1.8F);
         user.sendMessage(Text.literal("§d♬ Dance."), true);
         int[] age = {0};
         Scheduler.repeat(() -> {

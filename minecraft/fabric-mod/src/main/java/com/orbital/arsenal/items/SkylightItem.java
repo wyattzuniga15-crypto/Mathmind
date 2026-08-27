@@ -37,6 +37,8 @@ public class SkylightItem extends Item {
         // floor(), not a cast: below y=0 a cast rounds toward zero, which starts
         // the shaft above the player's head and leaves them still buried.
         int feet = (int) Math.floor(user.getY());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         int[] cleared = {0};
         Area.column(serverWorld, new Vec3d(cx, feet, cz), R, roof - feet, 0,
                 (w, pos, was, dx, dy, dz) -> {

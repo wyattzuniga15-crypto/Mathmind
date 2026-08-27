@@ -31,6 +31,8 @@ public class BlockPrinterItem extends Item {
         if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.SUCCESS;
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§7▤ Printing. Walk."), true);
         int[] age = {0};
         BlockState floor = Blocks.STONE_BRICKS.getDefaultState();

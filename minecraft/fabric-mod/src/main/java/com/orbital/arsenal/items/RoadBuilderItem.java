@@ -41,6 +41,8 @@ public class RoadBuilderItem extends Item {
         double ux = aim.x / flat;
         double uz = aim.z / flat;
         int[] step = {1};
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§7▬ Building a road…"), true);
         // Read once. Taking it fresh each step made the road follow the player
         // rather than run from where they were standing when they used it.

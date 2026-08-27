@@ -54,6 +54,8 @@ public class HomingCompassItem extends Item {
                     here.x + dx / len * i, here.y + 1.2, here.z + dz / len * i,
                     1, 0.0, 0.0, 0.0, 0.0);
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                SoundCategory.MASTER, 1.2F, 1.4F);
         user.sendMessage(Text.literal(String.format(
                 "§b✜ %.0f blocks that way. Sneak-click to re-mark.", away)), true);
         user.getItemCooldownManager().set(user.getStackInHand(hand), COOLDOWN);

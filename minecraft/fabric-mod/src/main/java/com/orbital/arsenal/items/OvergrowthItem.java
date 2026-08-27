@@ -32,6 +32,8 @@ public class OvergrowthItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 130.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§2❦ A hundred years, all at once."), true);
         // Surfaces only, and mottled rather than uniform — an evenly mossed
         // landscape reads as painted, a patchy one reads as grown.

@@ -30,6 +30,8 @@ public class FeatherfallItem extends Item {
         if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.SUCCESS;
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                SoundCategory.MASTER, 1.5F, 1.8F);
         user.sendMessage(Text.literal("§f❋ Slow falling, everything."), true);
         int[] age = {0};
         Scheduler.repeat(() -> {

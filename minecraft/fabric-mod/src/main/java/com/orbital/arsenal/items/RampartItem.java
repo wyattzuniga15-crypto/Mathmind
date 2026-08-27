@@ -1,13 +1,15 @@
 package com.orbital.arsenal.items;
 
 import com.orbital.arsenal.Scheduler;
-import com.orbital.arsenal.weapons.Area;
 import com.orbital.arsenal.time.Journal;
+import com.orbital.arsenal.weapons.Area;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -42,6 +44,8 @@ public class RampartItem extends Item {
         int cx = (int) Math.floor(user.getX());
         int cz = (int) Math.floor(user.getZ());
         int guess = (int) Math.floor(user.getY());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§7▥ Raising the wall."), true);
         int[] step = {2};
         Scheduler.repeat(() -> {

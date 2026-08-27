@@ -31,6 +31,8 @@ public class ExcavatorItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 120.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§7▣ Digging."), true);
         // Square rather than a bowl: this is for clearing a build site, and a
         // crater with sloped walls is no use to anyone laying foundations.

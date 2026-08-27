@@ -34,6 +34,8 @@ public class BouncyGroundItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d here = new Vec3d(user.getX(), user.getY(), user.getZ());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§a◯ Boing."), true);
         Area.column(serverWorld, here, RADIUS, 1, 2, (w, pos, was, dx, dy, dz) ->
                 (!was.isAir() && w.getBlockState(pos.up()).isAir())

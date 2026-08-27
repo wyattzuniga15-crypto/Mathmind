@@ -37,6 +37,8 @@ public class ClonerItem extends Item {
         int cy = (int) Math.floor(at.y);
         int cz = (int) Math.floor(at.z);
         int shift = HALF * 2 + 2;
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§d⧉ Copying."), true);
         // Read the whole source first, then write. Reading and writing in one pass
         // copies blocks the same pass has already changed, which smears the source

@@ -36,6 +36,8 @@ public class DungeonMakerItem extends Item {
         int cx = (int) Math.floor(user.getX());
         int cz = (int) Math.floor(user.getZ());
         int floor = (int) Math.floor(user.getY()) - DROP;
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§8▤ Something under your feet."), true);
         Area.sweep(serverWorld, new Vec3d(cx, floor + H / 2.0, cz), W, H, W,
                 (dx, dy, dz) -> true,

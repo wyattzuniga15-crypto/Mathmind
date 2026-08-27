@@ -68,6 +68,8 @@ public class ChainLightningItem extends Item {
             from[0] = new Vec3d(next.getX(), next.getY(), next.getZ());
             return true;
         });
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(),
+                SoundCategory.MASTER, 4.0F, 1.2F);
         user.sendMessage(Text.literal("§e⚡⚡ Chain"), true);
         user.getItemCooldownManager().set(user.getStackInHand(hand), COOLDOWN);
         return ActionResult.SUCCESS;

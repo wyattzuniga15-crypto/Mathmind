@@ -52,6 +52,8 @@ public class OreFinderItem extends Item {
                 }
             }
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                SoundCategory.MASTER, 1.2F, 1.4F);
         user.sendMessage(Text.literal("§b◈ " + found.size() + " ores nearby"), true);
         int[] age = {0};
         Scheduler.repeat(() -> {

@@ -37,6 +37,8 @@ public class AnvilRainItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 140.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(),
+                SoundCategory.MASTER, 6.0F, 0.8F);
         user.sendMessage(Text.literal("§7⬛ Look up. Then do not."), true);
         int[] sent = {0};
         Scheduler.repeat(() -> {

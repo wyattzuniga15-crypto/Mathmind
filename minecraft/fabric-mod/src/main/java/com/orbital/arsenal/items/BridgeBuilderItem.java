@@ -41,6 +41,8 @@ public class BridgeBuilderItem extends Item {
         double uz = aim.z / flat;
         int deck = (int) Math.floor(user.getY()) - 1;
         int[] step = {1};
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§7═ Bridging…"), true);
         // The start is read once, here, not inside the loop. Reading it every
         // step meant walking while it built dragged the far end along with you,

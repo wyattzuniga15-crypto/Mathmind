@@ -33,6 +33,8 @@ public class LandscaperItem extends Item {
         int cx = (int) Math.floor(user.getX());
         int cz = (int) Math.floor(user.getZ());
         int base = (int) Math.floor(user.getY());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§2⌒ Smoothing."), true);
         Area.column(serverWorld, new Vec3d(cx, base, cz), RADIUS, 12, 6,
                 (w, pos, was, dx, dy, dz) -> {

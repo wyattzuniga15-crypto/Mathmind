@@ -36,6 +36,8 @@ public class StampedeItem extends Item {
         double flat = Math.max(0.05, Math.sqrt(aim.x * aim.x + aim.z * aim.z));
         double ux = aim.x / flat;
         double uz = aim.z / flat;
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 5.0F, 1.4F);
         user.sendMessage(Text.literal("§6🐄 Move."), true);
         int[] sent = {0};
         Scheduler.repeat(() -> {

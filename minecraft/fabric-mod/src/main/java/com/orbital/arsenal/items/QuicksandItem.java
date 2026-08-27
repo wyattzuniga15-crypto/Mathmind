@@ -36,6 +36,8 @@ public class QuicksandItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 100.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM,
+                SoundCategory.MASTER, 3.0F, 1.4F);
         user.sendMessage(Text.literal("§e⌄ Sinking."), true);
         Area.column(serverWorld, at, RADIUS, 0, 6, (w, pos, was, dx, dy, dz) ->
                 was.isAir() ? null : Blocks.SAND.getDefaultState(), null);

@@ -56,6 +56,8 @@ public class FossiliseItem extends Item {
             thing.discard();
             caught++;
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM,
+                SoundCategory.MASTER, 4.0F, 0.9F);
         user.sendMessage(Text.literal("§7⬖ " + caught + " turned to stone"), true);
         user.getItemCooldownManager().set(user.getStackInHand(hand), COOLDOWN);
         return ActionResult.SUCCESS;

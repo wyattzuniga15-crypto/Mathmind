@@ -40,6 +40,8 @@ public class BeaconItem extends Item {
             Journal.clear(serverWorld, spot, serverWorld.getBlockState(spot),
                     Blocks.SEA_LANTERN.getDefaultState());
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(),
+                SoundCategory.MASTER, 3.0F, 0.7F);
         user.sendMessage(Text.literal("§f▲ Marked."), true);
         // Particles rather than blocks for the column itself: ninety blocks of
         // glowstone would be a building, and this is a marker.

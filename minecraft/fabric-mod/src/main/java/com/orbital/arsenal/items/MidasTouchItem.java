@@ -31,6 +31,8 @@ public class MidasTouchItem extends Item {
             return ActionResult.SUCCESS;
         }
         Vec3d at = Strikes.aim(user, 120.0);
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(),
+                SoundCategory.MASTER, 4.0F, 1.2F);
         user.sendMessage(Text.literal("§e✦ Gold."), true);
         serverWorld.spawnParticles(ParticleTypes.END_ROD, true, true,
                 at.x, at.y + 3, at.z, 400, RADIUS * 0.5, RADIUS * 0.4, RADIUS * 0.5, 0.06);

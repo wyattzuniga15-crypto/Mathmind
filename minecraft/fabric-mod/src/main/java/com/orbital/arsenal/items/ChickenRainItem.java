@@ -33,6 +33,8 @@ public class ChickenRainItem extends Item {
         if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.SUCCESS;
         }
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_CAT_HISS,
+                SoundCategory.MASTER, 3.0F, 1.6F);
         user.sendMessage(Text.literal("§e🐔 Look up."), true);
         int[] sent = {0};
         Scheduler.repeat(() -> {

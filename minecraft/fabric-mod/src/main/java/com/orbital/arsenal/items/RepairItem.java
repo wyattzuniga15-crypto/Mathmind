@@ -35,6 +35,8 @@ public class RepairItem extends Item {
         int cx = (int) Math.floor(user.getX());
         int cz = (int) Math.floor(user.getZ());
         int stand = (int) Math.floor(user.getY());
+        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER,
+                SoundCategory.MASTER, 4.0F, 0.6F);
         user.sendMessage(Text.literal("§7✚ Filling in."), true);
         // Ground level is read from the rim, where nothing has been dug, and
         // that is the level the holes come back up to. Filling every air block
