@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "YYY",
+    "YSY",
+    "YYY"
+  ],
+  "key": {
+    "Y": {
+      "item": "minecraft:yellow_concrete"
+    },
+    "S": {
+      "item": "minecraft:slime_ball"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_duck",
+    "count": 1
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "WWW",
+    "WCW",
+    "WWW"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:white_concrete"
+    },
+    "C": {
+      "item": "minecraft:cake"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_cake",
+    "count": 1
+  }
+}

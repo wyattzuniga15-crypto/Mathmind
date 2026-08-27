@@ -1,6 +1,11 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.GiantDuckItem;
+import com.orbital.arsenal.items.GiantAnvilItem;
+import com.orbital.arsenal.items.GrandPianoItem;
+import com.orbital.arsenal.items.GiantDiamondItem;
+import com.orbital.arsenal.items.GiantCakeItem;
 import com.orbital.arsenal.items.GrowingCatItem;
 import com.orbital.arsenal.items.BlackHoleItem;
 import com.orbital.arsenal.items.KamehamehaItem;
@@ -39,6 +44,11 @@ public final class ModItems {
     public static Item POTATO_BOMB;
     public static Item CAT_BAZOOKA;
     public static Item GROWING_CAT;
+    public static Item GIANT_DUCK;
+    public static Item GIANT_ANVIL;
+    public static Item GRAND_PIANO;
+    public static Item GIANT_DIAMOND;
+    public static Item GIANT_CAKE;
     public static Item TIME_STOP_CLOCK;
     public static Item SLOW_TIME_CLOCK;
     public static Item ECHO_GHOST;
@@ -88,6 +98,11 @@ public final class ModItems {
         POTATO_BOMB = register("potato_bomb", PotatoBombItem::new);
         CAT_BAZOOKA = register("cat_bazooka", CatBazookaItem::new);
         GROWING_CAT = register("growing_cat", GrowingCatItem::new);
+        GIANT_DUCK = register("giant_duck", GiantDuckItem::new);
+        GIANT_ANVIL = register("giant_anvil", GiantAnvilItem::new);
+        GRAND_PIANO = register("grand_piano", GrandPianoItem::new);
+        GIANT_DIAMOND = register("giant_diamond", GiantDiamondItem::new);
+        GIANT_CAKE = register("giant_cake", GiantCakeItem::new);
         TIME_STOP_CLOCK = register("time_stop_clock", TimeStopClockItem::new);
         SLOW_TIME_CLOCK = register("slow_time_clock", SlowTimeClockItem::new);
         ECHO_GHOST = register("echo_ghost", EchoGhostItem::new);
@@ -119,6 +134,11 @@ public final class ModItems {
             entries.add(POTATO_BOMB);
             entries.add(CAT_BAZOOKA);
             entries.add(GROWING_CAT);
+            entries.add(GIANT_DUCK);
+            entries.add(GIANT_ANVIL);
+            entries.add(GRAND_PIANO);
+            entries.add(GIANT_DIAMOND);
+            entries.add(GIANT_CAKE);
             entries.add(TIME_STOP_CLOCK);
             entries.add(SLOW_TIME_CLOCK);
             entries.add(ECHO_GHOST);

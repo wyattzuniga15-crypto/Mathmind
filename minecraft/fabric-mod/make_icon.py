@@ -475,11 +475,56 @@ _CAT_KEY = {
 GROWING_CAT = [[_CAT_KEY[c] for c in row] for row in _CAT_ART]
 
 
+# The five sculpture drops. Each is the thing itself in silhouette rather than
+# a symbol for it: at sixteen pixels an icon has one job, which is to be
+# recognised in a hotbar without being read.
+_sY = (250, 208, 46, 255)    # duck yellow
+_sW = (250, 250, 246, 255)   # white
+_sO = (240, 140, 40, 255)    # beak
+_sK = (24, 22, 26, 255)      # black
+_sI = (196, 200, 208, 255)   # iron
+_sD = (108, 222, 216, 255)   # diamond
+_sC = (222, 252, 250, 255)   # gem core
+_sA = (226, 178, 98, 255)    # sponge
+_sR = (196, 58, 62, 255)     # jam
+_sF = (255, 200, 90, 255)    # candle flame
+
+_SCULPT_KEY = {".": _t, "Y": _sY, "W": _sW, "O": _sO, "K": _sK, "I": _sI,
+               "D": _sD, "C": _sC, "A": _sA, "R": _sR, "F": _sF, "B": _sK}
+
+_SCULPT_ART = {
+    "giant_duck": ["................","......YYYY......",".....YYYYYY.....",".....YKYYKY.....",
+        "....YYYYYYYYOO..","....YYYYYYYOOO..","...YYYYYYYY.....","..YYYYYYYYYYY...",
+        ".YYYYYYYYYYYYYY.","YYYYYYYYYYYYYYYY","YYYYYYYYYYYYYYYY",".YYYYYYYYYYYYYY.",
+        "..WWWWWWWWWWWW..","...WWWWWWWWWW...","....WWWWWWWW....","................"],
+    "giant_anvil": ["................","................","..IIIIIIIIIIII..",".IIIIIIIIIIIIIII",
+        "..IIIIIIIIIIIIII","..IIIIIIIIIIII..","....IIIIIIII....",".....IIIIII.....",
+        ".....IIIIII.....",".....IIIIII.....","....IIIIIIII....","...IIIIIIIIII...",
+        "..IIIIIIIIIIII..","..IIIIIIIIIIII..","..IIIIIIIIIIII..","................"],
+    "grand_piano": ["................","................","....BBBBBBBB....","...BBBBBBBBBB...",
+        "..BBBBBBBBBBBB..",".BBBBBBBBBBBBBB.","BBBBBBBBBBBBBBB.","BBBBBBBBBBBBBB..",
+        "BBBBBBBBBBBBB...","BBBBBBBBBBBB....","KWKWKWKWKWKW....","KWKWKWKWKWKW....",
+        "..K........K....","..K........K....","..K........K....","................"],
+    "giant_diamond": ["................",".......DD.......","......DDDD......",".....DDDDDD.....",
+        "....DDDDDDDD....","...DDDDCCDDDD...","..DDDDCCCCDDDD..",".DDDDCCCCCCDDDD.",
+        ".DDDDCCCCCCDDDD.","..DDDDCCCCDDDD..","...DDDDCCDDDD...","....DDDDDDDD....",
+        ".....DDDDDD.....","......DDDD......",".......DD.......","................"],
+    "giant_cake": ["................",".......F........",".......F........",".......W........",
+        ".......W........",".....WWWWWW.....",".....AAAAAA.....",".....RRRRRR.....",
+        "...WWWWWWWWWW...","...AAAAAAAAAA...","...RRRRRRRRRR...","..WWWWWWWWWWWW..",
+        "..AAAAAAAAAAAA..","..AAAAAAAAAAAA..","..RRRRRRRRRRRR..","................"],
+}
+
+SCULPTURES = {name: [[_SCULPT_KEY[c] for c in row] for row in rows]
+              for name, rows in _SCULPT_ART.items()}
+
+
 if __name__ == "__main__":
     art = Path(__file__).parent / "src/main/resources/assets/orbital/textures/item"
     for name, pixels in (("orbital_laser", PIXELS), ("rewind_clock", CLOCK), ("potato_bomb", POTATO),
                           ("cat_bazooka", BAZOOKA),
                           ("growing_cat", GROWING_CAT),
+                          *sorted(SCULPTURES.items()),
                           ("time_stop_clock", STOP_CLOCK),
                           ("slow_time_clock", SLOW_CLOCK),
                           ("echo_ghost", GHOST),

@@ -8,6 +8,15 @@ public class Blocks {
     public static final Block FARMLAND = new Block();
     public static final Block PACKED_MUD = new Block();
     public static final Block COARSE_DIRT = new Block();
+    public static final Block YELLOW_CONCRETE = new Block();
+    public static final Block WHITE_CONCRETE = new Block();
+    public static final Block ORANGE_CONCRETE = new Block();
+    public static final Block BLACK_CONCRETE = new Block();
+    public static final Block RED_CONCRETE = new Block();
+    public static final Block IRON_BLOCK = new Block();
+    public static final Block DIAMOND_BLOCK = new Block();
+    public static final Block SEA_LANTERN = new Block();
+    public static final Block YELLOW_TERRACOTTA = new Block();
     public static final Block STONE_BRICKS = new Block();
     public static final Block DEEPSLATE_BRICKS = new Block();
     public static final Block OAK_PLANKS = new Block();
