@@ -1,6 +1,18 @@
 package com.orbital.arsenal;
 
 import com.orbital.arsenal.items.CatBazookaItem;
+import com.orbital.arsenal.items.DisintegratorItem;
+import com.orbital.arsenal.items.BlackHoleGrenadeItem;
+import com.orbital.arsenal.items.NapalmLauncherItem;
+import com.orbital.arsenal.items.EarthquakeHammerItem;
+import com.orbital.arsenal.items.SwarmMissilesItem;
+import com.orbital.arsenal.items.ShotgunBlastItem;
+import com.orbital.arsenal.items.AcidSprayItem;
+import com.orbital.arsenal.items.SonicCannonItem;
+import com.orbital.arsenal.items.ChainLightningItem;
+import com.orbital.arsenal.items.IceSpikesItem;
+import com.orbital.arsenal.items.LandmineItem;
+import com.orbital.arsenal.items.NukeSuitcaseItem;
 import com.orbital.arsenal.items.GiantChickenItem;
 import com.orbital.arsenal.items.GiantBootItem;
 import com.orbital.arsenal.items.GiantHammerItem;
@@ -117,6 +129,18 @@ public final class ModItems {
     public static Item GIANT_DONUT;
     public static Item GIANT_ROCKET;
     public static Item GIANT_TEAPOT;
+    public static Item DISINTEGRATOR;
+    public static Item BLACK_HOLE_GRENADE;
+    public static Item NAPALM_LAUNCHER;
+    public static Item EARTHQUAKE_HAMMER;
+    public static Item SWARM_MISSILES;
+    public static Item SHOTGUN_BLAST;
+    public static Item ACID_SPRAY;
+    public static Item SONIC_CANNON;
+    public static Item CHAIN_LIGHTNING;
+    public static Item ICE_SPIKES;
+    public static Item LANDMINE;
+    public static Item NUKE_SUITCASE;
 
     /**
      * Counted as they go in rather than written down. A hardcoded total drifts
@@ -206,6 +230,18 @@ public final class ModItems {
         GIANT_ROCKET = register("giant_rocket", GiantRocketItem::new);
         GIANT_TEAPOT = register("giant_teapot", GiantTeapotItem::new);
 
+        DISINTEGRATOR = register("disintegrator", DisintegratorItem::new);
+        BLACK_HOLE_GRENADE = register("black_hole_grenade", BlackHoleGrenadeItem::new);
+        NAPALM_LAUNCHER = register("napalm_launcher", NapalmLauncherItem::new);
+        EARTHQUAKE_HAMMER = register("earthquake_hammer", EarthquakeHammerItem::new);
+        SWARM_MISSILES = register("swarm_missiles", SwarmMissilesItem::new);
+        SHOTGUN_BLAST = register("shotgun_blast", ShotgunBlastItem::new);
+        ACID_SPRAY = register("acid_spray", AcidSprayItem::new);
+        SONIC_CANNON = register("sonic_cannon", SonicCannonItem::new);
+        CHAIN_LIGHTNING = register("chain_lightning", ChainLightningItem::new);
+        ICE_SPIKES = register("ice_spikes", IceSpikesItem::new);
+        LANDMINE = register("landmine", LandmineItem::new);
+        NUKE_SUITCASE = register("nuke_suitcase", NukeSuitcaseItem::new);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.COMBAT).register(entries -> {
             entries.add(STRIKE_CANNON);
             entries.add(TACTICAL_NUKE);
@@ -261,6 +297,18 @@ public final class ModItems {
             entries.add(GIANT_DONUT);
             entries.add(GIANT_ROCKET);
             entries.add(GIANT_TEAPOT);
+            entries.add(DISINTEGRATOR);
+            entries.add(BLACK_HOLE_GRENADE);
+            entries.add(NAPALM_LAUNCHER);
+            entries.add(EARTHQUAKE_HAMMER);
+            entries.add(SWARM_MISSILES);
+            entries.add(SHOTGUN_BLAST);
+            entries.add(ACID_SPRAY);
+            entries.add(SONIC_CANNON);
+            entries.add(CHAIN_LIGHTNING);
+            entries.add(ICE_SPIKES);
+            entries.add(LANDMINE);
+            entries.add(NUKE_SUITCASE);
         });
         return registered;
     }

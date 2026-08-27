@@ -7,6 +7,7 @@ public class BlockPos {
     public int getZ() { return 0; }
     public BlockPos toImmutable() { return this; }
     public BlockPos up() { return this; }
+    public BlockPos down() { return this; }
     public BlockPos down(int n) { return this; }
     public BlockPos up(int n) { return this; }
     public static BlockPos ofFloored(Vec3d v) { return null; }

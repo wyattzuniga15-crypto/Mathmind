@@ -52,5 +52,17 @@
   "item.orbital.giant_dice": "Giant Dice",
   "item.orbital.giant_donut": "Giant Doughnut",
   "item.orbital.giant_rocket": "Giant Rocket",
-  "item.orbital.giant_teapot": "Giant Teapot"
+  "item.orbital.giant_teapot": "Giant Teapot",
+  "item.orbital.disintegrator": "Disintegrator",
+  "item.orbital.black_hole_grenade": "Black Hole Grenade",
+  "item.orbital.napalm_launcher": "Napalm Launcher",
+  "item.orbital.earthquake_hammer": "Earthquake Hammer",
+  "item.orbital.swarm_missiles": "Swarm Missiles",
+  "item.orbital.shotgun_blast": "Shotgun",
+  "item.orbital.acid_spray": "Acid Spray",
+  "item.orbital.sonic_cannon": "Sonic Cannon",
+  "item.orbital.chain_lightning": "Chain Lightning",
+  "item.orbital.ice_spikes": "Ice Spikes",
+  "item.orbital.landmine": "Landmine",
+  "item.orbital.nuke_suitcase": "Nuke Suitcase"
 }
