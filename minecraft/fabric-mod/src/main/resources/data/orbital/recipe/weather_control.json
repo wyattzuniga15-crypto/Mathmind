@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GTG",
+    "GGG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "T": {
+      "item": "minecraft:trident"
+    }
+  },
+  "result": {
+    "id": "orbital:weather_control",
+    "count": 1
+  }
+}

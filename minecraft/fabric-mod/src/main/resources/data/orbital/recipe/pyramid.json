@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "  S",
+    " SS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:sandstone"
+    }
+  },
+  "result": {
+    "id": "orbital:pyramid",
+    "count": 1
+  }
+}

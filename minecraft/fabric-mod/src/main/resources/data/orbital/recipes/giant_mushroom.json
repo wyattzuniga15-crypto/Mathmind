@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RRR",
+    "RMR",
+    "RRR"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:red_mushroom"
+    },
+    "M": {
+      "item": "minecraft:mushroom_stem"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_mushroom",
+    "count": 1
+  }
+}

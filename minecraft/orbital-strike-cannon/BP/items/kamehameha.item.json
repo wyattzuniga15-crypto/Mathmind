@@ -1,0 +1,25 @@
+{
+  "format_version": "1.21.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "orbital:kamehameha",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": "kamehameha",
+      "minecraft:display_name": {
+        "value": "§b§lKamehameha"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:glint": true,
+      "minecraft:rarity": "epic",
+      "minecraft:cooldown": {
+        "category": "kamehameha",
+        "duration": 8
+      }
+    }
+  }
+}

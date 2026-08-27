@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "WWW",
+    " C "
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:snowball"
+    },
+    "W": {
+      "item": "minecraft:white_wool"
+    },
+    "C": {
+      "item": "minecraft:wheat"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_ice_cream",
+    "count": 1
+  }
+}

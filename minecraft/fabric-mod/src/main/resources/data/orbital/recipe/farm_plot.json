@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "WWW",
+    "IHI",
+    " S "
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:wheat_seeds"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "H": {
+      "item": "minecraft:water_bucket"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "orbital:farm_plot",
+    "count": 1
+  }
+}

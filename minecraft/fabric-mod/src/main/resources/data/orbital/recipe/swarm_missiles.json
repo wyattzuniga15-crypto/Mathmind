@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FFF",
+    "FTF",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:firework_rocket"
+    },
+    "T": {
+      "item": "minecraft:tnt"
+    }
+  },
+  "result": {
+    "id": "orbital:swarm_missiles",
+    "count": 1
+  }
+}

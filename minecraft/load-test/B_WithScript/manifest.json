@@ -1,0 +1,30 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "TEST B - with script",
+    "description": "Diagnostic only. Activates if script modules load on this version.",
+    "uuid": "a1c72146-10d5-4f94-acdf-706528227835",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 30]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "8593aebe-43e1-498c-b393-1224bc827d2a",
+      "version": [1, 0, 0]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "a89a7cf7-64fa-48aa-95c3-d828b571fa64",
+      "version": [1, 0, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.16.0"
+    }
+  ]
+}

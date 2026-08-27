@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FFF",
+    "FPF",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:feather"
+    },
+    "P": {
+      "item": "minecraft:phantom_membrane"
+    }
+  },
+  "result": {
+    "id": "orbital:featherfall",
+    "count": 1
+  }
+}

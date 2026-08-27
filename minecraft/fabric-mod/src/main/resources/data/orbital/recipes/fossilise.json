@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SFS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stone"
+    },
+    "F": {
+      "item": "minecraft:bone"
+    }
+  },
+  "result": {
+    "id": "orbital:fossilise",
+    "count": 1
+  }
+}

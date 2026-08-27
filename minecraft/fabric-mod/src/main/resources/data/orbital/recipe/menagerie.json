@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "NNN",
+    "NSN",
+    "NNN"
+  ],
+  "key": {
+    "N": {
+      "item": "minecraft:nether_star"
+    },
+    "S": {
+      "item": "minecraft:shulker_shell"
+    }
+  },
+  "result": {
+    "id": "orbital:menagerie",
+    "count": 1
+  }
+}

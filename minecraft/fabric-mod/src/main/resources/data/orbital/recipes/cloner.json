@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "QQQ",
+    "QEQ",
+    "QQQ"
+  ],
+  "key": {
+    "Q": {
+      "item": "minecraft:quartz"
+    },
+    "E": {
+      "item": "minecraft:ender_chest"
+    }
+  },
+  "result": {
+    "id": "orbital:cloner",
+    "count": 1
+  }
+}

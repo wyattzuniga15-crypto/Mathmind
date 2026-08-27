@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BPB",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:water_bucket"
+    },
+    "P": {
+      "item": "minecraft:prismarine"
+    }
+  },
+  "result": {
+    "id": "orbital:lake_maker",
+    "count": 1
+  }
+}

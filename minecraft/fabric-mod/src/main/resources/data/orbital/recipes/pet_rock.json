@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CCC",
+    "CMC",
+    "CCC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:cobblestone"
+    },
+    "M": {
+      "item": "minecraft:mossy_cobblestone"
+    }
+  },
+  "result": {
+    "id": "orbital:pet_rock",
+    "count": 1
+  }
+}

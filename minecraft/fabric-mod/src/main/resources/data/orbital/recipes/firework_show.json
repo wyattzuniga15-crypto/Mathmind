@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FFF",
+    "FGF",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:firework_rocket"
+    },
+    "G": {
+      "item": "minecraft:gunpowder"
+    }
+  },
+  "result": {
+    "id": "orbital:firework_show",
+    "count": 1
+  }
+}

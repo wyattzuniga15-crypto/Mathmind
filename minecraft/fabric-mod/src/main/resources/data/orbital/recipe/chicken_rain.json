@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "EEE",
+    "EFE",
+    "EEE"
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:egg"
+    },
+    "F": {
+      "item": "minecraft:feather"
+    }
+  },
+  "result": {
+    "id": "orbital:chicken_rain",
+    "count": 1
+  }
+}

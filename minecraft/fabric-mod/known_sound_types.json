@@ -1,0 +1,17 @@
+{
+  "_comment": "Which SoundEvents constants are bare and which are RegistryEntry.Reference, as reported by the workflow's javap check against the real Minecraft jar. Not guessable and not consistent: BLOCK_NOTE_BLOCK_BASS is wrapped, BLOCK_GLASS_BREAK beside it is not. Update from the 'Dump the true type of every sound' step, never from memory.",
+  "_source": "run 33036467469, Minecraft 1.21.11",
+  "bare": [
+    "BLOCK_GLASS_BREAK",
+    "ENTITY_CAT_HISS",
+    "ENTITY_CAT_PURREOW",
+    "ENTITY_EXPERIENCE_ORB_PICKUP",
+    "ENTITY_LIGHTNING_BOLT_THUNDER",
+    "ENTITY_WARDEN_SONIC_BOOM",
+    "ENTITY_WITHER_SPAWN"
+  ],
+  "wrapped": [
+    "BLOCK_NOTE_BLOCK_BASS",
+    "ENTITY_GENERIC_EXPLODE"
+  ]
+}

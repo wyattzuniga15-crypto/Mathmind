@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GSG",
+    "CCC"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "S": {
+      "item": "minecraft:sea_lantern"
+    },
+    "C": {
+      "item": "minecraft:white_concrete"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_lighthouse",
+    "count": 1
+  }
+}

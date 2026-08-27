@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SLS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stone_bricks"
+    },
+    "L": {
+      "item": "minecraft:ladder"
+    }
+  },
+  "result": {
+    "id": "orbital:tower_builder",
+    "count": 1
+  }
+}

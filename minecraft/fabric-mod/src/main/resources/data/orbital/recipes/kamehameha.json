@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "GDG",
+    "DHD",
+    "GDG"
+  ],
+  "key": {
+    "G": "minecraft:glowstone_dust",
+    "D": "minecraft:diamond",
+    "H": "minecraft:heart_of_the_sea"
+  },
+  "result": {
+    "id": "orbital:kamehameha",
+    "count": 1
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AAA",
+    " G ",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:anvil"
+    },
+    "G": {
+      "item": "minecraft:gunpowder"
+    }
+  },
+  "result": {
+    "id": "orbital:anvil_rain",
+    "count": 1
+  }
+}

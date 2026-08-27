@@ -1,0 +1,22 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "orbital:tactical_nuke_recipe"
+    },
+    "tags": ["crafting_table"],
+    "pattern": [
+      "NTN",
+      "TST",
+      "NTN"
+    ],
+    "key": {
+      "N": { "item": "minecraft:netherite_ingot" },
+      "T": { "item": "minecraft:tnt" },
+      "S": { "item": "minecraft:nether_star" }
+    },
+    "result": {
+      "item": "orbital:tactical_nuke"
+    }
+  }
+}

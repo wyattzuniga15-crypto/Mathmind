@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Orbital Strike Cannon v2 [RP]",
+    "description": "Textures and names for the Orbital Strike Cannon.",
+    "uuid": "89d94936-9d57-4114-8747-3d63c0c7ffe7",
+    "version": [2, 0, 0],
+    "min_engine_version": [1, 21, 30]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "ab9b0524-3a6d-42cb-95ed-67f00a2cd7b8",
+      "version": [2, 0, 0]
+    }
+  ]
+}

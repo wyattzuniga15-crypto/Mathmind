@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FCF",
+    "CGC",
+    "FCF"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:firework_rocket"
+    },
+    "C": {
+      "item": "minecraft:cake"
+    },
+    "G": {
+      "item": "minecraft:glowstone"
+    }
+  },
+  "result": {
+    "id": "orbital:party_mode",
+    "count": 1
+  }
+}

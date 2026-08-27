@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SMS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stone_bricks"
+    },
+    "M": {
+      "item": "minecraft:map"
+    }
+  },
+  "result": {
+    "id": "orbital:maze_maker",
+    "count": 1
+  }
+}

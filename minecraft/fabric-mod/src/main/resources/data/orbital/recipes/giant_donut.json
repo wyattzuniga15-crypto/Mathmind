@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SCS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:sugar"
+    },
+    "C": {
+      "item": "minecraft:cookie"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_donut",
+    "count": 1
+  }
+}

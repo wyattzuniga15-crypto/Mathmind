@@ -1,0 +1,81 @@
+plugins {
+    id "fabric-loom" version "${loom_version}"
+    id "maven-publish"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    // Loom adds Mojang's and Fabric's repositories itself.
+}
+
+repositories {
+    mavenCentral()
+}
+
+// The Anthropic SDK is not a mod, so it has to be bundled into this jar to
+// exist at runtime. Loom's include() is deliberately non-transitive — it ships
+// exactly the artifact named and nothing it depends on — which for an SDK that
+// pulls in an HTTP client and a JSON mapper would produce a jar that builds
+// clean and then dies at launch on a missing class. So resolve the whole tree
+// and include every artifact in it.
+configurations {
+    shipped
+    implementation.extendsFrom shipped
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    shipped("com.anthropic:anthropic-java:${project.anthropic_version}") {
+        // Minecraft already provides slf4j. Shipping a second copy inside the
+        // mod puts two bindings on the classpath, and logging then either
+        // duplicates or silently stops — a bad failure for the one thing you
+        // need working when diagnosing everything else.
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+}
+
+afterEvaluate {
+    configurations.shipped.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+        dependencies.add("include", artifact.moduleVersion.id.toString())
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    // Minecraft 1.21 runs on Java 21.
+    it.options.release = 21
+    it.options.encoding = "UTF-8"
+}
+
+java {
+    withSourcesJar()
+    // Ask Gradle to find an installed JDK 21 and compile with it, whichever
+    // JDK Gradle itself happens to be running on. Gradle still has to *run* on
+    // a version it supports — very new JDKs (26 and up) are refused outright,
+    // which is why JAVA_HOME needs to point at 21 as well.
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}

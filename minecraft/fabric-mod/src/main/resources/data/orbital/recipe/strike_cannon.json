@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "GTG",
+    "TET",
+    "GIG"
+  ],
+  "key": {
+    "G": "minecraft:gunpowder",
+    "T": "minecraft:tnt",
+    "E": "minecraft:ender_eye",
+    "I": "minecraft:iron_block"
+  },
+  "result": {
+    "id": "orbital:strike_cannon",
+    "count": 1
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BNB",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:black_concrete"
+    },
+    "N": {
+      "item": "minecraft:note_block"
+    }
+  },
+  "result": {
+    "id": "orbital:grand_piano",
+    "count": 1
+  }
+}

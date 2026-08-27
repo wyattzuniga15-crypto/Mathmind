@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RWY",
+    "B B",
+    "LLL"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:red_wool"
+    },
+    "W": {
+      "item": "minecraft:white_wool"
+    },
+    "Y": {
+      "item": "minecraft:yellow_wool"
+    },
+    "B": {
+      "item": "minecraft:blue_wool"
+    },
+    "L": {
+      "item": "minecraft:oak_log"
+    }
+  },
+  "result": {
+    "id": "orbital:giant_hot_air_balloon",
+    "count": 1
+  }
+}

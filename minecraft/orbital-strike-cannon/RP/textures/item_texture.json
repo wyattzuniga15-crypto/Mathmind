@@ -1,0 +1,15 @@
+{
+  "resource_pack_name": "orbital_strike_cannon",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "orbital_strike_cannon": {
+      "textures": "textures/items/orbital_strike_cannon"
+    },
+    "tactical_nuke": {
+      "textures": "textures/items/tactical_nuke"
+    },
+    "kamehameha": {
+      "textures": "textures/items/kamehameha"
+    }
+  }
+}

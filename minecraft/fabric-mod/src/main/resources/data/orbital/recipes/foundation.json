@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SBS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:smooth_stone"
+    },
+    "B": {
+      "item": "minecraft:bricks"
+    }
+  },
+  "result": {
+    "id": "orbital:foundation",
+    "count": 1
+  }
+}

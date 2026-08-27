@@ -1,0 +1,34 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Orbital Strike Cannon v2 [BP]",
+    "description": "Adds the Orbital Strike Cannon — use it to call down 500 heavy shells as a flat 96-block-wide circle.",
+    "uuid": "6ddfe4c1-a9e6-409c-9be9-bca8d5468731",
+    "version": [2, 0, 0],
+    "min_engine_version": [1, 21, 30]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "4dcdc914-8131-4fba-be52-266836941e6b",
+      "version": [2, 0, 0]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "eeedc3b5-a848-4f43-af45-f356a987d30c",
+      "version": [2, 0, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.16.0"
+    },
+    {
+      "uuid": "89d94936-9d57-4114-8747-3d63c0c7ffe7",
+      "version": [2, 0, 0]
+    }
+  ]
+}

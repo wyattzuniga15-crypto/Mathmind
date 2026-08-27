@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LLL",
+    "LTL",
+    "PPP"
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:oak_log"
+    },
+    "T": {
+      "item": "minecraft:torch"
+    },
+    "P": {
+      "item": "minecraft:oak_planks"
+    }
+  },
+  "result": {
+    "id": "orbital:cabin",
+    "count": 1
+  }
+}

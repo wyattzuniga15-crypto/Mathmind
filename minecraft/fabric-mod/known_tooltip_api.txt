@@ -1,0 +1,38 @@
+# What this Minecraft really declares around item tooltips.
+# Written by the workflow from javap against the remapped jar.
+# Do not edit by hand — rerun the build.
+
+--- net.minecraft.item.Item, anything mentioning tooltip ---
+  public void appendTooltip(net.minecraft.item.ItemStack, net.minecraft.item.Item$TooltipContext, net.minecraft.component.type.TooltipDisplayComponent, java.util.function.Consumer<net.minecraft.text.Text>, net.minecraft.item.tooltip.TooltipType);
+  public java.util.Optional<net.minecraft.item.tooltip.TooltipData> getTooltipData(net.minecraft.item.ItemStack);
+
+--- net.minecraft.item.Item.TooltipContext ---
+Compiled from "Item.java"
+public interface net.minecraft.item.Item$TooltipContext {
+  public static final net.minecraft.item.Item$TooltipContext DEFAULT;
+  public abstract net.minecraft.registry.RegistryWrapper$WrapperLookup getRegistryLookup();
+  public abstract float getUpdateTickRate();
+  public abstract net.minecraft.item.map.MapState getMapState(net.minecraft.component.type.MapIdComponent);
+  public abstract boolean isDifficultyPeaceful();
+  public static net.minecraft.item.Item$TooltipContext create(net.minecraft.world.World);
+  public static net.minecraft.item.Item$TooltipContext create(net.minecraft.registry.RegistryWrapper$WrapperLookup);
+  static {};
+}
+
+--- net.minecraft.item.tooltip.TooltipAppender ---
+Compiled from "TooltipAppender.java"
+public interface net.minecraft.item.tooltip.TooltipAppender {
+  public abstract void appendTooltip(net.minecraft.item.Item$TooltipContext, java.util.function.Consumer<net.minecraft.text.Text>, net.minecraft.item.tooltip.TooltipType, net.minecraft.component.ComponentsAccess);
+}
+
+--- net.minecraft.component.type.TooltipDisplayComponent ---
+Compiled from "TooltipDisplayComponent.java"
+public final class net.minecraft.component.type.TooltipDisplayComponent extends java.lang.Record {
+  public static final com.mojang.serialization.Codec<net.minecraft.component.type.TooltipDisplayComponent> CODEC;
+  public static final net.minecraft.network.codec.PacketCodec<net.minecraft.network.RegistryByteBuf, net.minecraft.component.type.TooltipDisplayComponent> PACKET_CODEC;
+  public static final net.minecraft.component.type.TooltipDisplayComponent DEFAULT;
+  public net.minecraft.component.type.TooltipDisplayComponent(boolean, java.util.SequencedSet<net.minecraft.component.ComponentType<?>>);
+  public net.minecraft.component.type.TooltipDisplayComponent with(net.minecraft.component.ComponentType<?>, boolean);
+  public boolean shouldDisplay(net.minecraft.component.ComponentType<?>);
+  public final java.lang.String toString();
+  public final int hashCode();

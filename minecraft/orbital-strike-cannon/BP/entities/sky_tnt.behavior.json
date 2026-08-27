@@ -1,0 +1,56 @@
+{
+  "format_version": "1.21.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "orbital:sky_tnt",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "orbital:detonating": {
+        "minecraft:explode": {
+          "fuse_length": 0,
+          "fuse_lit": true,
+          "power": 4,
+          "causes_fire": false,
+          "destroy_affected_by_griefing": false
+        }
+      }
+    },
+    "components": {
+      "minecraft:physics": {
+        "has_gravity": true,
+        "has_collision": true
+      },
+      "minecraft:collision_box": {
+        "width": 0.98,
+        "height": 0.98
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:fire_immune": true,
+      "minecraft:type_family": {
+        "family": ["orbital_shell", "inanimate"]
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "all",
+            "deals_damage": false
+          }
+        ]
+      },
+      "minecraft:conditional_bandwidth_optimization": {}
+    },
+    "events": {
+      "orbital:detonate": {
+        "add": {
+          "component_group": "orbital:detonating"
+        }
+      }
+    }
+  }
+}

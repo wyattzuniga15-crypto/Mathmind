@@ -1,0 +1,5 @@
+item.orbital:strike_cannon.name=Orbital Strike Cannon
+entity.orbital:sky_tnt.name=Orbital Shell
+item.orbital:tactical_nuke.name=Tactical Nuke
+item.orbital:kamehameha.name=Kamehameha
+entity.orbital:ki_beam.name=Ki Energy

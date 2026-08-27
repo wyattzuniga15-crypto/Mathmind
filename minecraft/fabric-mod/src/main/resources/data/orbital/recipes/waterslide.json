@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "P W",
+    "PW ",
+    "WP "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:prismarine"
+    },
+    "W": {
+      "item": "minecraft:water_bucket"
+    }
+  },
+  "result": {
+    "id": "orbital:waterslide",
+    "count": 1
+  }
+}

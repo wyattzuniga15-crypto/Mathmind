@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SBS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:slime_ball"
+    },
+    "B": {
+      "item": "minecraft:slime_block"
+    }
+  },
+  "result": {
+    "id": "orbital:bouncy_ground",
+    "count": 1
+  }
+}
