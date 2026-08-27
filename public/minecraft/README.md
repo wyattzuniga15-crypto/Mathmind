@@ -10,6 +10,13 @@ requests. It is an original work for private use, not affiliated with Mojang or 
 - **Deployed**: visit `/minecraft/` on the site.
 - **Local**: open `index.html` in any browser with WebGL2 (Chrome, Edge, Firefox), or serve
   the folder with any static server.
+- **Single file**: run `node build-single.mjs` to bundle every script into one standalone
+  `BlockCraft.html`. Save it anywhere and double-click it — no server, no install.
+
+Play from a real browser tab (the local file or the deployed page) rather than an embedded
+preview: pointer lock, and therefore proper mouse capture, is blocked inside sandboxed
+iframes. Click the canvas to capture the mouse; **Esc** releases it and opens the pause
+menu, where the look-sensitivity slider lives.
 
 Two buttons: **Play Survival** and **Creative Mode**. Each keeps its own saved world,
 stored automatically (every 20 seconds and on pause/quit) in your browser's localStorage,
@@ -104,3 +111,4 @@ The full progression is here, the same shape as the real thing:
 | `dims.js` | Travel between dimensions, portals, eyes of ender, creative mode, credits |
 | `boss.js` | End crystals and the Ender Dragon |
 | `touch.js` | Touch controls for phones and tablets |
+| `build-single.mjs` | Bundles everything into one standalone downloadable HTML file |
