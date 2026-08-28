@@ -1140,3 +1140,111 @@ function drawItemIcon(ctx, id, size) {
   ctx.restore();
   ctx.filter = 'none';
 }
+
+// ---------------------------------------------------------------- HUD icons
+// Hearts, drumsticks and bubbles are DOM, not world geometry, so they get their
+// own little 9x9 sprite strip rather than atlas tiles. Shapes are masks; the
+// black outline is derived from the mask so every icon sits on the HUD the way
+// the real ones do.
+const HUD_ICON = 9;
+const HudIcons = { size: HUD_ICON, index: {}, url: '', count: 0 };
+(function buildHudIcons() {
+  const HEART = [
+    '.........',
+    '..##.##..',
+    '.#######.',
+    '.#######.',
+    '..#####..',
+    '...###...',
+    '....#....',
+    '.........',
+    '.........',
+  ];
+  const FOOD = [
+    '....###..',
+    '...#####.',
+    '..######.',
+    '..######.',
+    '..#####..',
+    '.####....',
+    '###......',
+    '.#.......',
+    '.........',
+  ];
+  const BUBBLE = [
+    '.........',
+    '...###...',
+    '..#####..',
+    '.#######.',
+    '.#######.',
+    '.#######.',
+    '..#####..',
+    '...###...',
+    '.........',
+  ];
+  const POP = [
+    '.........',
+    '.........',
+    '...###...',
+    '..#...#..',
+    '..#...#..',
+    '..#...#..',
+    '...###...',
+    '.........',
+    '.........',
+  ];
+  // light from the top left, the same direction the block textures use
+  const lit = (base, x, y, amt = 0.42) => {
+    const v = 1.14 - ((x + y) / 14) * amt;
+    return [base[0] * v, base[1] * v, base[2] * v];
+  };
+  const icons = [];
+  const add = (name, mask, colorFn) => icons.push({ name, mask, colorFn });
+
+  const DARK = () => [58, 58, 60];
+  const DARK_LIT = () => [96, 96, 100];      // container flashes pale on a hit
+  const RED = (x, y) => (x === 2 && y === 2) ? [255, 205, 205] : lit([226, 42, 42], x, y);
+  const PINK = (x, y) => lit([255, 190, 190], x, y, 0.2);
+  const MEAT = (x, y) => {
+    if (y >= 6 || (y === 5 && x <= 1)) return lit([232, 226, 208], x, y, 0.3);  // bone
+    if (x === 4 && y === 1) return [246, 202, 150];                             // highlight
+    return lit([206, 116, 46], x, y);
+  };
+  const AQUA = (x, y) => (x === 3 && y === 2) ? [235, 250, 255] : lit([90, 190, 240], x, y, 0.3);
+
+  const half = (fn) => (x, y) => (x <= 3 ? fn(x, y) : DARK(x, y));
+
+  add('heart_empty', HEART, DARK);
+  add('heart_empty_hit', HEART, DARK_LIT);
+  add('heart_full', HEART, RED);
+  add('heart_half', HEART, half(RED));
+  add('heart_flash', HEART, PINK);
+  add('heart_flash_half', HEART, half(PINK));
+  add('food_empty', FOOD, DARK);
+  add('food_empty_hit', FOOD, DARK_LIT);
+  add('food_full', FOOD, MEAT);
+  add('food_half', FOOD, half(MEAT));
+  add('bubble_full', BUBBLE, AQUA);
+  add('bubble_pop', POP, AQUA);
+
+  const cv = document.createElement('canvas');
+  cv.width = icons.length * HUD_ICON; cv.height = HUD_ICON;
+  const cx = cv.getContext('2d');
+  icons.forEach((ic, i) => {
+    const img = cx.createImageData(HUD_ICON, HUD_ICON);
+    const on = (x, y) => x >= 0 && y >= 0 && x < HUD_ICON && y < HUD_ICON && ic.mask[y][x] === '#';
+    for (let y = 0; y < HUD_ICON; y++) for (let x = 0; x < HUD_ICON; x++) {
+      let c = null;
+      if (on(x, y)) c = ic.colorFn(x, y);
+      // any empty pixel touching the shape becomes the black outline
+      else if (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1)) c = [0, 0, 0];
+      if (!c) continue;
+      const o = (y * HUD_ICON + x) * 4;
+      img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+    }
+    cx.putImageData(img, i * HUD_ICON, 0);
+    HudIcons.index[ic.name] = i;
+  });
+  HudIcons.count = icons.length;
+  HudIcons.url = cv.toDataURL();
+})();

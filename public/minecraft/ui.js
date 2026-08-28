@@ -215,6 +215,7 @@ const UI = {
   $(id) { return document.getElementById(id); },
   init(game) {
     this.game = game;
+    this.initHudIcons();
     // hotbar
     const hb = this.$('hotbar');
     this.hotEls = [];
@@ -519,37 +520,80 @@ const UI = {
   },
 
   // ---------------- HUD ----------------
-  heartsHtml(hp, max, full, empty, color) {
-    let s = '';
-    const n = Math.ceil(max / 2);
-    for (let i = 0; i < n; i++) {
-      const v = hp - i * 2;
-      if (v >= 2) s += `<span style="color:${color}">${full}</span>`;
-      else if (v === 1) s += `<span style="color:${color};opacity:.9">${full}</span><span style="color:#333;margin-left:-1em">${empty}</span>`.replace('</span><span', '</span><span'); // half ~ approximated
-      else s += `<span style="color:#3a3a3a">${full}</span>`;
+  // The stats row is built once and then only re-pointed at different sprites,
+  // so a frame costs a couple of style writes instead of rebuilding 20 spans.
+  initHudIcons() {
+    this.hud = {};
+    for (const [id, n] of [['hearts', 10], ['hunger', 10], ['air', 10]]) {
+      const el = this.$(id);
+      el.innerHTML = '';
+      const arr = [];
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement('span');
+        s.className = 'hicon';
+        s.style.backgroundImage = `url(${HudIcons.url})`;
+        el.appendChild(s);
+        arr.push(s);
+      }
+      this.hud[id] = arr;
     }
-    return s;
+    this._jitter = new Int8Array(20);
+    this._lastHp = 20;
+  },
+  setIcon(span, name, dy) {
+    const bp = `${-HudIcons.index[name] * 18}px 0`;
+    if (span._bp !== bp) { span.style.backgroundPosition = bp; span._bp = bp; }
+    const tr = dy ? `translateY(${dy}px)` : '';
+    if (span._tr !== tr) { span.style.transform = tr; span._tr = tr; }
+    if (span._hid) { span.style.display = ''; span._hid = false; }
+  },
+  hideIcon(span) {
+    if (!span._hid) { span.style.display = 'none'; span._hid = true; }
   },
   refreshStats(p) {
-    let h = '';
+    const now = performance.now();
+    // the real HUD re-rolls its wobble every tick; 12 Hz reads the same without strobing
+    if (now - (this._jitT || 0) > 80) {
+      this._jitT = now;
+      for (let i = 0; i < this._jitter.length; i++) this._jitter[i] = Math.random() < 0.5 ? -1 : 0;
+    }
+    const creative = this.game.creative;
+    // a hit makes the whole row jump once and the hearts blink pale
+    if (p.hp < this._lastHp) this._hitT = now;
+    this._lastHp = p.hp;
+    const sinceHit = (now - (this._hitT ?? -1e9)) / 1000;
+    const blink = sinceHit < 0.45 && Math.floor(sinceHit * 12) % 2 === 0;
+    const pop = sinceHit < 0.22 ? -2 : 0;
+
+    // hearts fill from the left and empty from the right; they shake at 2 hearts or less
+    const lowHp = p.hp <= 4 && !creative;
     for (let i = 0; i < 10; i++) {
       const v = p.hp - i * 2;
-      h += `<span style="color:${v >= 2 ? '#e53935' : v === 1 ? '#a33' : '#3a3a3a'}">❤</span>`;
+      const name = v >= 2 ? (blink ? 'heart_flash' : 'heart_full')
+                 : v === 1 ? (blink ? 'heart_flash_half' : 'heart_half')
+                 : (blink ? 'heart_empty_hit' : 'heart_empty');
+      this.setIcon(this.hud.hearts[i], name, (lowHp ? this._jitter[i] : 0) + pop);
     }
-    this.$('hearts').innerHTML = h;
-    let f = '';
-    for (let i = 9; i >= 0; i--) {
-      const v = p.hunger - i * 2;
-      f += `<span style="color:${v >= 2 ? '#c98d3c' : v === 1 ? '#8a6127' : '#3a3a3a'}">🍗</span>`;
+
+    // hunger is mirrored: it drains from the left end, and the drumsticks
+    // shake once saturation is gone and the food bar itself is being eaten into
+    const shake = p.saturation <= 0 && p.hunger < 20 && !creative;
+    for (let i = 0; i < 10; i++) {
+      const v = p.hunger - (9 - i) * 2;
+      this.setIcon(this.hud.hunger[i],
+        v >= 2 ? 'food_full' : v === 1 ? 'food_half' : 'food_empty',
+        shake ? this._jitter[10 + i] : 0);
     }
-    this.$('hunger').innerHTML = f;
-    const air = this.$('air');
-    if (p.headInWater(this.game.world)) {
-      let a = '';
-      for (let i = 0; i < p.maxAir; i++) a += `<span style="color:${i < p.air ? '#4fc3f7' : '#234'}">●</span>`;
-      air.innerHTML = a;
-    } else air.innerHTML = '';
-    this.$('vignette').style.opacity = p.hp <= 6 ? '1' : '0';
+
+    // bubbles pop from the left, same mirroring
+    const under = p.headInWater(this.game.world) && !creative;
+    const shown = under ? Math.ceil(p.air / p.maxAir * 10) : 0;
+    for (let i = 0; i < 10; i++) {
+      const k = 9 - i;
+      if (!under || k > shown) this.hideIcon(this.hud.air[i]);
+      else this.setIcon(this.hud.air[i], k < shown ? 'bubble_full' : 'bubble_pop', 0);
+    }
+    this.$('vignette').style.opacity = p.hp <= 6 && !creative ? '1' : '0';
   },
   // ---------------- boss bar ----------------
   refreshBoss(d) {

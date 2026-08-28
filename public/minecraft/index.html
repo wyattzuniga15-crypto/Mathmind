@@ -57,11 +57,15 @@
   #xplevel { position:absolute; bottom:60px; left:50%; transform:translateX(-50%); color:#7f3;
              font-size:16px; font-weight:800; text-shadow:1px 1px #000, -1px -1px #000, 1px -1px #000, -1px 1px #000; }
   #stats { position:absolute; bottom:66px; left:50%; transform:translateX(-50%); width:440px;
-           display:flex; justify-content:space-between; font-size:19px; text-shadow:1px 1px #000; }
-  #hearts { letter-spacing:-2px; }
-  #hunger { letter-spacing:-2px; }
+           display:flex; justify-content:space-between; align-items:flex-end; }
+  #hearts, #hunger, #air { display:flex; }
+  /* 9x9 sprites from the HUD strip, doubled and kept crisp */
+  .hicon { width:18px; height:18px; flex:0 0 18px;
+           background-repeat:no-repeat; background-size:auto 18px;
+           image-rendering:pixelated; image-rendering:crisp-edges;
+           filter:drop-shadow(1px 1px 0 #0009); will-change:transform; }
   #air { position:absolute; bottom:92px; left:50%; transform:translateX(-50%); width:440px;
-         text-align:right; font-size:17px; text-shadow:1px 1px #000; letter-spacing:-1px; }
+         justify-content:flex-end; }
   #itemname { position:absolute; bottom:110px; width:100%; text-align:center; color:#fff;
               font-size:18px; font-weight:600; text-shadow:2px 2px #000; opacity:0; transition:opacity .4s; }
   #debug { position:absolute; top:8px; left:8px; color:#fff; font:13px/1.5 monospace;

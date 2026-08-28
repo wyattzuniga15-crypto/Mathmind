@@ -102,7 +102,7 @@ function defItem(name, opts) {
   I[name] = id;
   Items[id] = Object.assign({
     id, name, label: name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-    stack: 64, tool: T_NONE, tier: 0, speed: 1, dmg: 1, food: 0, durability: 0, icon: null,
+    stack: 64, tool: T_NONE, tier: 0, speed: 1, dmg: 1, food: 0, sat: null, durability: 0, icon: null,
   }, opts);
   return id;
 }
@@ -113,17 +113,17 @@ defItem('charcoal', {});
 defItem('iron_ingot', {});
 defItem('gold_ingot', {});
 defItem('diamond', {});
-defItem('apple', { food: 4 });
-defItem('bread', { food: 5 });
+defItem('apple', { food: 4, sat: 2.4 });
+defItem('bread', { food: 5, sat: 6 });
 defItem('wheat', {});
 defItem('wheat_seeds', {});
-defItem('porkchop', { food: 3 });
-defItem('cooked_porkchop', { food: 8 });
-defItem('beef', { food: 3 });
-defItem('steak', { food: 8 });
-defItem('chicken', { food: 2 });
-defItem('cooked_chicken', { food: 6 });
-defItem('rotten_flesh', { food: 2, rotten: true });
+defItem('porkchop', { food: 3, sat: 1.8 });
+defItem('cooked_porkchop', { food: 8, sat: 12.8 });
+defItem('beef', { food: 3, sat: 1.8 });
+defItem('steak', { food: 8, sat: 12.8 });
+defItem('chicken', { food: 2, sat: 1.2 });
+defItem('cooked_chicken', { food: 6, sat: 7.2 });
+defItem('rotten_flesh', { food: 4, sat: 0.8, rotten: true });
 defItem('bone', {});
 defItem('arrow', {});
 defItem('string', {});

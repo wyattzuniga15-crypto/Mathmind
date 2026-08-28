@@ -89,7 +89,7 @@ class Player extends Entity {
       if (inWater) this.vy = Math.min(this.vy + 26 * dt, 3.6);
       else if (this.onGround) {
         this.vy = 8.4;
-        this.exhaustion += this.sprinting ? 0.2 : 0.05;
+        this.exhaustion += this.sprinting ? 0.2 : 0.05;   // sprint jump / jump
         this.onGround = false;
       }
     }
@@ -166,22 +166,41 @@ class Player extends Entity {
       if (this.airT > 1) { this.airT = 0; this.air--; if (this.air < 0) { this.air = 0; this.hurt(game, 2); } }
     } else { this.air = this.maxAir; this.airT = 0; }
 
-    // ---- hunger / regen ----
-    if (game.creative) { this.hunger = 20; this.hp = this.maxHp; this.air = this.maxAir; }
-    this.exhaustion += (this.sprinting ? 0.28 : 0.02) * dt * hspeed * 0.25;
-    if (this.exhaustion > 4) {
-      this.exhaustion -= 4;
-      if (this.saturation > 0) this.saturation--;
-      else if (this.hunger > 0) this.hunger--;
+    // ---- hunger / saturation / regen ----
+    // The real model: exhaustion accrues per metre travelled and per action,
+    // and every 4.0 points spends one saturation point. Only once saturation is
+    // gone does the food bar itself start dropping — which is why the
+    // drumsticks sit still until you are genuinely running low. Plain walking
+    // is free; sprinting, swimming, jumping, mining, fighting and above all
+    // healing are what make you hungry.
+    if (game.creative) {
+      this.hunger = 20; this.saturation = 5; this.exhaustion = 0;
+      this.hp = this.maxHp; this.air = this.maxAir;
+    } else {
+      const moved = Math.hypot(this.x - (this._exX ?? this.x), this.z - (this._exZ ?? this.z));
+      if (this.inWater) this.exhaustion += moved * 0.01;
+      else if (this.onGround && this.sprinting) this.exhaustion += moved * 0.1;
+      while (this.exhaustion >= 4) {
+        this.exhaustion -= 4;
+        if (this.saturation > 0) this.saturation = Math.max(0, this.saturation - 1);
+        else if (this.hunger > 0) this.hunger--;
+      }
+      // a full bar with saturation left heals fast; a merely full-ish bar heals slowly
+      if (this.hp < this.maxHp && this.hunger >= 18) {
+        const fast = this.hunger >= 20 && this.saturation > 0;
+        this.regenT += dt;
+        if (this.regenT >= (fast ? 0.5 : 4)) {
+          this.regenT = 0;
+          this.hp = Math.min(this.maxHp, this.hp + 1);
+          this.exhaustion += 6;               // healing is what really burns food
+        }
+      } else this.regenT = 0;
+      if (this.hunger <= 0) {
+        this.starveT += dt;
+        if (this.starveT >= 4) { this.starveT = 0; if (this.hp > 1) this.hurt(game, 1); }
+      } else this.starveT = 0;
     }
-    if (this.hunger >= 18 && this.hp < this.maxHp) {
-      this.regenT += dt;
-      if (this.regenT > 3.5) { this.regenT = 0; this.hp = Math.min(this.maxHp, this.hp + 1); this.exhaustion += 2; }
-    }
-    if (this.hunger <= 0) {
-      this.starveT += dt;
-      if (this.starveT > 4) { this.starveT = 0; if (this.hp > 1) this.hurt(game, 1); }
-    }
+    this._exX = this.x; this._exZ = this.z;
 
     // ---- bow charging ----
     const held = game.inv.held();
@@ -215,7 +234,9 @@ class Player extends Entity {
       if (this.eatT > 1.4) {
         this.eatT = 0;
         this.hunger = Math.min(20, this.hunger + heldDef.food);
-        this.saturation = Math.min(this.hunger, this.saturation + heldDef.food * 0.6);
+        // saturation is the hidden buffer that gets eaten before the visible bar,
+        // and it can never exceed the food level it is sitting on
+        this.saturation = Math.min(this.hunger, this.saturation + (heldDef.sat ?? heldDef.food * 0.6));
         if (heldDef.rotten && Math.random() < 0.6) game.msg('You feel sick…');
         game.inv.consumeHeld();
         Sfx.burp();
@@ -255,7 +276,7 @@ class Player extends Entity {
             if (this.mining.progress >= this.mining.total) {
               game.breakBlock(hit.x, hit.y, hit.z, heldId);
               this.mining = null;
-              this.exhaustion += 0.03;
+              this.exhaustion += 0.005;   // breaking a block
             }
           }
         } else this.mining = null;
@@ -341,7 +362,7 @@ class Player extends Entity {
     if (!isFall) this.vy = Math.max(this.vy, 4.5);
     Sfx.hurt();
     game.flashHurt();
-    this.exhaustion += 0.3;
+    this.exhaustion += 0.1;              // taking a hit
     if (this.hp <= 0) { this.hp = 0; this.die(game); }
   }
   die(game) {

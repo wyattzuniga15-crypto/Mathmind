@@ -845,7 +845,8 @@ const Game = {
         `fps ${this.fps.toFixed(0)}\n` +
         `xyz ${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.z.toFixed(1)}\n` +
         `dim ${this.dim}  biome ${this.dim === 'overworld' ? this.world.biomeAt(p.x, p.z) : '-'}  time ${(this.dayTime * 24).toFixed(1)}h\n` +
-        `chunks ${this.world.chunks.size}  mobs ${this.mobs.length}  drops ${this.drops.length}`;
+        `chunks ${this.world.chunks.size}  mobs ${this.mobs.length}  drops ${this.drops.length}\n` +
+        `hp ${p.hp}/${p.maxHp}  food ${p.hunger}/20  sat ${p.saturation.toFixed(1)}  exh ${p.exhaustion.toFixed(2)}`;
     }
   },
 

@@ -5,6 +5,19 @@ const CHUNK = 16, WORLD_H = 128, SEA = 44;
 let VIEW_R = 6;                 // chunk load radius (reduced on touch devices)
 const CKEY = (cx, cz) => cx + ',' + cz;
 
+// Ore veins, roughly four to six times scarcer than the old per-block scatter
+// and clustered into pockets, so ore is something you go looking for rather
+// than something that studs every wall you walk past.
+// n = veins per chunk (fractional means "this often"), size = blocks per vein.
+const ORE_VEINS = [
+  { id: 'coal_ore',    n: 2.6,  size: 10, min: 10, max: 92 },
+  { id: 'iron_ore',    n: 1.5,  size: 7,  min: 5,  max: 58 },
+  { id: 'gold_ore',    n: 0.30, size: 5,  min: 4,  max: 30 },
+  { id: 'diamond_ore', n: 0.16, size: 4,  min: 2,  max: 15 },
+  { id: 'gravel',      n: 1.2,  size: 14, min: 8,  max: 60 },
+  { id: 'dirt',        n: 1.0,  size: 12, min: 6,  max: 44 },
+].map(v => ({ ...v, id: B[v.id] }));
+
 class Chunk {
   constructor(cx, cz) {
     this.cx = cx; this.cz = cz;
@@ -105,24 +118,58 @@ class World {
         else if (y > h - 4) {
           id = (biome === 'desert') ? (y > h - 3 ? B.sand : B.sandstone) : B.dirt;
         }
-        else {
-          id = B.stone;
-          // ores
-          const r = hash3(s ^ 0x77, wx, y, wz);
-          if (r < 0.011 && y < 90) id = B.coal_ore;
-          else if (r < 0.017 && y < 48) id = B.iron_ore;
-          else if (r < 0.0185 && y < 26) id = B.gold_ore;
-          else if (r < 0.0197 && y < 15) id = B.diamond_ore;
-          else if (r > 0.985 && y < 60) id = B.gravel;
-          else if (r > 0.975 && r <= 0.985 && y < 40) id = B.dirt;
-        }
+        else id = B.stone;
         if (id) c.set(lx, y, lz, id);
       }
       // freeze water surface in snow biome
       if (biome === 'snow' && c.get(lx, SEA, lz) === B.water) c.set(lx, SEA, lz, B.ice);
     }
+    this.placeVeins(c, cx, cz);
     this.computeHeightmap(c);
     return c;
+  }
+
+  // ---------------- ore veins ----------------
+  // Veins are seeded per chunk but spill over the edges, so a chunk also runs
+  // its eight neighbours' veins and keeps whatever lands inside it. The RNG
+  // stream depends only on the source chunk, so both sides agree on the shape.
+  placeVeins(c, cx, cz) {
+    for (let dz = -1; dz <= 1; dz++)
+      for (let dx = -1; dx <= 1; dx++) this.veinsFrom(c, cx, cz, cx + dx, cz + dz);
+  }
+  veinsFrom(c, cx, cz, ox, oz) {
+    const rng = mulberry32((this.seed ^ 0x51ED9) + ox * 341873128 + oz * 132897987);
+    const bx = (ox - cx) * CHUNK, bz = (oz - cz) * CHUNK;
+    for (const v of ORE_VEINS) {
+      let count = Math.floor(v.n);
+      if (rng() < v.n - count) count++;
+      for (let i = 0; i < count; i++) {
+        const vx = bx + rng() * CHUNK, vz = bz + rng() * CHUNK;
+        const vy = v.min + rng() * (v.max - v.min);
+        this.carveVein(c, vx, vy, vz, v.size, v.id, rng);
+      }
+    }
+  }
+  carveVein(c, x, y, z, size, id, rng) {
+    // a short random walk dropping a blob at each step, the way a real pocket
+    // of ore snakes through the rock rather than sitting in a neat ball
+    let px = x, py = y, pz = z, placed = 0;
+    const steps = Math.max(1, Math.round(size / 2.2));
+    for (let s = 0; s < steps && placed < size; s++) {
+      const r = 0.8 + rng() * 0.9, ri = Math.ceil(r), lim = r * r + 0.35;
+      const cxi = Math.round(px), cyi = Math.round(py), czi = Math.round(pz);
+      for (let dy = -ri; dy <= ri && placed < size; dy++)
+        for (let dz = -ri; dz <= ri && placed < size; dz++)
+          for (let dx = -ri; dx <= ri && placed < size; dx++) {
+            if (dx * dx + dy * dy + dz * dz > lim) continue;
+            const gx = cxi + dx, gy = cyi + dy, gz = czi + dz;
+            if (gx < 0 || gz < 0 || gx >= CHUNK || gz >= CHUNK || gy < 1 || gy >= WORLD_H) continue;
+            if (c.get(gx, gy, gz) !== B.stone) continue;   // never float in a cave
+            c.set(gx, gy, gz, id);
+            placed++;
+          }
+      px += rng() * 2.6 - 1.3; py += rng() * 2.0 - 1.0; pz += rng() * 2.6 - 1.3;
+    }
   }
 
   computeHeightmap(c) {
