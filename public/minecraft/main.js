@@ -568,37 +568,97 @@ const Game = {
   },
 
   // ---------------- mob spawning ----------------
-  trySpawnHostile() {
-    if (this.mobs.filter(m => m.def.hostile).length >= 14) return;
+  // Weighted tables per dimension. `where` says what kind of spot the creature
+  // needs — surface ground, a cave, open air, or a column of water — and the
+  // optional filters narrow it to a biome or a depth.
+  spawnTables() {
+    return SPAWN_TABLES[this.dim];
+  },
+  // a standing spot: two blocks of air on something solid
+  findAirSpot(x, z, minY, maxY) {
+    for (let tries = 0; tries < 24; tries++) {
+      const y = randInt(minY, maxY);
+      if (y < 1 || y > WORLD_H - 3) continue;
+      const below = this.world.getBlock(x, y - 1, z);
+      if (!below || !Blocks[below].solid) continue;
+      if (this.world.getBlock(x, y, z) || this.world.getBlock(x, y + 1, z)) continue;
+      return y;
+    }
+    return -1;
+  },
+  // somewhere inside a body of water, at least two deep
+  findWaterSpot(x, z) {
+    for (let y = SEA; y > 4; y--) {
+      if (this.world.getBlock(x, y, z) !== B.water) continue;
+      if (this.world.getBlock(x, y - 1, z) !== B.water) continue;
+      return y;
+    }
+    return -1;
+  },
+  pickSpawn(list, ctx) {
+    let total = 0;
+    const ok = [];
+    for (const e of list) {
+      const f = e[2];
+      if (f) {
+        if (f.biome && f.biome !== ctx.biome) continue;
+        if (f.maxY !== undefined && ctx.y > f.maxY) continue;
+        if (f.minY !== undefined && ctx.y < f.minY) continue;
+      }
+      ok.push(e); total += e[1];
+    }
+    if (!ok.length) return null;
+    let r = Math.random() * total;
+    for (const e of ok) { r -= e[1]; if (r <= 0) return e[0]; }
+    return ok[ok.length - 1][0];
+  },
+  // one attempt at one creature, somewhere out of sight around the player
+  trySpawn(hostile, force = false) {
+    const table = this.spawnTables();
+    if (!table) return;
+    const cap = hostile ? 16 : 14;
+    if (this.mobs.filter(m => !!m.def.hostile === hostile).length >= cap) return;
     const p = this.player;
-    const ang = rand(0, Math.PI * 2), dist = rand(24, 52);
+    const ang = rand(0, Math.PI * 2), dist = force ? rand(10, 34) : rand(26, 52);
     const x = Math.floor(p.x + Math.cos(ang) * dist) + 0.5;
     const z = Math.floor(p.z + Math.sin(ang) * dist) + 0.5;
     if (!this.world.chunkAt(x, z)) return;
-    const y = this.findSpawnY(x, z);
-    if (y <= SEA + 1) return;
-    // only in darkness
-    const sky = this.world.skyAt(x, y, z);
-    const dark = this.day < 0.35 || sky < 0.4;
-    if (!dark) return;
-    const kinds = ['zombie', 'zombie', 'skeleton', 'creeper', 'spider'];
-    const kind = kinds[randInt(0, kinds.length - 1)];
-    this.mobs.push(new Mob(kind, x, y, z));
+    const biome = this.dim === 'overworld' ? this.world.biomeAt(x, z) : this.dim;
+
+    // decide which sort of spot to look for, then find one
+    const roll = Math.random();
+    let where, y;
+    if (roll < (hostile ? 0.34 : 0.2)) {
+      where = 'cave';
+      y = this.findAirSpot(x, z, 6, Math.max(8, this.findSpawnY(x, z) - 8));
+    } else if (roll < (hostile ? 0.44 : 0.42)) {
+      where = 'water';
+      y = this.findWaterSpot(x, z);
+    } else if (roll < (hostile ? 0.52 : 0.5)) {
+      where = 'air';
+      y = this.findSpawnY(x, z) + rand(6, 18);
+    } else {
+      where = 'ground';
+      y = this.findSpawnY(x, z);
+      if (y <= SEA + 1 && this.dim === 'overworld') return;   // don't stand in the sea
+    }
+    if (y < 0 || y > WORLD_H - 3) return;
+
+    // hostiles need the dark; the surface at noon is safe
+    if (hostile && this.dim === 'overworld') {
+      const sky = this.world.skyAt(x, y, z);
+      if (!(this.day < 0.35 || sky < 0.4)) return;
+    }
+    const list = table[hostile ? 'hostile' : 'passive'].filter(e => (e[3] || 'ground') === where);
+    const kind = this.pickSpawn(list, { biome, y });
+    if (!kind) return;
+    const m = new Mob(kind, x, y, z);
+    // a spawn that would be stuck inside the world is not worth having
+    if (this.world.boxCollides(x - m.w, y, z - m.w, x + m.w, y + m.h, z + m.w)) return;
+    this.mobs.push(m);
   },
-  trySpawnPassive(force = false) {
-    if (this.mobs.filter(m => !m.def.hostile).length >= 12) return;
-    const p = this.player;
-    const ang = rand(0, Math.PI * 2), dist = force ? rand(10, 40) : rand(28, 50);
-    const x = Math.floor(p.x + Math.cos(ang) * dist) + 0.5;
-    const z = Math.floor(p.z + Math.sin(ang) * dist) + 0.5;
-    if (!this.world.chunkAt(x, z)) return;
-    const y = this.findSpawnY(x, z);
-    if (y <= SEA + 1) return;
-    const g = this.world.getBlock(x, y - 1, z);
-    if (g !== B.grass_block && g !== B.snowy_grass && g !== B.sand) return;
-    const kind = ['cow', 'pig', 'sheep', 'chicken'][randInt(0, 3)];
-    this.mobs.push(new Mob(kind, x, y, z));
-  },
+  trySpawnHostile() { this.trySpawn(true); },
+  trySpawnPassive(force = false) { this.trySpawn(false, force); },
 
   // ---------------- misc ui ----------------
   msg(text) {

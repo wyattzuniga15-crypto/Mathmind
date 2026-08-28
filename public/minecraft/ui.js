@@ -635,9 +635,15 @@ const UI = {
       out.push(I.bow, I.arrow, I.flint_and_steel);
       return out;
     }],
-    ['Items', () => [I.coal, I.charcoal, I.iron_ingot, I.gold_ingot, I.diamond, I.stick, I.string, I.feather,
-      I.leather, I.flint, I.bone, I.egg, I.apple, I.bread, I.steak, I.cooked_porkchop, I.cooked_chicken,
-      I.wheat, I.wheat_seeds, I.rotten_flesh]],
+    ['Items', () => [I.coal, I.charcoal, I.iron_ingot, I.gold_ingot, I.copper_ingot, I.diamond, I.emerald,
+      I.stick, I.string, I.feather, I.leather, I.flint, I.bone, I.egg, I.snowball,
+      I.wheat, I.wheat_seeds, I.rotten_flesh, I.gunpowder]],
+    ['Food', () => [I.apple, I.bread, I.steak, I.beef, I.cooked_porkchop, I.porkchop, I.cooked_chicken, I.chicken,
+      I.cooked_mutton, I.mutton, I.cooked_rabbit, I.rabbit, I.cooked_cod, I.cod, I.cooked_salmon, I.salmon,
+      I.spider_eye, I.rotten_flesh]],
+    ['Drops', () => [I.slimeball, I.magma_cream, I.ink_sac, I.glow_ink_sac, I.honeycomb, I.scute,
+      I.rabbit_hide, I.phantom_membrane, I.prismarine_shard, I.shulker_shell, I.wither_skeleton_skull,
+      I.breeze_rod, I.echo_shard, I.blaze_rod, I.blaze_powder, I.ender_pearl]],
   ],
   buildCreative() {
     const tabs = this.$('ctabs');

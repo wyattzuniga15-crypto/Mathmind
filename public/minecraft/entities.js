@@ -199,66 +199,278 @@ class Arrow extends Entity {
 }
 
 // ---------------------------------------------------------------- fireball
+// Everything the mobs throw. `kind` picks what it does on impact; the older
+// `power` flag still means "ghast fireball" so the dragon fight is unchanged.
+const SHOT = {
+  bolt:   { dmg: 5,  size: 0.16, tile: 'fireball', trail: 0.5,  gravity: 0 },
+  fire:   { dmg: 0,  size: 0.40, tile: 'fireball', trail: 0.5,  gravity: 0 },
+  wind:   { dmg: 1,  size: 0.26, tile: 'white',    trail: 0.7,  gravity: 0,   knock: 16, radius: 2.4 },
+  potion: { dmg: 6,  size: 0.22, tile: 'poppy',    trail: 0.25, gravity: 9,   radius: 2.6 },
+  bullet: { dmg: 4,  size: 0.18, tile: 'purpur_block',   trail: 0.3,  gravity: 0 },
+  snow:   { dmg: 2,  size: 0.18, tile: 'white',    trail: 0.15, gravity: 6,   hitsMobs: true },
+};
 class Fireball extends Entity {
-  constructor(x, y, z, vx, vy, vz, power) {
+  constructor(x, y, z, vx, vy, vz, power, kind) {
     super(x, y, z);
     this.vx = vx; this.vy = vy; this.vz = vz;
     this.w = 0.15; this.h = 0.3;
     this.power = power;           // 0 = blaze bolt, 1 = ghast fireball
+    this.kind = kind || (power ? 'fire' : 'bolt');
+    this.spec = SHOT[this.kind] || SHOT.bolt;
   }
   update(game, dt) {
     this.age += dt;
     if (this.age > 10) { this.dead = true; return; }
+    const sp = this.spec;
+    if (sp.gravity) this.vy -= sp.gravity * dt;
     const nx = this.x + this.vx * dt, ny = this.y + this.vy * dt, nz = this.z + this.vz * dt;
     const id = game.world.getBlock(nx, ny, nz);
     const p = game.player;
-    const hitPlayer = !p.dead && Math.abs(nx - p.x) < 0.55 && Math.abs(nz - p.z) < 0.55 &&
+    let hitPlayer = !sp.hitsMobs && !p.dead && Math.abs(nx - p.x) < 0.55 && Math.abs(nz - p.z) < 0.55 &&
       ny > p.y - 0.3 && ny < p.y + 2;
-    if ((id && Blocks[id].solid) || hitPlayer) {
+    // splash shots burst as they come alongside you, not only where they land
+    if (sp.radius && !sp.hitsMobs && !p.dead &&
+        dist2(nx, ny, nz, p.x, p.y + 1, p.z) < sp.radius * sp.radius * 0.36) hitPlayer = true;
+    // a snow golem's snowballs are aimed the other way
+    let hitMob = null;
+    if (sp.hitsMobs) {
+      for (const m of game.mobs)
+        if (!m.dead && m.def.hostile && Math.abs(nx - m.x) < 0.6 + m.w && Math.abs(nz - m.z) < 0.6 + m.w &&
+            ny > m.y - 0.3 && ny < m.y + m.h) { hitMob = m; break; }
+    }
+    if ((id && Blocks[id].solid) || hitPlayer || hitMob) {
       this.dead = true;
-      if (this.power) game.explode(this.x, this.y, this.z, 2.2, 12);
-      else {
-        game.particles.burst(this.x, this.y, this.z, TileIdx.fireball, 8, 2);
-        Sfx.thud();
-        if (hitPlayer) p.hurt(game, 5, this.vx * 0.1, this.vz * 0.1);
+      if (this.kind === 'fire') { game.explode(this.x, this.y, this.z, 2.2, 12); return; }
+      game.particles.burst(this.x, this.y, this.z, TileIdx[sp.tile] ?? TileIdx.white, 8, 2);
+      Sfx.thud();
+      if (hitMob) hitMob.hurt(game, sp.dmg, this.vx * 0.05, this.vz * 0.05);
+      // splash shots catch you even on a near miss
+      const near = sp.radius && !p.dead &&
+        dist2(this.x, this.y, this.z, p.x, p.y + 1, p.z) < sp.radius * sp.radius;
+      if (hitPlayer || near) {
+        const k = (sp.knock || 1) * 0.1;
+        p.hurt(game, sp.dmg, this.vx * k, this.vz * k);
+        if (sp.knock) { p.vy = Math.max(p.vy, 9); p.vx += this.vx * 0.5; p.vz += this.vz * 0.5; }
       }
       return;
     }
     this.x = nx; this.y = ny; this.z = nz;
-    if (Math.random() < 0.5) game.particles.burst(this.x, this.y, this.z, TileIdx.fireball, 1, 0.3);
+    if (Math.random() < sp.trail)
+      game.particles.burst(this.x, this.y, this.z, TileIdx[sp.tile] ?? TileIdx.white, 1, 0.3);
   }
   emit(verts, game) {
-    addSprite(verts, this.x, this.y, this.z, this.power ? 0.4 : 0.16, game.player.yaw, TileIdx.fireball, 1.4);
+    addSprite(verts, this.x, this.y, this.z, this.spec.size, game.player.yaw,
+      TileIdx[this.spec.tile] ?? TileIdx.fireball, 1.4);
   }
 }
 
 // ---------------------------------------------------------------- mobs
+// ---------------------------------------------------------------- the roster
+// Every creature is a row of data: hit points, how it moves, which body plan
+// draws it, and a handful of behaviour flags the update loop reads. Adding one
+// costs a line here, a skin in the atlas and nothing else.
+//
+// flags: hostile/neutral · burns (undead in daylight) · ranged (bow) ·
+// fuse (creeper) · flying+hover · aquatic · jumper · splits · charger ·
+// scared (curls up) · watched (freezes while you look at it) · summons ·
+// teleports · stationary · lavaProof · light (glows) · follows
 const MOB_DEFS = {
+  // ---- overworld hostiles ----
   zombie: { hp: 20, speed: 2.1, hostile: true, dmg: 3, burns: true,
+    drops: () => [[I.rotten_flesh, randInt(0, 2)]] },
+  husk: { hp: 20, speed: 2.0, hostile: true, dmg: 3, plan: 'humanoid', h: 1.95,
+    drops: () => [[I.rotten_flesh, randInt(0, 2)]] },
+  drowned: { hp: 20, speed: 2.0, hostile: true, dmg: 3, plan: 'humanoid', amphibious: true,
+    drops: () => [[I.rotten_flesh, randInt(0, 2)], [I.cod, randInt(0, 1)]] },
+  zombie_villager: { hp: 20, speed: 2.0, hostile: true, dmg: 3, burns: true, plan: 'humanoid',
     drops: () => [[I.rotten_flesh, randInt(0, 2)]] },
   skeleton: { hp: 20, speed: 2.2, hostile: true, dmg: 0, ranged: true, burns: true,
     drops: () => [[I.bone, randInt(0, 2)], [I.arrow, randInt(0, 2)]] },
+  stray: { hp: 20, speed: 2.2, hostile: true, dmg: 0, ranged: true, plan: 'humanoid',
+    drops: () => [[I.bone, randInt(0, 2)], [I.arrow, randInt(1, 2)]] },
+  bogged: { hp: 16, speed: 2.0, hostile: true, dmg: 0, ranged: true, plan: 'humanoid',
+    drops: () => [[I.bone, randInt(0, 2)], [I.arrow, randInt(0, 2)], [B.brown_mushroom, randInt(0, 1)]] },
   creeper: { hp: 20, speed: 2.4, hostile: true, dmg: 0, fuse: true,
     drops: () => [[I.gunpowder, randInt(0, 2)]] },
   spider: { hp: 16, speed: 2.6, hostile: true, dmg: 2, night: true,
-    drops: () => [[I.string, randInt(0, 2)]] },
+    drops: () => [[I.string, randInt(0, 2)], [I.spider_eye, randInt(0, 1)]] },
+  cave_spider: { hp: 12, speed: 3.1, hostile: true, dmg: 2, plan: 'arthro', w: 0.35, h: 0.5,
+    drops: () => [[I.string, randInt(0, 2)], [I.spider_eye, randInt(0, 1)]] },
+  silverfish: { hp: 8, speed: 2.6, hostile: true, dmg: 1, plan: 'arthro', w: 0.2, h: 0.3,
+    drops: () => [] },
+  witch: { hp: 26, speed: 1.9, hostile: true, dmg: 0, potion: true, plan: 'humanoid',
+    drops: () => [[I.glowstone_dust, randInt(0, 2)], [I.gunpowder, randInt(0, 1)]] },
+  slime: { hp: 16, speed: 1.6, hostile: true, dmg: 2, jumper: true, splits: true, plan: 'blob',
+    w: 0.5, h: 1.0, drops: () => [[I.slimeball, randInt(1, 2)]] },
+  phantom: { hp: 20, speed: 3.0, hostile: true, dmg: 3, flying: true, hover: 14, dive: true,
+    plan: 'flyer', burns: true, w: 0.5, h: 0.4,
+    drops: () => [[I.phantom_membrane, randInt(0, 1)]] },
+  pillager: { hp: 24, speed: 2.1, hostile: true, dmg: 0, ranged: true, plan: 'humanoid',
+    drops: () => [[I.arrow, randInt(0, 2)], [I.emerald, randInt(0, 1)]] },
+  vindicator: { hp: 24, speed: 2.5, hostile: true, dmg: 6, plan: 'humanoid',
+    drops: () => [[I.emerald, randInt(0, 1)]] },
+  evoker: { hp: 24, speed: 1.8, hostile: true, dmg: 2, summons: 'vex', plan: 'humanoid',
+    drops: () => [[I.emerald, randInt(1, 2)]] },
+  vex: { hp: 14, speed: 3.4, hostile: true, dmg: 4, flying: true, hover: 3, dive: true,
+    plan: 'flyer', w: 0.2, h: 0.6, light: true, drops: () => [] },
+  ravager: { hp: 100, speed: 2.4, hostile: true, dmg: 8, charger: true, plan: 'quad',
+    w: 0.9, h: 2.0, drops: () => [[I.emerald, randInt(0, 2)]] },
+  breeze: { hp: 30, speed: 2.6, hostile: true, dmg: 0, wind: true, jumper: true, plan: 'humanoid',
+    light: true, drops: () => [[I.breeze_rod, randInt(1, 2)]] },
+  creaking: { hp: 24, speed: 3.2, hostile: true, dmg: 5, watched: true, plan: 'humanoid',
+    h: 2.6, drops: () => [] },
+  guardian: { hp: 30, speed: 1.9, hostile: true, dmg: 0, aquatic: true, laser: true, plan: 'fishy',
+    w: 0.45, h: 0.85, drops: () => [[I.prismarine_shard, randInt(0, 2)], [I.cod, randInt(0, 1)]] },
+  warden: { hp: 250, speed: 1.7, hostile: true, dmg: 14, sonic: true, plan: 'humanoid',
+    w: 0.55, h: 2.9, light: true, drops: () => [[I.echo_shard, 1]] },
+  enderman: { hp: 40, speed: 2.7, hostile: true, dmg: 5, teleports: true,
+    drops: () => [[I.ender_pearl, randInt(0, 1)]] },
+  endermite: { hp: 8, speed: 2.4, hostile: true, dmg: 2, plan: 'arthro', w: 0.2, h: 0.3,
+    drops: () => [] },
+
+  // ---- overworld passive & neutral ----
   cow: { hp: 10, speed: 1.2, hostile: false,
     drops: () => [[I.beef, randInt(1, 3)], [I.leather, randInt(0, 2)]] },
+  mooshroom: { hp: 10, speed: 1.2, hostile: false, plan: 'quad',
+    drops: () => [[I.beef, randInt(1, 3)], [B.red_mushroom, randInt(1, 2)]] },
   pig: { hp: 10, speed: 1.2, hostile: false,
     drops: () => [[I.porkchop, randInt(1, 3)]] },
   sheep: { hp: 8, speed: 1.15, hostile: false,
-    drops: () => [[B.wool, randInt(1, 2)]] },
+    drops: () => [[B.wool, randInt(1, 2)], [I.mutton, randInt(1, 2)]] },
   chicken: { hp: 4, speed: 1.1, hostile: false,
     drops: () => [[I.chicken, 1], [I.feather, randInt(0, 2)]] },
-  // --- the Nether and beyond ---
-  enderman: { hp: 40, speed: 2.7, hostile: true, dmg: 5, teleports: true,
-    drops: () => [[I.ender_pearl, randInt(0, 1)]] },
+  rabbit: { hp: 3, speed: 1.9, hostile: false, jumper: true, plan: 'quad', w: 0.2, h: 0.5,
+    drops: () => [[I.rabbit, randInt(0, 1)], [I.rabbit_hide, randInt(0, 1)]] },
+  fox: { hp: 10, speed: 2.4, hostile: false, plan: 'quad', w: 0.3, h: 0.65,
+    drops: () => [] },
+  wolf: { hp: 8, speed: 2.6, hostile: false, neutral: true, dmg: 4, plan: 'quad', w: 0.3, h: 0.75,
+    drops: () => [] },
+  goat: { hp: 10, speed: 2.0, hostile: false, neutral: true, dmg: 3, charger: true, plan: 'quad',
+    w: 0.35, h: 1.2, drops: () => [] },
+  polar_bear: { hp: 30, speed: 1.9, hostile: false, neutral: true, dmg: 6, plan: 'quad',
+    w: 0.65, h: 1.35, drops: () => [[I.cod, randInt(0, 2)]] },
+  panda: { hp: 20, speed: 1.2, hostile: false, plan: 'quad', w: 0.6, h: 1.2,
+    drops: () => [] },
+  llama: { hp: 15, speed: 1.5, hostile: false, neutral: true, dmg: 2, plan: 'quad',
+    w: 0.4, h: 1.6, drops: () => [[I.leather, randInt(0, 2)]] },
+  horse: { hp: 22, speed: 3.0, hostile: false, plan: 'quad', w: 0.6, h: 1.55,
+    drops: () => [[I.leather, randInt(0, 2)]] },
+  camel: { hp: 32, speed: 2.2, hostile: false, plan: 'quad', w: 0.6, h: 2.2,
+    drops: () => [[I.leather, randInt(0, 1)]] },
+  sniffer: { hp: 14, speed: 1.0, hostile: false, plan: 'quad', w: 0.7, h: 1.7,
+    drops: () => [[I.wheat_seeds, randInt(1, 3)]] },
+  armadillo: { hp: 12, speed: 1.4, hostile: false, scared: true, plan: 'quad', w: 0.35, h: 0.6,
+    drops: () => [[I.scute, randInt(0, 1)]] },
+  turtle: { hp: 30, speed: 0.7, hostile: false, amphibious: true, plan: 'quad', w: 0.55, h: 0.5,
+    drops: () => [[I.scute, randInt(0, 1)]] },
+  frog: { hp: 10, speed: 1.3, hostile: false, jumper: true, plan: 'quad', w: 0.25, h: 0.5,
+    drops: () => [] },
+  parrot: { hp: 6, speed: 2.2, hostile: false, flying: true, hover: 5, plan: 'flyer', w: 0.2, h: 0.6,
+    drops: () => [[I.feather, randInt(1, 2)]] },
+  bat: { hp: 6, speed: 2.4, hostile: false, flying: true, hover: 4, plan: 'flyer', w: 0.2, h: 0.4,
+    drops: () => [] },
+  bee: { hp: 10, speed: 2.0, hostile: false, neutral: true, dmg: 2, flying: true, hover: 6,
+    plan: 'flyer', w: 0.25, h: 0.4, drops: () => [[I.honeycomb, randInt(0, 1)]] },
+  allay: { hp: 20, speed: 2.6, hostile: false, flying: true, hover: 3, follows: true,
+    plan: 'flyer', light: true, w: 0.2, h: 0.6, drops: () => [] },
+  happy_ghast: { hp: 20, speed: 1.2, hostile: false, flying: true, hover: 12, plan: 'ghastly',
+    w: 1.9, h: 3.8, drops: () => [] },
+  squid: { hp: 10, speed: 1.4, hostile: false, aquatic: true, plan: 'squid', w: 0.45, h: 0.8,
+    drops: () => [[I.ink_sac, randInt(1, 3)]] },
+  glow_squid: { hp: 10, speed: 1.4, hostile: false, aquatic: true, plan: 'squid', light: true,
+    w: 0.45, h: 0.8, drops: () => [[I.glow_ink_sac, randInt(1, 3)]] },
+  dolphin: { hp: 10, speed: 3.2, hostile: false, aquatic: true, plan: 'fishy', w: 0.45, h: 0.6,
+    drops: () => [[I.cod, randInt(0, 1)]] },
+  cod: { hp: 3, speed: 1.6, hostile: false, aquatic: true, plan: 'fishy', w: 0.2, h: 0.3,
+    drops: () => [[I.cod, 1]] },
+  salmon: { hp: 3, speed: 1.8, hostile: false, aquatic: true, plan: 'fishy', w: 0.22, h: 0.34,
+    drops: () => [[I.salmon, 1]] },
+  axolotl: { hp: 14, speed: 1.8, hostile: false, aquatic: true, plan: 'fishy', w: 0.25, h: 0.35,
+    drops: () => [] },
+  villager: { hp: 20, speed: 1.5, hostile: false, plan: 'humanoid',
+    drops: () => [[I.emerald, randInt(0, 1)]] },
+  iron_golem: { hp: 100, speed: 1.6, hostile: false, neutral: true, dmg: 12, plan: 'humanoid',
+    guard: true, w: 0.6, h: 2.7, drops: () => [[I.iron_ingot, randInt(2, 4)], [B.poppy, 1]] },
+  snow_golem: { hp: 4, speed: 1.4, hostile: false, snowballs: true, plan: 'humanoid', guard: true,
+    w: 0.35, h: 1.9, drops: () => [[I.snowball, randInt(1, 3)]] },
+  copper_golem: { hp: 20, speed: 1.8, hostile: false, plan: 'humanoid', light: true, w: 0.3, h: 1.2,
+    drops: () => [[I.copper_ingot, randInt(1, 2)]] },
+
+  // ---- the Nether ----
   ghast: { hp: 10, speed: 1.5, hostile: true, dmg: 0, flying: true, shoots: 1, hover: 22,
     drops: () => [[I.gunpowder, randInt(0, 2)]] },
   blaze: { hp: 20, speed: 1.8, hostile: true, dmg: 0, flying: true, shoots: 0, hover: 3,
     drops: () => [[I.blaze_rod, randInt(0, 2)]], light: true },
   pigman: { hp: 20, speed: 2.0, hostile: false, neutral: true, dmg: 4,
     drops: () => [[I.gold_ingot, randInt(0, 1)], [I.rotten_flesh, randInt(0, 1)]] },
+  piglin_brute: { hp: 50, speed: 2.3, hostile: true, dmg: 7, plan: 'humanoid', lavaProof: false,
+    drops: () => [[I.gold_ingot, randInt(1, 2)]] },
+  wither_skeleton: { hp: 20, speed: 2.3, hostile: true, dmg: 7, plan: 'humanoid', h: 2.4,
+    drops: () => [[I.bone, randInt(0, 2)], [I.coal, randInt(0, 1)],
+                  ...(Math.random() < 0.08 ? [[I.wither_skeleton_skull, 1]] : [])] },
+  hoglin: { hp: 40, speed: 2.2, hostile: true, dmg: 6, charger: true, plan: 'quad', w: 0.7, h: 1.4,
+    drops: () => [[I.porkchop, randInt(2, 4)], [I.leather, randInt(0, 1)]] },
+  magma_cube: { hp: 16, speed: 1.6, hostile: true, dmg: 4, jumper: true, splits: true, plan: 'blob',
+    lavaProof: true, light: true, w: 0.5, h: 1.0, drops: () => [[I.magma_cream, randInt(0, 1)]] },
+  strider: { hp: 20, speed: 1.4, hostile: false, plan: 'quad', lavaProof: true, light: true,
+    w: 0.45, h: 1.6, drops: () => [[I.string, randInt(1, 3)]] },
+
+  // ---- The End ----
+  shulker: { hp: 30, speed: 0, hostile: true, dmg: 0, stationary: true, bullet: true, plan: 'cube',
+    w: 0.5, h: 1.0, drops: () => [[I.shulker_shell, randInt(0, 1)]] },
+};
+
+// ---------------------------------------------------------------- spawn tables
+// [kind, weight, filter, where]. `where` is the sort of spot the spawner has to
+// find: solid ground under open sky, a cave pocket, open air, or deep water.
+const SPAWN_TABLES = {
+  overworld: {
+    hostile: [
+      ['zombie', 10], ['skeleton', 9], ['creeper', 8], ['spider', 6],
+      ['husk', 6, { biome: 'desert' }], ['stray', 6, { biome: 'snow' }],
+      ['bogged', 4, { biome: 'forest' }], ['zombie_villager', 2],
+      ['witch', 2], ['enderman', 3], ['pillager', 3], ['vindicator', 2],
+      ['evoker', 1], ['breeze', 2], ['creaking', 3, { biome: 'forest' }], ['ravager', 1],
+      ['zombie', 6, null, 'cave'], ['skeleton', 6, null, 'cave'], ['creeper', 4, null, 'cave'],
+      ['cave_spider', 6, null, 'cave'], ['silverfish', 5, null, 'cave'], ['slime', 5, { maxY: 40 }, 'cave'],
+      ['endermite', 3, { maxY: 34 }, 'cave'], ['witch', 1, null, 'cave'],
+      ['warden', 1, { maxY: 16 }, 'cave'],
+      ['phantom', 6, null, 'air'], ['vex', 2, null, 'air'],
+      ['drowned', 8, null, 'water'], ['guardian', 3, null, 'water'],
+    ],
+    passive: [
+      ['cow', 8], ['pig', 8], ['sheep', 8], ['chicken', 7], ['rabbit', 5],
+      ['fox', 3], ['wolf', 3], ['horse', 4], ['villager', 4], ['frog', 3], ['turtle', 3],
+      ['goat', 4, { biome: 'mountains' }], ['llama', 3, { biome: 'mountains' }],
+      ['polar_bear', 4, { biome: 'snow' }], ['snow_golem', 2, { biome: 'snow' }],
+      ['panda', 3, { biome: 'forest' }], ['camel', 4, { biome: 'desert' }],
+      ['armadillo', 4, { biome: 'desert' }], ['sniffer', 1], ['mooshroom', 1],
+      ['iron_golem', 1], ['copper_golem', 2],
+      ['bat', 8, null, 'cave'], ['copper_golem', 1, null, 'cave'],
+      ['bee', 5, null, 'air'], ['parrot', 4, { biome: 'forest' }, 'air'],
+      ['bat', 4, null, 'air'], ['allay', 2, null, 'air'], ['happy_ghast', 1, null, 'air'],
+      ['squid', 6, null, 'water'], ['glow_squid', 3, null, 'water'], ['dolphin', 3, null, 'water'],
+      ['cod', 6, null, 'water'], ['salmon', 5, null, 'water'], ['axolotl', 3, null, 'water'],
+    ],
+  },
+  nether: {
+    hostile: [
+      ['magma_cube', 6], ['hoglin', 5], ['wither_skeleton', 4], ['piglin_brute', 3],
+      ['magma_cube', 4, null, 'cave'], ['wither_skeleton', 3, null, 'cave'],
+      ['ghast', 8, null, 'air'],
+    ],
+    passive: [
+      ['pigman', 8], ['strider', 5],
+      ['pigman', 4, null, 'cave'],
+    ],
+  },
+  end: {
+    hostile: [
+      ['enderman', 10], ['shulker', 4], ['endermite', 3],
+      ['enderman', 6, null, 'cave'],
+    ],
+    passive: [],
+  },
 };
 
 class Mob extends Entity {
@@ -271,7 +483,8 @@ class Mob extends Entity {
     const SIZES = { chicken: [0.22, 0.7], spider: [0.6, 0.8], enderman: [0.3, 2.9],
                     ghast: [1.9, 3.8], blaze: [0.3, 1.8] };
     const sz = SIZES[kind] || [0.32, 1.8];
-    this.w = sz[0]; this.h = sz[1];
+    this.w = d.w ?? sz[0]; this.h = d.h ?? sz[1];
+    this.scale = 1;                    // slimes shrink as they split
     this.yaw = rand(0, Math.PI * 2);
     this.wanderT = 0;
     this.moveX = 0; this.moveZ = 0;
@@ -283,7 +496,8 @@ class Mob extends Entity {
     this.anim = 0;
   }
   hurt(game, dmg, kx = 0, kz = 0) {
-    if (this.def.neutral) this.angry = true;          // provoked pigmen swarm
+    if (this.def.neutral) this.angry = true;   // wolves, bees, golems and pigmen turn on you
+    if (this.def.scared) this.curl = 4;        // an armadillo balls up the moment it is hit
     if (this.def.teleports && Math.random() < 0.5 && this.hp > dmg) this.blink(game);
     this.hp -= dmg;
     this.hurtT = 0.5;
@@ -298,7 +512,20 @@ class Mob extends Entity {
     for (const [id, n] of drops) if (n > 0) game.spawnDrop(this.x, this.y + 0.5, this.z, id, n);
     game.particles.burst(this.x, this.y + this.h / 2, this.z, TileIdx.white, 10);
     game.spawnXp(this.x, this.y + 0.5, this.z, this.def.hostile ? 5 : 2);
+    // a big slime bursts into two small ones, which burst again
+    if (this.def.splits && this.scale > 0.45 && game.mobs.length < 40) {
+      for (let i = 0; i < 2; i++) {
+        const m = new Mob(this.kind, this.x + rand(-0.6, 0.6), this.y + 0.2, this.z + rand(-0.6, 0.6));
+        m.setScale(this.scale * 0.55);
+        game.mobs.push(m);
+      }
+    }
     if (this.def.hostile) { game.stats.kills++; game.ach('hunter', 'Monster Hunter'); }
+  }
+  setScale(s) {
+    this.scale = s;
+    this.w *= s; this.h *= s;
+    this.maxHp = Math.max(1, Math.round(this.maxHp * s)); this.hp = this.maxHp;
   }
   update(game, dt) {
     this.age += dt; this.hurtT -= dt; this.attackCd -= dt; this.shootCd -= dt;
@@ -311,7 +538,33 @@ class Mob extends Entity {
       if (this.burnT > 1) { this.burnT = 0; this.hurt(game, 2); game.particles.burst(this.x, this.y + this.h, this.z, TileIdx.lava, 3); }
     }
 
-    // ghasts and blazes float instead of walking
+    // lava and fire are home for some of them
+    if (this.def.lavaProof) this.burnT = 0;
+
+    // a creaking only moves when nobody is watching, and cannot be hurt while seen
+    if (this.def.watched) {
+      this.seen = this.inPlayerView(p) && this.canSee(game, p);
+      if (this.seen) {
+        this.vx = this.vz = 0; this.moveX = this.moveZ = 0;
+        this.physics(world, dt);
+        return;
+      }
+    }
+    // an armadillo rolls into a ball rather than running
+    if (this.def.scared) {
+      if (d2p < 5 * 5 && !p.dead) this.curl = Math.max(this.curl || 0, 1.2);
+      this.curl = Math.max(0, (this.curl || 0) - dt);
+      if (this.curl > 0) {
+        this.vx *= 0.6; this.vz *= 0.6; this.moveX = this.moveZ = 0;
+        this.physics(world, dt);
+        return;
+      }
+    }
+    // shulkers are bolted to their block and just shoot
+    if (this.def.stationary) { this.turretUpdate(game, dt, p, d2p); return; }
+    // fish, squid, dolphins and guardians live in the water column
+    if (this.def.aquatic) { this.swimUpdate(game, dt, p, d2p); return; }
+    // ghasts, phantoms, bats, bees and the rest of the fliers hold station in the air
     if (this.def.flying) { this.flyUpdate(game, dt, p, d2p); return; }
 
     let targeting = false;
@@ -342,12 +595,87 @@ class Mob extends Entity {
           this.fuseT -= dt;
           if (this.fuseT <= 0) { this.explode(game); return; }
         }
+      } else if (this.def.wind) {
+        // a breeze bounces around and fires wind charges that shove you off ledges
+        if (d2p < 36) { this.moveX = -dx / dl; this.moveZ = -dz / dl; }
+        else if (d2p > 120) { this.moveX = dx / dl; this.moveZ = dz / dl; }
+        else { this.moveX = 0; this.moveZ = 0; }
+        if (this.onGround && Math.random() < dt * 1.6) this.vy = 11;
+        if (this.shootCd <= 0 && d2p < 260 && this.canSee(game, p)) {
+          this.shootCd = 2.6;
+          this.launch(game, p, 15, 'wind');
+        }
+      } else if (this.def.potion) {
+        // a witch lobs splash potions in an arc and backs away up close
+        if (d2p < 25) { this.moveX = -dx / dl; this.moveZ = -dz / dl; }
+        else if (d2p > 100) { this.moveX = dx / dl; this.moveZ = dz / dl; }
+        else { this.moveX = 0; this.moveZ = 0; }
+        if (this.shootCd <= 0 && d2p < 200 && this.canSee(game, p)) {
+          this.shootCd = 3;
+          this.launch(game, p, 12, 'potion', Math.sqrt(d2p) * 0.3);
+        }
+      } else if (this.def.sonic) {
+        // the warden closes slowly, and answers distance with a sonic shriek
+        this.moveX = dx / dl; this.moveZ = dz / dl;
+        if (this.shootCd <= 0 && d2p > 16 && d2p < 400 && this.canSee(game, p)) {
+          this.shootCd = 4.5;
+          Sfx.dragon();
+          for (let i = 0; i < 14; i++)
+            game.particles.burst(this.x + dx * (i / 14), this.y + 1.6 + (p.y - this.y) * (i / 14),
+              this.z + dz * (i / 14), TileIdx.white, 1, 0.4);
+          p.hurt(game, 10, dx / dl * 0.6, dz / dl * 0.6);
+        }
+        if (d2p < 4 && this.attackCd <= 0) {
+          this.attackCd = 1.4;
+          p.hurt(game, this.def.dmg, dx / dl * 1.2, dz / dl * 1.2);
+        }
+      } else if (this.def.summons) {
+        // an evoker hangs back and calls in vexes
+        if (d2p < 64) { this.moveX = -dx / dl; this.moveZ = -dz / dl; }
+        else { this.moveX = dx / dl; this.moveZ = dz / dl; }
+        if (this.shootCd <= 0 && d2p < 300 && game.mobs.length < 34 && this.canSee(game, p)) {
+          this.shootCd = 8;
+          Sfx.pop();
+          for (let i = 0; i < 2; i++)
+            game.mobs.push(new Mob(this.def.summons, this.x + rand(-2, 2), this.y + 1, this.z + rand(-2, 2)));
+        }
+      } else if (this.def.charger) {
+        // ravagers, hoglins and goats wind up, then run you down
+        this.chargeT = (this.chargeT ?? 0) - dt;
+        if (this.chargeT > 0) {
+          this.moveX = this.chargeX; this.moveZ = this.chargeZ;
+        } else if (d2p > 9 && d2p < 400 && this.chargeT < -2.5) {
+          this.chargeT = 1.4; this.chargeX = dx / dl; this.chargeZ = dz / dl;
+        } else {
+          this.moveX = dx / dl; this.moveZ = dz / dl;
+        }
+        if (d2p < 3.2 && this.attackCd <= 0) {
+          this.attackCd = 1.2;
+          const power = this.chargeT > 0 ? 1.6 : 0.6;
+          p.hurt(game, this.def.dmg, dx / dl * power, dz / dl * power);
+          this.chargeT = -1;
+        }
       } else {
         this.moveX = dx / dl; this.moveZ = dz / dl;
-        if (d2p < 2.2 && this.attackCd <= 0) {
+        if (d2p < 2.2 + this.w * 2 && this.attackCd <= 0) {
           this.attackCd = 1;
           p.hurt(game, this.def.dmg, dx / dl * 0.5, dz / dl * 0.5);
         }
+      }
+    }
+    // snow golems and iron golems pick fights with whatever is hunting you
+    if (this.def.guard && this.shootCd <= 0) {
+      let best = null, bd = this.def.snowballs ? 18 * 18 : 6 * 6;
+      for (const m of game.mobs) {
+        if (m === this || m.dead || !m.def.hostile) continue;
+        const d = dist2(m.x, m.y, m.z, this.x, this.y, this.z);
+        if (d < bd) { bd = d; best = m; }
+      }
+      if (best) {
+        this.yaw = Math.atan2(best.x - this.x, best.z - this.z);
+        this.shootCd = this.def.snowballs ? 1.2 : 1;
+        if (this.def.snowballs) this.launch(game, best, 18, 'snow');
+        else best.hurt(game, this.def.dmg, (best.x - this.x) * 0.2, (best.z - this.z) * 0.2);
       }
     }
     // chickens lay eggs now and then
@@ -367,11 +695,25 @@ class Mob extends Entity {
         }
       }
     }
-    const sp = this.def.speed * (targeting && !this.def.ranged ? 1.15 : 0.6) * (targeting ? 1.4 : 1);
-    this.vx = lerp(this.vx, this.moveX * sp, 0.12);
-    this.vz = lerp(this.vz, this.moveZ * sp, 0.12);
+    let sp = this.def.speed * (targeting && !this.def.ranged ? 1.15 : 0.6) * (targeting ? 1.4 : 1);
+    if (this.chargeT > 0) sp *= 2.2;                    // mid-charge
+    if (this.def.jumper) {
+      // slimes, frogs and rabbits hop: they only get a shove while airborne
+      this.hopT = (this.hopT ?? rand(0, 1)) - dt;
+      if (this.onGround) {
+        this.vx *= 0.7; this.vz *= 0.7;
+        if (this.hopT <= 0 && (this.moveX || this.moveZ || targeting)) {
+          this.hopT = targeting ? 0.55 : rand(0.9, 2.2);
+          this.vy = 7.5;
+          this.vx = this.moveX * sp * 1.6; this.vz = this.moveZ * sp * 1.6;
+        }
+      }
+    } else {
+      this.vx = lerp(this.vx, this.moveX * sp, 0.12);
+      this.vz = lerp(this.vz, this.moveZ * sp, 0.12);
+    }
     // jump over obstacles
-    if ((this.moveX || this.moveZ) && this.onGround) {
+    if ((this.moveX || this.moveZ) && this.onGround && !this.def.jumper) {
       const ahead = world.getBlock(this.x + this.moveX * 0.8, this.y + 0.4, this.z + this.moveZ * 0.8);
       if (ahead && Blocks[ahead].solid) this.vy = 8.2;
       else if (this.inWater) this.vy = 3;
@@ -380,9 +722,30 @@ class Mob extends Entity {
     this.physics(world, dt);
     this.anim += Math.hypot(this.vx, this.vz) * dt * 3.2;
     if (this.y < -10) this.dead = true;
-    // cactus / lava damage
+    // cactus / lava damage — striders and magma cubes are at home in it
     const at = world.getBlock(this.x, this.y, this.z);
-    if (at === B.lava) this.hurt(game, 4);
+    if (at === B.lava && !this.def.lavaProof) this.hurt(game, 4);
+    if (this.def.lavaProof && at === B.lava) {           // float rather than sink
+      this.vy = Math.max(this.vy, 2.5);
+      this.onGround = true;
+    }
+    if (at === B.cactus) this.hurt(game, 1);
+  }
+  // lob something at a target with a bit of arc
+  launch(game, target, speed, kind, arc = 0) {
+    const ex = this.x, ey = this.y + this.h * 0.8, ez = this.z;
+    const tx = target.x - ex, ty = (target.y + 1) - ey, tz = target.z - ez;
+    const d = Math.hypot(tx, ty, tz) || 1;
+    game.fireballs.push(new Fireball(ex, ey, ez,
+      tx / d * speed, ty / d * speed + arc, tz / d * speed, 0, kind));
+    Sfx.fireball();
+  }
+  // is this mob inside the player's view cone? (the creaking's whole trick)
+  inPlayerView(p) {
+    const dx = this.x - p.x, dz = this.z - p.z;
+    const d = Math.hypot(dx, dz) || 1;
+    const look = p.lookDir();
+    return (dx / d * look[0] + dz / d * look[2]) > 0.4;
   }
   explode(game) {
     this.dead = true;
@@ -398,17 +761,42 @@ class Mob extends Entity {
       const id = world.getBlock(this.x, y, this.z);
       if (id && Blocks[id].solid) { gy = y + 1; break; }
     }
-    ty = gy + this.def.hover;
+    // friendly fliers tag along at the player's shoulder instead of a fixed height
+    ty = this.def.follows && !p.dead && d2p < 40 * 40 ? p.y + 2 : gy + this.def.hover;
     this.vy = lerp(this.vy, clamp((ty - this.y) * 1.5, -4, 4), 0.08);
-    if (aggro) {
+    const shoots = this.def.shoots !== undefined;
+    const chases = this.def.hostile || this.angry || this.def.follows;
+    if (aggro && chases) {
       const dx = p.x - this.x, dz = p.z - this.z;
       const dl = Math.hypot(dx, dz) || 1;
       this.yaw = Math.atan2(dx, dz);
-      const want = this.def.shoots ? 16 : 6;      // ghasts keep their distance
+      if (this.def.dive) {
+        // phantoms and vexes swoop straight at you instead of holding station
+        const dy = (p.y + 1.2) - this.y;
+        const d3 = Math.hypot(dx, dy, dz) || 1;
+        const sp3 = this.def.speed * 2.2;
+        this.vx = lerp(this.vx, dx / d3 * sp3, 0.08);
+        this.vy = lerp(this.vy, dy / d3 * sp3, 0.08);
+        this.vz = lerp(this.vz, dz / d3 * sp3, 0.08);
+        if (d3 < 1.6 + this.w && this.attackCd <= 0) {
+          this.attackCd = 1.4;
+          p.hurt(game, this.def.dmg, dx / dl * 0.6, dz / dl * 0.6);
+          this.vy = 6;                            // peel off after the pass
+        }
+        this.driftStep(world, dt);
+        this.anim += dt;
+        if (this.y < -10) this.dead = true;
+        return;
+      }
+      const want = this.def.follows ? 3 : (this.def.shoots ? 16 : 6);   // ghasts keep their distance
       const push = (dl - want) / Math.max(dl, 1);
       this.vx = lerp(this.vx, dx * push * this.def.speed * 0.5, 0.04);
       this.vz = lerp(this.vz, dz * push * this.def.speed * 0.5, 0.04);
-      if (this.shootCd <= 0 && d2p < 40 * 40 && this.canSee(game, p)) {
+      if (this.def.dmg && !shoots && d2p < 4 && this.attackCd <= 0) {
+        this.attackCd = 1.4;                      // a bee that has had enough of you
+        p.hurt(game, this.def.dmg, dx / dl * 0.4, dz / dl * 0.4);
+      }
+      if (shoots && this.shootCd <= 0 && d2p < 40 * 40 && this.canSee(game, p)) {
         this.shootCd = this.def.shoots ? 3.2 : 1.8;
         const ex = this.x, ey = this.y + this.h * 0.5, ez = this.z;
         const tx = p.x - ex, ty2 = (p.y + 1.2) - ey, tz = p.z - ez;
@@ -432,7 +820,14 @@ class Mob extends Entity {
         this.vz = Math.cos(this.yaw) * this.def.speed * 0.5;
       }
     }
-    // drift, bouncing off anything solid
+    this.driftStep(world, dt);
+    this.anim += dt;
+    if (this.kind === 'blaze' && Math.random() < 0.25)
+      game.particles.burst(this.x, this.y + 0.4, this.z, TileIdx.fireball, 1, 0.6);
+    if (this.y < -10) this.dead = true;
+  }
+  // free movement through the air (or water), bouncing off anything solid
+  driftStep(world, dt) {
     const step = (ax, v) => {
       const nx = this.x + (ax === 0 ? v : 0), ny = this.y + (ax === 1 ? v : 0), nz = this.z + (ax === 2 ? v : 0);
       if (world.boxCollides(nx - this.w, ny, nz - this.w, nx + this.w, ny + this.h, nz + this.w)) {
@@ -444,10 +839,82 @@ class Mob extends Entity {
       this.x = nx; this.y = ny; this.z = nz;
     };
     step(0, this.vx * dt); step(1, this.vy * dt); step(2, this.vz * dt);
-    this.anim += dt;
-    if (this.kind === 'blaze' && Math.random() < 0.25)
-      game.particles.burst(this.x, this.y + 0.4, this.z, TileIdx.fireball, 1, 0.6);
+  }
+
+  // ---- water dwellers: fish, squid, dolphins, guardians ----
+  swimUpdate(game, dt, p, d2p) {
+    const world = game.world;
+    const inWater = world.getBlock(this.x, this.y + this.h * 0.5, this.z) === B.water;
+    this.inWater = inWater;
+    if (!inWater) {
+      // flopping on land: gravity, and it suffocates
+      this.vy -= 24 * dt;
+      this.vx *= 0.8; this.vz *= 0.8;
+      if (Math.random() < dt * 3) this.vy = 4;
+      this.driftStep(world, dt);
+      this.gasp = (this.gasp || 0) + dt;
+      if (this.gasp > 4) { this.gasp = 0; this.hurt(game, 2); }
+      return;
+    }
+    this.gasp = 0;
+    const hunting = (this.def.hostile || this.angry) && !p.dead && d2p < 24 * 24 &&
+                    p.headInWater(world);
+    if (hunting) {
+      const dx = p.x - this.x, dy = (p.y + 1) - this.y, dz = p.z - this.z;
+      const d = Math.hypot(dx, dy, dz) || 1;
+      this.yaw = Math.atan2(dx, dz);
+      if (this.def.laser) {
+        // a guardian holds position and burns you with its beam
+        if (d > 5) { this.vx = dx / d * this.def.speed; this.vz = dz / d * this.def.speed; this.vy = dy / d * this.def.speed; }
+        else { this.vx *= 0.85; this.vz *= 0.85; this.vy *= 0.85; }
+        this.beam = Math.max(0, (this.beam || 0) - dt);
+        if (this.shootCd <= 0 && d < 14 && this.canSee(game, p)) {
+          this.shootCd = 3.5; this.beam = 0.6;
+          for (let i = 0; i < 10; i++)
+            game.particles.burst(this.x + dx * (i / 10), this.y + 0.4 + dy * (i / 10), this.z + dz * (i / 10),
+              TileIdx.white, 1, 0.2);
+          p.hurt(game, 5, dx / d * 0.2, dz / d * 0.2);
+          Sfx.fireball();
+        }
+      } else {
+        const sp = this.def.speed * 1.6;
+        this.vx = lerp(this.vx, dx / d * sp, 0.1);
+        this.vy = lerp(this.vy, dy / d * sp, 0.1);
+        this.vz = lerp(this.vz, dz / d * sp, 0.1);
+        if (d < 1.4 + this.w && this.attackCd <= 0) {
+          this.attackCd = 1.2;
+          p.hurt(game, this.def.dmg, dx / d * 0.4, dz / d * 0.4);
+        }
+      }
+    } else {
+      this.wanderT -= dt;
+      if (this.wanderT <= 0) {
+        this.wanderT = rand(1.5, 4.5);
+        this.yaw = rand(0, Math.PI * 2);
+        this.pitchV = rand(-0.5, 0.5);
+        const sp = this.def.speed * 0.8;
+        this.vx = Math.sin(this.yaw) * sp; this.vz = Math.cos(this.yaw) * sp;
+        this.vy = this.pitchV;
+      }
+      // stay under the surface and off the bottom
+      if (world.getBlock(this.x, this.y + this.h + 0.6, this.z) !== B.water) this.vy = Math.min(this.vy, -0.4);
+      if (world.getBlock(this.x, this.y - 0.4, this.z) !== B.water) this.vy = Math.max(this.vy, 0.4);
+    }
+    this.driftStep(world, dt);
+    this.anim += Math.hypot(this.vx, this.vy, this.vz) * dt * 4;
     if (this.y < -10) this.dead = true;
+  }
+
+  // ---- shulkers: bolted in place, all turret ----
+  turretUpdate(game, dt, p, d2p) {
+    this.vx = this.vy = this.vz = 0;
+    this.anim += dt;
+    this.open = clamp((this.open ?? 0) + (d2p < 18 * 18 ? dt * 2 : -dt * 2), 0, 1);
+    if (d2p < 18 * 18 && !p.dead && this.shootCd <= 0 && this.canSee(game, p)) {
+      this.shootCd = 2.4;
+      this.yaw = Math.atan2(p.x - this.x, p.z - this.z);
+      this.launch(game, p, 7, 'bullet');
+    }
   }
 
   blink(game) {
@@ -472,12 +939,15 @@ class Mob extends Entity {
     return !hit;
   }
   emit(verts, game) {
-    const l0 = Math.max(0.12, game.world.skyAt(this.x, this.y + 1, this.z));
+    let l0 = Math.max(0.12, game.world.skyAt(this.x, this.y + 1, this.z));
+    if (this.def.light) l0 = Math.max(l0, 1.25);          // the ones that glow
     const l = this.hurtT > 0.35 ? 1.6 : l0;   // flash when hurt
     const yaw = this.yaw;
     const swing = Math.sin(this.anim * 4) * 0.5;
     const k = this.kind, x = this.x, z = this.z;
     const Tt = (n) => TileIdx[n];
+    // most of the roster draws itself from its body plan
+    if (this.def.plan) { PLANS[this.def.plan](this, verts, l, yaw, swing); return; }
     const humanoid = (skinFace, skinSide, shirt, pants, armT) => {
       const y = this.y;
       // legs
@@ -573,6 +1043,154 @@ class Mob extends Entity {
     }
   }
 }
+
+
+// ---------------------------------------------------------------- body plans
+// A handful of shapes, each reading the mob's own width/height, so most of the
+// roster draws itself from its size and its two skin tiles alone. The older
+// hand-built creatures (creeper, spider, ghast, ...) keep their own branches.
+const PLANS = {
+  // four legs, a barrel body and a head out front: cows through ravagers
+  quad(m, verts, l, yaw, swing) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const x = m.x, y = m.y, z = m.z, w = m.w, h = m.h;
+    // curled up: an armadillo is just a ball with plates
+    if (m.curl > 0) {
+      addBoxYaw(verts, x, y + w, z, yaw, 0, 0, w * 1.1, w * 1.05, w * 1.1, { all: skin }, l);
+      return;
+    }
+    const legH = h * 0.4, bodyH = h * 0.36, hr = Math.min(w * 0.8, h * 0.22);
+    const bx = w * 0.78, bz = w * 1.25;
+    const legs = [[bx * 0.7, bz * 0.6], [-bx * 0.7, bz * 0.6], [bx * 0.7, -bz * 0.6], [-bx * 0.7, -bz * 0.6]];
+    legs.forEach(([ox, oz], i) =>
+      limb(verts, x, y + legH, z, yaw, ox, oz, w * 0.22, w * 0.22, legH, skin, l, (i % 2 ? swing : -swing) * 0.8));
+    addBoxYaw(verts, x, y + legH + bodyH / 2, z, yaw, 0, 0, bx, bodyH / 2, bz, { all: skin }, l);
+    // head, dipped toward the ground while grazing
+    const dip = m.def.hostile || m.angry ? 0 : Math.sin(m.age * 0.5) * 0.06;
+    addBoxYaw(verts, x, y + legH + bodyH + hr * 0.5 - dip, z, yaw, 0, bz + hr * 0.7, hr, hr, hr,
+      { all: skin, front: face }, l);
+    // tail
+    addBoxYaw(verts, x, y + legH + bodyH * 0.8, z, yaw, 0, -bz - w * 0.15, w * 0.12, w * 0.12, w * 0.2, { all: skin }, l);
+  },
+
+  // two arms, two legs, a cube head: villagers, illagers, golems, the warden
+  humanoid(m, verts, l, yaw, swing) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const cloth = TileIdx[m.kind + '_cloth'] ?? skin;     // robes, coats, armour
+    const x = m.x, y = m.y, h = m.h, z = m.z;
+    const s = h / 1.8, t = Math.max(0.1, m.w * 0.36);
+    const legH = 0.75 * s, bodyH = 0.75 * s, headR = 0.25 * s * (m.w > 0.45 ? 1.25 : 1);
+    // arms forward for the shamblers, swinging for everyone else
+    const lunge = m.def.burns || m.def.watched || m.def.sonic ? -1.35 : swing;
+    limb(verts, x, y + legH, z, yaw, t * 0.9, 0, t * 0.75, t * 0.75, legH, cloth, l, swing);
+    limb(verts, x, y + legH, z, yaw, -t * 0.9, 0, t * 0.75, t * 0.75, legH, cloth, l, -swing);
+    addBoxYaw(verts, x, y + legH + bodyH / 2, z, yaw, 0, 0, t * 1.75, bodyH / 2, t, { all: cloth }, l);
+    limb(verts, x, y + legH + bodyH * 0.9, z, yaw, t * 2.4, 0, t * 0.7, t * 0.7, bodyH * 0.9, skin, l, lunge);
+    limb(verts, x, y + legH + bodyH * 0.9, z, yaw, -t * 2.4, 0, t * 0.7, t * 0.7, bodyH * 0.9, skin, l,
+      lunge === swing ? -swing : lunge);
+    addBoxYaw(verts, x, y + legH + bodyH + headR, z, yaw, 0, 0, headR, headR, headR,
+      { all: skin, front: face }, l);
+  },
+
+  // a small body, a head and a pair of beating wings
+  flyer(m, verts, l, yaw) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const x = m.x, y = m.y, z = m.z, w = m.w, h = m.h;
+    const flap = Math.sin(m.anim * 16) * 0.5;
+    addBoxYaw(verts, x, y + h * 0.45, z, yaw, 0, 0, w, h * 0.3, w * 1.2, { all: skin }, l);
+    addBoxYaw(verts, x, y + h * 0.8, z, yaw, 0, w * 1.1, w * 0.8, w * 0.8, w * 0.8,
+      { all: skin, front: face }, l);
+    for (const side of [1, -1]) {
+      const span = w * 2.6;
+      addBoxYaw(verts, x, y + h * 0.55 + flap * w * 1.6, z, yaw, side * (w + span * 0.5), -w * 0.2,
+        span * 0.5, w * 0.16, w * 1.1, { all: skin }, l * (flap > 0 ? 1 : 0.82));
+    }
+    // and a tail to steady it
+    addBoxYaw(verts, x, y + h * 0.45, z, yaw, 0, -w * 1.5, w * 0.3, w * 0.08, w * 0.5, { all: skin }, l);
+  },
+
+  // a soft cube that squashes as it lands: slimes and magma cubes
+  blob(m, verts, l, yaw) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const squash = m.onGround ? 1 + Math.max(0, Math.min(0.35, -m.vy * 0.04)) : 0.88;
+    const r = m.w * 1.05;
+    addBoxYaw(verts, m.x, m.y + r / squash, m.z, yaw, 0, 0, r * squash, r / squash, r * squash,
+      { all: skin, front: face }, l);
+    // the little core sloshing inside
+    addBoxYaw(verts, m.x, m.y + r * 0.7, m.z, yaw, 0, 0, r * 0.45, r * 0.45, r * 0.45,
+      { all: skin }, Math.min(1.6, l * 1.4));
+  },
+
+  // a streamlined body with a waving tail: fish, dolphins, guardians
+  fishy(m, verts, l, yaw) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const x = m.x, y = m.y, z = m.z, w = m.w, h = m.h;
+    const wag = Math.sin(m.anim * 8) * w * 0.9;
+    addBoxYaw(verts, x, y + h * 0.5, z, yaw, 0, 0, w, h * 0.5, w * 1.6, { all: skin, front: face }, l);
+    addBoxYaw(verts, x + wag * Math.cos(yaw), y + h * 0.5, z - wag * Math.sin(yaw), yaw,
+      0, -w * 2.1, w * 0.12, h * 0.45, w * 0.7, { all: skin }, l);
+    // dorsal fin
+    addBoxYaw(verts, x, y + h * 1.05, z, yaw, 0, 0, w * 0.1, h * 0.25, w * 0.5, { all: skin }, l);
+    // guardians run a spine of spikes instead of pectoral fins
+    if (m.def.laser)
+      for (const side of [1, -1])
+        addBoxYaw(verts, x, y + h * 0.5, z, yaw, side * w * 1.2, 0, w * 0.35, h * 0.1, w * 0.1, { all: skin }, l);
+  },
+
+  // a mantle and eight drifting arms
+  squid(m, verts, l, yaw) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const x = m.x, y = m.y, z = m.z, w = m.w, h = m.h;
+    addBoxYaw(verts, x, y + h * 0.68, z, yaw, 0, 0, w, h * 0.34, w, { all: skin, front: face }, l);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const sway = Math.sin(m.anim * 3 + i) * w * 0.25;
+      addBoxYaw(verts, x + Math.cos(a) * w * 0.55 + sway, y + h * 0.18, z + Math.sin(a) * w * 0.55, yaw,
+        0, 0, w * 0.12, h * 0.2, w * 0.12, { all: skin }, l);
+    }
+  },
+
+  // low, many-legged and quick: cave spiders, silverfish, endermites
+  arthro(m, verts, l, yaw) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const x = m.x, y = m.y, z = m.z, w = m.w, h = m.h;
+    addBoxYaw(verts, x, y + h * 0.5, z, yaw, 0, -w * 0.3, w, h * 0.45, w * 1.1, { all: skin }, l);
+    addBoxYaw(verts, x, y + h * 0.55, z, yaw, 0, w * 0.95, w * 0.65, w * 0.55, w * 0.6,
+      { all: skin, front: face }, l);
+    for (let i = 0; i < 3; i++) {
+      const oz = -w * 0.6 + i * w * 0.7;
+      const lift = Math.sin(m.anim * 7 + i) * h * 0.12;
+      for (const side of [1, -1])
+        addBoxYaw(verts, x, y + h * 0.3 + lift * side, z, yaw, side * w * 1.5, oz,
+          w * 0.7, h * 0.06, w * 0.08, { all: skin }, l);
+    }
+  },
+
+  // a shell bolted to the world that cracks open to shoot
+  cube(m, verts, l, yaw) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    const r = m.w;
+    addBoxYaw(verts, m.x, m.y + r, m.z, yaw, 0, 0, r, r, r, { all: skin }, l);
+    const peek = (m.open ?? 0) * r * 0.8;
+    if (peek > 0.01)
+      addBoxYaw(verts, m.x, m.y + r * 1.4 + peek, m.z, yaw, 0, 0, r * 0.55, r * 0.55, r * 0.55,
+        { all: skin, front: face }, Math.min(1.6, l * 1.3));
+  },
+
+  // the ghast silhouette, reused by its friendly cousin
+  ghastly(m, verts, l, yaw) {
+    const skin = TileIdx[m.kind + '_skin'], face = TileIdx[m.kind + '_face'];
+    addBoxYaw(verts, m.x, m.y + 2.1, m.z, yaw, 0, 0, 1.6, 1.6, 1.6, { all: skin, front: face },
+      Math.max(l, 0.75));
+    for (let i = 0; i < 9; i++) {
+      const ox = ((i % 3) - 1) * 0.9, oz = (((i / 3) | 0) - 1) * 0.9;
+      const len = 0.7 + ((i * 7) % 5) * 0.22;
+      const sway = Math.sin(m.anim * 1.6 + i) * 0.1;
+      addBoxYaw(verts, m.x + sway, m.y + 0.5 - len / 2 + 0.1, m.z, yaw, ox, oz, 0.16, len / 2, 0.16,
+        { all: skin }, Math.max(l, 0.6));
+    }
+  },
+};
 
 // ---------------------------------------------------------------- box builders
 // axis order helpers for rotated boxes (rotation around Y at (cx, cz))

@@ -141,6 +141,33 @@ defItem('blaze_powder', {});
 defItem('ender_pearl', { stack: 16 });
 defItem('eye_of_ender', { stack: 16 });
 
+// ---- drops from the wider mob roster ----
+defItem('mutton', { food: 2, sat: 1.2 });
+defItem('cooked_mutton', { food: 6, sat: 9.6 });
+defItem('rabbit', { food: 3, sat: 1.8 });
+defItem('cooked_rabbit', { food: 5, sat: 6 });
+defItem('rabbit_hide', {});
+defItem('cod', { food: 2, sat: 0.4 });
+defItem('cooked_cod', { food: 5, sat: 6 });
+defItem('salmon', { food: 2, sat: 0.4 });
+defItem('cooked_salmon', { food: 6, sat: 9.6 });
+defItem('spider_eye', { food: 2, sat: 3.2, rotten: true });
+defItem('slimeball', {});
+defItem('magma_cream', {});
+defItem('ink_sac', {});
+defItem('glow_ink_sac', {});
+defItem('phantom_membrane', {});
+defItem('prismarine_shard', {});
+defItem('shulker_shell', {});
+defItem('wither_skeleton_skull', { stack: 16 });
+defItem('copper_ingot', {});
+defItem('honeycomb', {});
+defItem('scute', {});
+defItem('breeze_rod', {});
+defItem('echo_shard', {});
+defItem('emerald', {});
+defItem('snowball', { stack: 16 });
+
 const TOOL_TIERS = [
   ['wooden', 1, 4, 60, 1],   // prefix, tier, speed, durability, bonus dmg
   ['stone', 2, 8, 132, 2],
@@ -188,6 +215,7 @@ recipe('bow', 1, [[P,'stick','string'],['stick',P,'string'],[P,'stick','string']
 recipe('arrow', 4, [['flint'],['stick'],['feather']]);
 recipe('flint_and_steel', 1, null, ['iron_ingot', 'flint']);
 recipe('blaze_powder', 2, null, ['blaze_rod']);
+recipe('magma_cream', 1, null, ['blaze_powder', 'slimeball']);
 recipe('eye_of_ender', 1, null, ['ender_pearl', 'blaze_powder']);
 recipe('nether_bricks', 1, [['netherrack','netherrack'],['netherrack','netherrack']]);
 recipe('purpur_block', 4, [['nether_quartz','nether_quartz'],['nether_quartz','nether_quartz']]);
@@ -226,6 +254,10 @@ smelt('oak_log', 'charcoal');
 smelt('porkchop', 'cooked_porkchop');
 smelt('beef', 'steak');
 smelt('chicken', 'cooked_chicken');
+smelt('mutton', 'cooked_mutton');
+smelt('rabbit', 'cooked_rabbit');
+smelt('cod', 'cooked_cod');
+smelt('salmon', 'cooked_salmon');
 
 // fuel burn time in seconds (one smelt = 10s)
 function fuelTime(id) {

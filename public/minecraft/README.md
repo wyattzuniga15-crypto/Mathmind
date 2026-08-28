@@ -66,15 +66,42 @@ The full progression is here, the same shape as the real thing:
 ## Features
 
 - Infinite procedurally generated terrain with plains, forest, desert, snow, and mountain
-  biomes, caves, ore veins (coal, iron, gold, diamond), lakes, frozen oceans, lava pools
+  biomes, caves, lakes, frozen oceans and lava pools
+- Ore in scarce veins rather than scattered singles: a chunk holds roughly twenty coal,
+  eleven iron, and a five-block pocket of gold or diamond only every fourth chunk. Veins
+  are seeded per chunk, spill across chunk borders from a deterministic stream, and only
+  ever replace stone, so nothing floats in a cave
 - Day/night cycle with sun, moon, stars, drifting clouds, and dawn/dusk skies
-- Survival systems: health, hunger, saturation, sprint/exhaustion, fall damage, drowning,
-  lava and cactus damage, regeneration, death and respawn
+- Survival systems on the real numbers: health and hunger drawn as pixel-art hearts and
+  drumsticks that wobble when you are low, and the actual exhaustion model behind them —
+  0.1 per metre sprinted, 0.01 swimming, 0.05 a jump, 0.005 a block broken, 0.1 a hit
+  taken, 6.0 per point healed, spending saturation before the visible bar. Walking is
+  free; healing is what really costs you. Plus fall damage, drowning with air bubbles,
+  lava and cactus damage, starvation, death and respawn
 - Full inventory with drag/split/stack, 2×2 and 3×3 crafting, tool tiers (wood, stone,
   iron, gold, diamond) with durability, furnace smelting with fuel, chests with persistent
   storage
-- Mobs: cows, pigs, sheep, chickens; zombies, skeletons (with bows), creepers (they
-  explode), and spiders at night — the undead burn at sunrise
+- **Sixty-seven creatures**, spawned from weighted per-dimension tables that care about
+  biome, depth, light and whether the spot is ground, cave, open air or deep water:
+  - *Farmyard and wild*: cows, pigs, sheep, chickens, rabbits, foxes, wolves, goats,
+    horses, llamas, camels, pandas, polar bears, turtles, frogs, sniffers, mooshrooms,
+    armadillos that roll into a ball when you come near
+  - *Water*: cod, salmon, squid, glow squid, dolphins, axolotls, and guardians that hold
+    position and burn you with a beam — anything aquatic suffocates if you land it
+  - *Air*: bats, bees, parrots, allays that tag along at your shoulder, phantoms and vexes
+    that swoop, and the happy ghast
+  - *Village*: villagers, iron golems and snow golems that pick fights with whatever is
+    hunting you, and copper golems
+  - *Night and the dark*: zombies, husks, drowned, zombie villagers, skeletons, strays,
+    bogged, creepers, spiders, cave spiders, silverfish, endermen, endermites, witches
+    lobbing splash potions, slimes that split when you kill them, breezes firing wind
+    charges that launch you, creakings that only move when you are not looking at them,
+    pillagers, vindicators, evokers that summon vexes, ravagers that charge, and the
+    warden with its sonic shriek
+  - *The Nether*: ghasts, blazes, zombie pigmen, piglin brutes, wither skeletons, hoglins,
+    magma cubes and striders that walk on lava
+  - *The End*: endermen, endermites and shulkers
+  The undead still burn at sunrise
 - Bow and arrows, XP orbs and levels, item drops with magnet pickup, block particles,
   breaking cracks, first-person hand, torch point-lighting, ambient occlusion
 - Beds set your respawn point and skip the night; saplings regrow trees; sand and gravel

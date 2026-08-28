@@ -976,6 +976,114 @@ icon('eye_of_ender', d => {
   d.rect(7, 7, 1, 2, [20, 20, 20]);
 });
 
+// ---- icons for the wider roster's drops ----
+// shared little shapes so 25 icons don't need 25 hand-drawn blobs
+const iMeat = (col, fat) => d => {
+  d.fill([0, 0, 0], 0, 0);
+  d.rect(4, 5, 9, 7, col, 12);
+  d.px(4, 5, [0,0,0], 0); d.px(12, 5, [0,0,0], 0);
+  d.px(4, 11, [0,0,0], 0); d.px(12, 11, [0,0,0], 0);
+  d.rect(6, 6, 4, 1, fat, 6); d.rect(7, 9, 3, 1, fat, 6);
+};
+const iFish = (body, belly) => d => {
+  d.fill([0, 0, 0], 0, 0);
+  for (let y = 5; y < 11; y++) for (let x = 3; x < 12; x++) {
+    const r = Math.hypot((x - 7) / 4.4, (y - 7.6) / 2.4);
+    if (r < 1) d.px(x, y, y > 8 ? belly : body, 255);
+  }
+  for (let i = 0; i < 4; i++) { d.px(12 + (i > 2 ? 1 : 0), 6 + i, body); d.px(13, 5 + i, body); }
+  d.px(5, 7, [255, 255, 255]); d.px(5, 7, [20, 20, 20]);
+};
+const iDust = (col, n = 18) => d => {
+  d.fill([0, 0, 0], 0, 0);
+  for (let k = 0; k < n; k++) d.px(3 + ((d.rng() * 10) | 0), 4 + ((d.rng() * 9) | 0), col);
+};
+const iBlob = (col, hi) => d => {
+  d.fill([0, 0, 0], 0, 0);
+  for (let y = 4; y < 13; y++) for (let x = 4; x < 13; x++)
+    if (Math.hypot(x - 8, y - 8.2) < 4.3) d.px(x, y, col, 235);
+  d.rect(6, 6, 2, 2, hi, 0, 220);
+};
+const iIngot = (m, dk) => d => {
+  d.fill([0, 0, 0], 0, 0);
+  d.pat(['................','................','................','.....dddddd.....','....dmmmmmmd....',
+         '...dmmmmmmmmd...','..dmmmmmmmmmmd..','..mmmmmmmmmmmm..','..dddddddddddd..'], { m, d: dk });
+};
+const iRod = (a, b) => d => {
+  d.fill([0, 0, 0], 0, 0);
+  for (let i = 0; i < 11; i++) { d.px(4 + i, 12 - i, a); d.px(5 + i, 12 - i, b); }
+};
+const iShard = (m, dk) => d => {
+  d.fill([0, 0, 0], 0, 0);
+  d.pat(['................','......mm........','.....dmmd.......','....dmmmmd......','....dmmmmd......',
+         '.....dmmd.......','......mm........'], { m, d: dk });
+};
+
+icon('mutton', iMeat([224, 112, 122], [255, 220, 220]));
+icon('cooked_mutton', iMeat([176, 106, 56], [222, 172, 116]));
+icon('rabbit', iMeat([236, 122, 116], [255, 214, 210]));
+icon('cooked_rabbit', iMeat([186, 118, 62], [230, 182, 122]));
+icon('rabbit_hide', d => { d.fill([0,0,0],0,0); d.rect(4, 4, 9, 9, [198, 160, 120], 14);
+  d.px(4,4,[0,0,0],0); d.px(12,12,[0,0,0],0); d.px(12,4,[0,0,0],0); d.px(4,12,[0,0,0],0); });
+icon('cod', iFish([190, 170, 130], [222, 210, 178]));
+icon('cooked_cod', iFish([196, 148, 84], [226, 190, 130]));
+icon('salmon', iFish([196, 92, 74], [232, 150, 130]));
+icon('cooked_salmon', iFish([206, 122, 62], [236, 172, 108]));
+icon('spider_eye', d => {
+  d.fill([0,0,0],0,0);
+  for (let y = 4; y < 13; y++) for (let x = 4; x < 13; x++)
+    if (Math.hypot(x - 8, y - 8) < 4.2) d.px(x, y, [126, 32, 30]);
+  d.rect(7, 6, 3, 5, [230, 200, 60]); d.rect(8, 7, 1, 3, [20, 20, 20]);
+});
+icon('slimeball', iBlob([124, 210, 108], [200, 250, 190]));
+icon('magma_cream', iBlob([226, 132, 44], [255, 214, 120]));
+icon('ink_sac', iBlob([30, 30, 40], [80, 80, 96]));
+icon('glow_ink_sac', iBlob([60, 190, 200], [190, 255, 255]));
+icon('phantom_membrane', d => {
+  d.fill([0,0,0],0,0);
+  d.pat(['................','...mmm..........','..mmmmmm........','.mmmmmmmmm......','..mmmmmmmmm.....',
+         '...mmmmmmmm.....','....mmmmmm......','.....mmm........'], { m: [200, 190, 170] });
+  d.speckle([150, 140, 122], 10, 8);
+});
+icon('prismarine_shard', iShard([140, 220, 208], [70, 150, 142]));
+icon('shulker_shell', d => {
+  d.fill([0,0,0],0,0);
+  d.rect(4, 6, 9, 6, [148, 110, 156], 12);
+  d.rect(5, 4, 7, 3, [186, 148, 194], 10);
+  d.rect(6, 11, 5, 1, [110, 78, 118], 6);
+});
+icon('wither_skeleton_skull', d => {
+  d.fill([0,0,0],0,0);
+  d.rect(4, 4, 9, 8, [46, 46, 46], 10);
+  d.rect(6, 6, 2, 2, [12, 12, 12]); d.rect(9, 6, 2, 2, [12, 12, 12]);
+  d.rect(6, 10, 5, 1, [24, 24, 24]); d.px(8, 9, [26, 26, 26]);
+});
+icon('copper_ingot', iIngot([226, 134, 88], [156, 84, 52]));
+icon('honeycomb', d => {
+  d.fill([0,0,0],0,0);
+  d.rect(4, 4, 9, 9, [226, 160, 52], 10);
+  for (const [hx, hy] of [[6, 6], [10, 6], [6, 10], [10, 10], [8, 8]]) d.px(hx, hy, [172, 110, 24]);
+});
+icon('scute', d => {
+  d.fill([0,0,0],0,0);
+  for (let y = 4; y < 13; y++) for (let x = 3; x < 13; x++)
+    if (Math.hypot((x - 8) / 5, (y - 8.5) / 4.5) < 1) d.px(x, y, [78, 172, 96], 255);
+  d.px(6, 7, [140, 220, 150]); d.px(10, 10, [50, 130, 70]);
+});
+icon('breeze_rod', iRod([120, 190, 240], [190, 232, 255]));
+icon('echo_shard', iShard([120, 214, 214], [40, 96, 110]));
+icon('emerald', d => {
+  d.fill([0,0,0],0,0);
+  d.pat(['................','.....mmmm.......','....dmmmmd......','...dmmmmmmd.....','...dmmmmmmd.....',
+         '....dmmmmd......','.....mmmm.......'], { m: [60, 220, 120], d: [24, 150, 74] });
+});
+icon('snowball', d => {
+  d.fill([0,0,0],0,0);
+  for (let y = 4; y < 13; y++) for (let x = 4; x < 13; x++)
+    if (Math.hypot(x - 8, y - 8.2) < 4.3) d.px(x, y, [238, 244, 252], 255);
+  d.rect(6, 6, 2, 2, [255, 255, 255]);
+});
+
 // ---------------- mob skin tiles ----------------
 T('zombie_face', d => {
   d.fill([70, 140, 60], 10);
@@ -1028,6 +1136,100 @@ T('spider_face', d => {
   d.rect(3, 5, 2, 2, [200, 30, 30]); d.rect(11, 5, 2, 2, [200, 30, 30]);
   d.rect(6, 4, 1, 1, [200, 30, 30]); d.rect(9, 4, 1, 1, [200, 30, 30]);
 });
+// ---- the wider roster -----------------------------------------------------
+// One hide tile and one face tile per creature. The face is generated from a
+// few knobs — eye position, sclera colour, a snout, a brow — so a new mob costs
+// a line instead of a hand-drawn sheet. The iconic ones above stay hand-drawn.
+function mobSkin(name, body, spot, o = {}) {
+  const vary = o.vary ?? 10;
+  T(name + '_skin', d => {
+    d.fill(body, vary);
+    d.speckle(spot, o.spots ?? 16, 8);
+    if (o.stripes) for (let y = 2; y < 16; y += 5) d.rect(0, y, 16, 2, spot, 6);
+    if (o.plates) for (let y = 1; y < 16; y += 4) d.rect(0, y, 16, 1, spot, 4);
+  });
+  // an optional second hide for clothes, so the humanoids are not one flat colour
+  if (o.cloth) T(name + '_cloth', d => {
+    d.fill(o.cloth, 8);
+    d.speckle([o.cloth[0] * 0.82, o.cloth[1] * 0.82, o.cloth[2] * 0.82], 14, 6);
+    if (o.belt) d.rect(0, 9, 16, 2, o.belt, 6);
+  });
+  T(name + '_face', d => {
+    d.fill(body, vary);
+    d.speckle(spot, 8, 6);
+    if (o.hood) d.rect(0, 0, 16, o.hood[0], o.hood[1], 8);
+    const ey = o.ey ?? 5, ew = o.ew ?? 3, eh = o.eh ?? 3, ex = o.ex ?? 3;
+    const sclera = o.glow || o.sclera || [244, 244, 244];
+    const pupil = o.pupil || [22, 22, 28];
+    for (const x0 of [ex, 16 - ex - ew]) {
+      d.rect(x0, ey, ew, eh, sclera);
+      if (!o.glow) d.rect(x0 + (x0 < 8 ? 1 : 0), ey + 1, ew - 1, eh - 1, pupil);
+    }
+    if (o.brow) d.rect(ex - 1, ey - 2, 18 - ex * 2, 2, o.brow, 6);
+    if (o.snout) d.rect(5, 9, 6, 5, o.snout, 6);
+    if (o.mouth) d.rect(5, o.mouthY ?? 11, 6, 1, o.mouth);
+  });
+}
+
+// overworld hostiles
+mobSkin('husk', [188, 168, 118], [150, 132, 90], { pupil: [40, 30, 20], mouth: [110, 96, 62], cloth: [122, 102, 66] });
+mobSkin('drowned', [70, 140, 128], [48, 108, 100], { glow: [140, 230, 210], spots: 26, cloth: [46, 96, 110] });
+mobSkin('zombie_villager', [92, 142, 78], [66, 112, 58], { pupil: [20, 20, 20], snout: [78, 122, 66], cloth: [110, 76, 52], belt: [70, 60, 46] });
+mobSkin('stray', [200, 214, 224], [166, 184, 198], { glow: [180, 240, 255], mouth: [120, 140, 152], cloth: [124, 142, 158] });
+mobSkin('bogged', [178, 186, 172], [126, 62, 54], { spots: 30, glow: [210, 230, 200], cloth: [96, 110, 90] });
+mobSkin('cave_spider', [30, 82, 104], [22, 60, 78], { glow: [220, 60, 60], ey: 5, ew: 2, eh: 2 });
+mobSkin('silverfish', [124, 126, 136], [92, 94, 104], { plates: true, ey: 6, ew: 2, eh: 2, pupil: [10, 10, 10] });
+mobSkin('endermite', [62, 44, 86], [42, 28, 62], { plates: true, glow: [200, 120, 255], ey: 6, ew: 2, eh: 2 });
+mobSkin('witch', [148, 168, 128], [118, 136, 100], { hood: [6, [78, 62, 104]], pupil: [30, 20, 40], cloth: [78, 62, 104], belt: [70, 60, 46] });
+mobSkin('slime', [124, 210, 108], [96, 178, 84], { spots: 24, pupil: [20, 60, 20], ey: 6, ew: 2, eh: 2 });
+mobSkin('magma_cube', [56, 22, 12], [230, 110, 30], { spots: 40, glow: [255, 190, 60], ey: 6, ew: 2, eh: 2 });
+mobSkin('phantom', [76, 68, 122], [56, 50, 96], { glow: [150, 230, 255], ey: 6, ew: 3, eh: 2 });
+mobSkin('pillager', [122, 122, 122], [96, 96, 96], { sclera: [190, 190, 180], brow: [70, 70, 70], cloth: [84, 84, 84], belt: [70, 60, 46] });
+mobSkin('vindicator', [86, 122, 96], [64, 96, 74], { sclera: [190, 190, 180], brow: [56, 56, 56], cloth: [62, 92, 70], belt: [70, 60, 46] });
+mobSkin('evoker', [226, 226, 220], [186, 186, 178], { sclera: [200, 200, 190], brow: [200, 170, 60], cloth: [216, 216, 208], belt: [70, 60, 46] });
+mobSkin('vex', [188, 198, 216], [150, 162, 182], { glow: [220, 60, 60], ey: 6, ew: 2, eh: 2 });
+mobSkin('ravager', [96, 86, 78], [66, 58, 52], { brow: [50, 44, 40], snout: [120, 108, 96], mouth: [30, 26, 22] });
+mobSkin('breeze', [116, 164, 226], [168, 206, 250], { spots: 34, glow: [230, 245, 255], cloth: [84, 128, 196] });
+mobSkin('creaking', [82, 74, 60], [58, 52, 42], { spots: 26, glow: [236, 132, 44], ey: 5, ew: 3, eh: 2, cloth: [58, 52, 42] });
+mobSkin('guardian', [96, 146, 132], [72, 118, 106], { spots: 26, glow: [232, 128, 60], ex: 6, ew: 4, eh: 4, ey: 6 });
+mobSkin('warden', [18, 54, 58], [12, 40, 44], { spots: 22, glow: [90, 226, 200], ey: 6, ew: 3, eh: 2, cloth: [12, 40, 44] });
+mobSkin('wither_skeleton', [48, 48, 48], [30, 30, 30], { glow: [255, 140, 40], ey: 5, ew: 3, eh: 2, mouth: [22, 22, 22], cloth: [38, 38, 38] });
+mobSkin('piglin_brute', [234, 168, 148], [200, 132, 116], { snout: [246, 190, 172], pupil: [30, 20, 20], cloth: [152, 60, 60] });
+mobSkin('hoglin', [176, 112, 90], [138, 82, 66], { snout: [206, 150, 130], brow: [110, 66, 52] });
+mobSkin('shulker', [150, 112, 158], [120, 86, 128], { glow: [240, 230, 160], ey: 6, ew: 3, eh: 3 });
+
+// overworld passive & neutral
+mobSkin('rabbit', [184, 154, 122], [152, 124, 96], { ey: 5, ew: 3, eh: 3, pupil: [90, 40, 40], mouth: [140, 110, 88] });
+mobSkin('fox', [224, 128, 46], [190, 96, 28], { snout: [246, 240, 232], pupil: [40, 30, 20] });
+mobSkin('wolf', [212, 206, 200], [172, 164, 156], { snout: [230, 226, 220], pupil: [180, 60, 40] });
+mobSkin('goat', [232, 228, 220], [198, 192, 184], { pupil: [40, 36, 30], mouth: [180, 174, 166] });
+mobSkin('polar_bear', [240, 244, 248], [212, 218, 226], { snout: [230, 232, 236], pupil: [30, 30, 34] });
+mobSkin('panda', [238, 238, 238], [40, 40, 40], { spots: 22, ex: 2, ew: 5, eh: 5, sclera: [40, 40, 40], pupil: [240, 240, 240] });
+mobSkin('llama', [206, 176, 142], [172, 142, 112], { snout: [226, 202, 176], pupil: [50, 40, 30] });
+mobSkin('horse', [146, 104, 62], [116, 80, 46], { snout: [96, 66, 38], pupil: [30, 22, 16] });
+mobSkin('camel', [216, 182, 126], [186, 152, 100], { snout: [232, 206, 162], pupil: [50, 40, 26] });
+mobSkin('sniffer', [124, 96, 156], [98, 74, 126], { snout: [156, 128, 186], pupil: [40, 30, 50] });
+mobSkin('armadillo', [154, 124, 100], [110, 86, 68], { plates: true, snout: [176, 148, 124], pupil: [30, 22, 18] });
+mobSkin('turtle', [76, 164, 98], [122, 194, 140], { spots: 26, pupil: [30, 40, 30], mouth: [56, 128, 76] });
+mobSkin('frog', [116, 184, 84], [86, 146, 62], { ey: 3, ew: 4, eh: 4, pupil: [30, 30, 20], mouth: [72, 122, 52] });
+mobSkin('mooshroom', [172, 62, 52], [230, 226, 220], { spots: 22, snout: [232, 196, 190], pupil: [40, 28, 24] });
+mobSkin('villager', [190, 146, 112], [158, 118, 88], { hood: [5, [110, 76, 52]], brow: [92, 66, 44], pupil: [40, 60, 90], cloth: [112, 76, 52], belt: [70, 60, 46] });
+mobSkin('iron_golem', [208, 204, 194], [166, 162, 152], { spots: 24, glow: [220, 60, 50], ey: 6, ew: 3, eh: 2, mouth: [140, 136, 128], cloth: [184, 180, 170] });
+mobSkin('snow_golem', [242, 248, 252], [214, 224, 234], { pupil: [20, 20, 20], mouth: [70, 60, 50], cloth: [234, 240, 248] });
+mobSkin('copper_golem', [226, 134, 88], [156, 84, 52], { spots: 26, glow: [120, 226, 190], ey: 6, ew: 3, eh: 2, cloth: [176, 98, 62] });
+mobSkin('strider', [166, 52, 62], [200, 92, 66], { spots: 30, glow: [255, 200, 120], ey: 5, ew: 3, eh: 2 });
+mobSkin('parrot', [216, 62, 56], [40, 90, 200], { spots: 26, ey: 5, ew: 2, eh: 2, pupil: [20, 20, 20] });
+mobSkin('bat', [82, 64, 52], [58, 44, 36], { glow: [200, 60, 60], ey: 6, ew: 2, eh: 2 });
+mobSkin('bee', [232, 194, 68], [56, 44, 30], { stripes: true, ey: 5, ew: 3, eh: 3, pupil: [20, 20, 20] });
+mobSkin('allay', [78, 166, 232], [120, 206, 250], { spots: 30, glow: [230, 250, 255], ey: 6, ew: 2, eh: 2 });
+mobSkin('happy_ghast', [244, 244, 240], [214, 214, 210], { ey: 5, ew: 3, eh: 3, pupil: [40, 40, 50], mouth: [180, 180, 176] });
+mobSkin('squid', [46, 66, 128], [34, 50, 100], { ey: 6, ew: 3, eh: 3, pupil: [20, 20, 20] });
+mobSkin('glow_squid', [40, 96, 128], [70, 190, 200], { spots: 30, glow: [150, 255, 245], ey: 6, ew: 3, eh: 3 });
+mobSkin('dolphin', [142, 172, 196], [232, 240, 246], { spots: 20, ey: 5, ew: 2, eh: 2, pupil: [20, 20, 20] });
+mobSkin('cod', [186, 168, 130], [150, 134, 100], { ey: 5, ew: 3, eh: 3, pupil: [20, 20, 20] });
+mobSkin('salmon', [196, 92, 74], [232, 150, 130], { ey: 5, ew: 3, eh: 3, pupil: [20, 20, 20] });
+mobSkin('axolotl', [244, 154, 194], [230, 118, 172], { ey: 5, ew: 3, eh: 3, pupil: [30, 20, 30] });
+
 T('white', d => d.fill([255, 255, 255], 0));
 T('skin', d => { d.fill([232, 190, 152], 8); d.speckle([210, 168, 130], 16, 6); });
 T('xp', d => {

@@ -283,45 +283,17 @@ Object.assign(Game, {
   // ---------------- dimension-aware spawning ----------------
   trySpawnDim() {
     const p = this.player;
-    if (this.dim === 'nether') {
-      if (this.mobs.length >= 14) return;
-      const w = this.world;
-      // blazes keep to their fortresses; pigmen and ghasts roam
-      if (w.fortressSpots.length && Math.random() < 0.4) {
-        const spot = w.fortressSpots[randInt(0, w.fortressSpots.length - 1)];
-        if (dist2(spot[0], spot[1], spot[2], p.x, p.y, p.z) < 60 * 60)
-          this.mobs.push(new Mob('blaze', spot[0] + rand(-4, 4), spot[1] + 2, spot[2] + rand(-4, 4)));
-        return;
-      }
-      const ang = rand(0, Math.PI * 2), dd = rand(22, 44);
-      const x = p.x + Math.cos(ang) * dd, z = p.z + Math.sin(ang) * dd;
-      if (!this.world.chunkAt(x, z)) return;
-      if (Math.random() < 0.35) {
-        this.mobs.push(new Mob('ghast', x, p.y + rand(6, 16), z));
-      } else {
-        const y = this.findSpawnY(x, z);
-        if (y > NETHER_LAVA + 2 && y < WORLD_H - 6) this.mobs.push(new Mob('pigman', x, y, z));
-      }
+    // blazes keep to their fortresses; everything else comes off the table
+    if (this.dim === 'nether' && this.world.fortressSpots.length && Math.random() < 0.3) {
+      if (this.mobs.length >= 16) return;
+      const spot = this.world.fortressSpots[randInt(0, this.world.fortressSpots.length - 1)];
+      if (dist2(spot[0], spot[1], spot[2], p.x, p.y, p.z) < 60 * 60)
+        this.mobs.push(new Mob(Math.random() < 0.7 ? 'blaze' : 'wither_skeleton',
+          spot[0] + rand(-4, 4), spot[1] + 2, spot[2] + rand(-4, 4)));
       return;
     }
-    if (this.dim === 'end') {
-      if (this.mobs.length >= 8) return;
-      const ang = rand(0, Math.PI * 2), dd = rand(14, 34);
-      const x = p.x + Math.cos(ang) * dd, z = p.z + Math.sin(ang) * dd;
-      if (Math.hypot(x, z) > END_R - 3) return;
-      const y = this.findSpawnY(x, z);
-      if (y > 4) this.mobs.push(new Mob('enderman', x, y, z));
-      return;
-    }
-    // overworld: the usual night crowd, with the odd enderman among them
-    if (Math.random() < 0.12 && this.day < 0.4) {
-      const ang = rand(0, Math.PI * 2), dd = rand(26, 48);
-      const x = p.x + Math.cos(ang) * dd, z = p.z + Math.sin(ang) * dd;
-      if (!this.world.chunkAt(x, z)) return;
-      const y = this.findSpawnY(x, z);
-      if (y > SEA && this.world.skyAt(x, y, z) < 0.5) this.mobs.push(new Mob('enderman', x, y, z));
-      return;
-    }
-    this.trySpawnHostile();
+    if (this.dim === 'end' && Math.hypot(p.x, p.z) > END_R + 20) return;
+    this.trySpawn(true);
+    if (this.dim !== 'overworld' && Math.random() < 0.4) this.trySpawn(false);
   },
 });
